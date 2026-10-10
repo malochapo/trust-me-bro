@@ -108,6 +108,9 @@ def main(argv=None):
         down = [port for port in ports if not common.postgres_ready(port=port)]
         if down:
             raise SystemExit(f"Postgres is not reachable on localhost port(s) {down} (pg_isready -h localhost -p PORT)")
+        problems = [p for p in (common.postgres_encoding_problem(port=port) for port in ports) if p]
+        if problems:
+            raise SystemExit("; ".join(problems))
 
     grade_opts = ["--claude-bin", args.claude_bin, "--judge-model", args.judge_model]
     items = queue.Queue()

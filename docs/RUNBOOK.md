@@ -82,3 +82,17 @@ python3 -I harness/report.py        # results/report.md and results/report.csv
 - **Results:** commit `results/report.md`, `results/report.csv` and the raw run directories (`results/raw/`; mind their size).
 - **Summary:** post a short summary on malochapo/sobre-ai issue #81 that links to the report. It must say what the pilot is not: 10 tasks and one or two repetitions, which estimate variance and cost and back no claim.
 - **Phase 2:** choose the number of tasks and repetitions from the pilot's variance, then freeze PROTOCOL.md.
+
+## Parallel runs (`bench.py --jobs N`)
+
+Each job needs its own Postgres server, on consecutive ports from `--first-port`. Create them UTF8, since Dispatch's tests create a UTF8 database from `template1`:
+
+```sh
+for port in 5436 5437 5438; do
+  pg_createcluster 16 bench$port -p $port --encoding UTF8 --locale C.UTF-8 --start
+  su postgres -c "psql -p $port -c \"ALTER USER postgres PASSWORD 'dispatch'\""
+done
+python3 -I harness/bench.py ... --jobs 3 --first-port 5436
+```
+
+`bench.py` refuses to start when a server's `template1` is not UTF8. A container restart stops the clusters: `pg_ctlcluster 16 <name> start`.

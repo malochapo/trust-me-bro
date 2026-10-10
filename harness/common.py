@@ -146,6 +146,25 @@ def postgres_ready(host="localhost", port=None):
         return False
 
 
+def postgres_encoding_problem(host="localhost", port=None):
+    """Why the server cannot hold Dispatch's test database, or None. The fixture's
+    tests create it as UTF8 from template1, which a cluster initialised with the C or
+    POSIX locale (SQL_ASCII) refuses. Checked with psql when it is installed."""
+    port = port or DB_PORT
+    if not shutil.which("psql"):
+        return None
+    r = subprocess.run(["psql", "-h", host, "-p", str(port), "-U", "postgres", "-d", "postgres", "-tAc",
+                        "select pg_encoding_to_char(encoding) from pg_database where datname = 'template1'"],
+                       capture_output=True, text=True, env={**os.environ, "PGPASSWORD": "dispatch"})
+    if r.returncode != 0:
+        return f"psql on port {port} failed: {(r.stderr or r.stdout).strip()[:200]}"
+    encoding = r.stdout.strip()
+    if encoding != "UTF8":
+        return (f"template1 on port {port} is {encoding}, not UTF8: recreate the cluster with "
+                "pg_createcluster --encoding UTF8 --locale C.UTF-8")
+    return None
+
+
 @contextlib.contextmanager
 def bench_lock():
     LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
