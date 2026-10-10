@@ -1,0 +1,17 @@
+diff --git a/src/dispatch/static/dispatch/src/signal/instance/store.js b/src/dispatch/static/dispatch/src/signal/instance/store.js
+index a030fc115..debab74dd 100644
+--- a/src/dispatch/static/dispatch/src/signal/instance/store.js
++++ b/src/dispatch/static/dispatch/src/signal/instance/store.js
+@@ -123,9 +123,11 @@ const actions = {
+     )
+     return EntityApi.getAll(params)
+       .then(async (response) => {
++        // the entity table shows recent activity only
++        const STATS_DAYS = 30
+         const fetchSignalStats = async (entity) => {
+           try {
+-            return await SignalApi.getStats(entity.entity_type.id, entity.value)
++            return await SignalApi.getStats(entity.entity_type.id, entity.value, STATS_DAYS)
+           } catch (error) {
+             console.error(`Error fetching signal stats for entity ${entity.name}:`, error)
+             return null

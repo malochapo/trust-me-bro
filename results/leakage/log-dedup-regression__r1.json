@@ -1,0 +1,132 @@
+{
+  "answer": "I can't identify the root cause. I have no access to the repository or to `signal-worker.log`, and I won't invent a commit hash or a diagnosis I can't back up.\n\n**Hypotheses to check first**\n\nThese come from how deduplication generally works in Dispatch-style signal pipelines, not from your code. In the open-source Dispatch, the logic lives in `src/dispatch/signal/service.py`, in the signal filtering and dedup functions. Your fork may differ.\n\n- **Window unit or comparison:** a change that treats the window of 120 as seconds instead of minutes, or flips the comparison, would stop matching earlier instances. That would affect only signals whose windows are small or whose instances arrive minutes apart.\n- **Timestamp or timezone handling:** a naive vs. aware datetime, or a switch from `created_at` to another field, would make the lookback query return nothing.\n- **Match key:** a change to how the dedup fingerprint is built (e.g. a new field in the raw event, such as a request ID or timestamp, now included in the hash) would make every GuardDuty instance look unique. GuardDuty events carry per-event IDs and timestamps, which fits \"only this signal is affected.\"\n- **Case lookup:** the filter may find the earlier instance, but the code that attaches it to the existing case now skips closed or differently-typed cases, or a status filter changed.\n\n**How to confirm**\n\n1. In the log, find the first 2025-08-14 entry where this signal opens a case, and compare it with an earlier entry that deduplicated correctly. Look at the logged dedup decision, the window value, and any fingerprint or match-key fields.\n2. Run `git log --since=2025-08-10 -- src/dispatch/signal/` (or your equivalent path) and `git log -S\"window\"` on the dedup function. Look for a deploy on 2025-08-13 or 2025-08-14.\n3. Check whether GuardDuty's payload format changed upstream around that date. If so, the cause may be a field the dedup key depends on, not a code change.\n\nIf you paste the relevant log excerpt and the dedup function with its `git blame`, I can pin it down.\n\nFILE: unknown (cannot inspect the repository)\nFUNCTION: unknown (cannot inspect the repository)\nCAUSE: Undetermined without the logs and code; the likely area is the signal deduplication filter's window or match-key handling, but this is unverified.\nINTRODUCED_BY: unknown (no commit history available)",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 10674,
+    "duration_ms": 10977,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1283,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 2009,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.01635,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 1127,
+        "provider": "firstParty",
+        "thinkingTokens": 309,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't identify the root cause. I have no access to the repository or to `signal-worker.log`, and I won't invent a commit hash or a diagnosis I can't back up.\n\n**Hypotheses to check first**\n\nThese come from how deduplication generally works in Dispatch-style signal pipelines, not from your code. In the open-source Dispatch, the logic lives in `src/dispatch/signal/service.py`, in the signal filtering and dedup functions. Your fork may differ.\n\n- **Window unit or comparison:** a change that treats the window of 120 as seconds instead of minutes, or flips the comparison, would stop matching earlier instances. That would affect only signals whose windows are small or whose instances arrive minutes apart.\n- **Timestamp or timezone handling:** a naive vs. aware datetime, or a switch from `created_at` to another field, would make the lookback query return nothing.\n- **Match key:** a change to how the dedup fingerprint is built (e.g. a new field in the raw event, such as a request ID or timestamp, now included in the hash) would make every GuardDuty instance look unique. GuardDuty events carry per-event IDs and timestamps, which fits \"only this signal is affected.\"\n- **Case lookup:** the filter may find the earlier instance, but the code that attaches it to the existing case now skips closed or differently-typed cases, or a status filter changed.\n\n**How to confirm**\n\n1. In the log, find the first 2025-08-14 entry where this signal opens a case, and compare it with an earlier entry that deduplicated correctly. Look at the logged dedup decision, the window value, and any fingerprint or match-key fields.\n2. Run `git log --since=2025-08-10 -- src/dispatch/signal/` (or your equivalent path) and `git log -S\"window\"` on the dedup function. Look for a deploy on 2025-08-13 or 2025-08-14.\n3. Check whether GuardDuty's payload format changed upstream around that date. If so, the cause may be a field the dedup key depends on, not a code change.\n\nIf you paste the relevant log excerpt and the dedup function with its `git blame`, I can pin it down.\n\nFILE: unknown (cannot inspect the repository)\nFUNCTION: unknown (cannot inspect the repository)\nCAUSE: Undetermined without the logs and code; the likely area is the signal deduplication filter's window or match-key handling, but this is unverified.\nINTRODUCED_BY: unknown (no commit history available)",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "28092273-8875-4915-ba8a-9ea52241819e",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 299,
+    "total_cost_usd": 0.01635,
+    "ttft_ms": 4104,
+    "ttft_stream_ms": 1282,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 2009
+      },
+      "cache_creation_input_tokens": 2009,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 2009
+          },
+          "cache_creation_input_tokens": 2009,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 1127,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 1127,
+      "output_tokens_details": {
+        "thinking_tokens": 309
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "4043b9f9-8435-4b42-afc2-4e59b39c9f2f"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "cause",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "commit",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.0
+  }
+}

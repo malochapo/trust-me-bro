@@ -1,0 +1,132 @@
+{
+  "answer": "From memory, without access to the repository, so please verify against the code.\n\nThe signal instance views call a signal stats endpoint in `dispatch/signal/views.py`. It takes an entity value and entity type and returns, per entity, how many signal instances alerted, how many were snoozed, and how many snoozes are active or expired. The route delegates to `get_signal_stats` in `dispatch/signal/service.py`, which does the aggregation in the database. It matches signal instances through their entity associations and, as far as I recall, joins the snooze filters on the same entity.\n\nI believe the counts are not limited to the signal being viewed. They are keyed on the entity, so they cover every signal instance that shares that entity. That is why the UI can show how often an entity has alerted or been snoozed overall. I'm least sure of this point, since the function may accept an optional signal filter that I don't remember. Check whether the route passes a `signal_id`.\n\nENDPOINT: GET /signals/stats\nFUNCTION: get_signal_stats\nSCOPED_TO_SIGNAL: no",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 6737,
+    "duration_ms": 7017,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1148,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1927,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.012295,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 742,
+        "provider": "firstParty",
+        "thinkingTokens": 394,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "From memory, without access to the repository, so please verify against the code.\n\nThe signal instance views call a signal stats endpoint in `dispatch/signal/views.py`. It takes an entity value and entity type and returns, per entity, how many signal instances alerted, how many were snoozed, and how many snoozes are active or expired. The route delegates to `get_signal_stats` in `dispatch/signal/service.py`, which does the aggregation in the database. It matches signal instances through their entity associations and, as far as I recall, joins the snooze filters on the same entity.\n\nI believe the counts are not limited to the signal being viewed. They are keyed on the entity, so they cover every signal instance that shares that entity. That is why the UI can show how often an entity has alerted or been snoozed overall. I'm least sure of this point, since the function may accept an optional signal filter that I don't remember. Check whether the route passes a `signal_id`.\n\nENDPOINT: GET /signals/stats\nFUNCTION: get_signal_stats\nSCOPED_TO_SIGNAL: no",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "18e3bed9-b091-4218-afb2-c1188ab5c47a",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 274,
+    "total_cost_usd": 0.012295,
+    "ttft_ms": 4209,
+    "ttft_stream_ms": 1148,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1927
+      },
+      "cache_creation_input_tokens": 1927,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1927
+          },
+          "cache_creation_input_tokens": 1927,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 742,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 742,
+      "output_tokens_details": {
+        "thinking_tokens": 394
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "6c055d67-f458-4ce1-94dc-c9efce20efd6"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "endpoint",
+          "matched": true,
+          "pattern": "ENDPOINT:\\s*`?GET\\s+\\S*/signals/stats\\b(?!/)"
+        },
+        {
+          "id": "function",
+          "matched": true,
+          "pattern": "FUNCTION:\\s*`?(\\S*\\.)?get_signal_stats\\b"
+        },
+        {
+          "id": "scope",
+          "matched": true,
+          "pattern": "SCOPED_TO_SIGNAL:\\s*`?no\\b"
+        }
+      ],
+      "must_not": [
+        {
+          "id": "per-signal-endpoint",
+          "matched": false
+        }
+      ]
+    },
+    "pass": true,
+    "score": 1.0
+  }
+}

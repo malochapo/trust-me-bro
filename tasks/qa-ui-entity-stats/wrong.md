@@ -1,3 +1,4 @@
-ENDPOINT: GET /signals/{signal_id}/stats
+ENDPOINT: GET /signals/stats
 FUNCTION: get_signal_stats
-SCOPED_TO_SIGNAL: yes
+SCOPED_TO_SIGNAL: no
+INSTANCE_WINDOW: all time

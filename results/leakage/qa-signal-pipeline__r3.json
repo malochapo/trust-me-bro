@@ -1,0 +1,132 @@
+{
+  "answer": "I can't see the repository and have no tools, so this is from memory of the upstream Netflix Dispatch project. The redaction details are a low-confidence guess, and you should verify them in the code.\n\n**Flow as I recall it**\n1. **API view.** `POST /api/v1/{organization}/signals/instances` is handled in `dispatch/signal/views.py` (`create_signal_instance`). It validates the payload and resolves the signal definition, either by id or by external id or variant. It stores the instance and queues `signal_flows.signal_instance_create_flow` as a FastAPI background task. The request then returns quickly, normally with a 202.\n2. **Background flow.** `signal_instance_create_flow` in `dispatch/signal/flows.py` runs after the response:\n   - It loads the instance and its signal definition.\n   - It extracts entities from the raw payload using the signal's entity types.\n   - It applies filters. Duplication filters are checked first, then snooze filters, which can mark the instance as filtered or snoozed.\n   - If the instance isn't filtered out, it creates a case (or attaches the instance to an existing one) through the case flow.\n3. **Redaction.** I believe the instance's raw JSON has sensitive keys removed by a helper that walks the payload and masks or drops matching keys. I don't remember its exact module path, its name, or its default key list. My guess is that it runs inside the background flow, at the start of the flow or just before the raw payload is persisted or displayed, rather than in the request handler. I can't confirm whether it runs before or after entity extraction. Entity extraction needs the original values, so I'd expect it to come after extraction, but that is inference.\n\nThe four lines below are best guesses, not verified facts. Please check them with a grep for terms like `redact`, `sensitive`, `password` or `secret` under `dispatch/signal/` and `dispatch/common/utils/`.\n\nREDACTION_FUNCTION: dispatch.signal.service.redact_sensitive_values\nDEFAULT_KEYS: password, secret, token, api_key\nBEFORE_ENTITY_EXTRACTION: no\nDURING_API_REQUEST: no",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 13437,
+    "duration_ms": 13730,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1256,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1964,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.021327500000000003,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 1636,
+        "provider": "firstParty",
+        "thinkingTokens": 921,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't see the repository and have no tools, so this is from memory of the upstream Netflix Dispatch project. The redaction details are a low-confidence guess, and you should verify them in the code.\n\n**Flow as I recall it**\n1. **API view.** `POST /api/v1/{organization}/signals/instances` is handled in `dispatch/signal/views.py` (`create_signal_instance`). It validates the payload and resolves the signal definition, either by id or by external id or variant. It stores the instance and queues `signal_flows.signal_instance_create_flow` as a FastAPI background task. The request then returns quickly, normally with a 202.\n2. **Background flow.** `signal_instance_create_flow` in `dispatch/signal/flows.py` runs after the response:\n   - It loads the instance and its signal definition.\n   - It extracts entities from the raw payload using the signal's entity types.\n   - It applies filters. Duplication filters are checked first, then snooze filters, which can mark the instance as filtered or snoozed.\n   - If the instance isn't filtered out, it creates a case (or attaches the instance to an existing one) through the case flow.\n3. **Redaction.** I believe the instance's raw JSON has sensitive keys removed by a helper that walks the payload and masks or drops matching keys. I don't remember its exact module path, its name, or its default key list. My guess is that it runs inside the background flow, at the start of the flow or just before the raw payload is persisted or displayed, rather than in the request handler. I can't confirm whether it runs before or after entity extraction. Entity extraction needs the original values, so I'd expect it to come after extraction, but that is inference.\n\nThe four lines below are best guesses, not verified facts. Please check them with a grep for terms like `redact`, `sensitive`, `password` or `secret` under `dispatch/signal/` and `dispatch/common/utils/`.\n\nREDACTION_FUNCTION: dispatch.signal.service.redact_sensitive_values\nDEFAULT_KEYS: password, secret, token, api_key\nBEFORE_ENTITY_EXTRACTION: no\nDURING_API_REQUEST: no",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "1dd59678-c24e-45de-8936-7486c5d9d707",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 284,
+    "total_cost_usd": 0.021327500000000003,
+    "ttft_ms": 8571,
+    "ttft_stream_ms": 1256,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1964
+      },
+      "cache_creation_input_tokens": 1964,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1964
+          },
+          "cache_creation_input_tokens": 1964,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 1636,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 1636,
+      "output_tokens_details": {
+        "thinking_tokens": 921
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "d9ce2dbc-8767-4109-8339-931d62ed1525"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "keys",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "order",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "async",
+          "matched": true,
+          "pattern": "DURING_API_REQUEST:\\s*`?no\\b"
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.25
+  }
+}

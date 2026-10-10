@@ -1,7 +1,7 @@
 {
   "id": "qa-ui-entity-stats",
   "family": "cross-layer",
-  "prompt": "This repository is Dispatch, an incident management platform. In the web UI, the signal instance views show, for each entity, how many signal instances alerted or were snoozed and how many snoozes are active or expired. Which backend endpoint does the UI call to get these counts, which backend function computes them, and are the counts limited to the signal being viewed?\n\nFinish your answer with these three lines, in this exact form:\nENDPOINT: <HTTP method> <path relative to the organization's API prefix>\nFUNCTION: <name of the function that computes the counts>\nSCOPED_TO_SIGNAL: <yes or no>\n",
+  "prompt": "This repository is Dispatch, an incident management platform. In the web UI, the signal instance views show, for each entity, how many signal instances alerted or were snoozed and how many snoozes are active or expired. Which backend endpoint does the UI call to get these counts, which backend function computes them, are the counts limited to the signal being viewed, and over what period are the alerted and snoozed instance counts taken?\n\nFinish your answer with these four lines, in this exact form:\nENDPOINT: <HTTP method> <path relative to the organization's API prefix>\nFUNCTION: <name of the function that computes the counts>\nSCOPED_TO_SIGNAL: <yes or no>\nINSTANCE_WINDOW: <number of days, or \"all time\">\n",
   "data": null,
   "grader": {
     "kind": "facts",
@@ -23,6 +23,12 @@
         "any_of": [
           "SCOPED_TO_SIGNAL:\\s*`?no\\b"
         ]
+      },
+      {
+        "id": "window",
+        "any_of": [
+          "INSTANCE_WINDOW:\\s*`?30\\s*days?\\b"
+        ]
       }
     ],
     "must_not": [
@@ -32,5 +38,5 @@
       }
     ]
   },
-  "notes": "Upstream code, nothing planted. The UI store (signal/instance/store.js) calls SignalApi.getStats, which hits GET /signals/stats without a signal id, although a per-signal endpoint /signals/{signal_id}/stats exists. Needs the frontend and the backend."
+  "notes": "The UI store (signal/instance/store.js) calls SignalApi.getStats, which hits GET /signals/stats without a signal id, although a per-signal endpoint /signals/{signal_id}/stats exists. Plant p6 makes the store pass num_days=30, so instance counts cover the last 30 days (snooze counts are not time-limited). The first version, without the window, leaked in phase 0: the model knew the endpoint and the function from memory."
 }

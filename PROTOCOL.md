@@ -22,7 +22,7 @@ These are the same for every arm:
 
 ## Fixture
 
-Netflix Dispatch at `dd2837e8`, with 150 commits replayed and 7 commits planted among them (`fixture/plants.json`). The build is deterministic and checks that its final tree equals upstream plus the plants.
+Netflix Dispatch at `dd2837e8`, with 150 commits replayed and 8 commits planted among them (`fixture/plants.json`). The build is deterministic and checks that its final tree equals upstream plus the plants.
 
 ## Tasks and grading
 
@@ -79,3 +79,6 @@ A run succeeds when its grader passes, or when the judge gives it 2 or more. A r
   - shell network access is flagged;
   - Headroom is installed with `[sandbox]`.
 - 2026-10-10: the pilot runs on API credit, with a $3 cap per run and one repetition, plus a second if the credit allows.
+- 2026-10-10, phase 0 (`results/leakage/`, `results/leakage-v2/`):
+  - five of the six fact tasks were never answered correctly without the code (0/3 each);
+  - `qa-ui-entity-stats` was answered from memory 3/3. It now also asks for the period the counts cover, which plant `p6-entity-stats-window` sets to 30 days. The rewritten task scored 0/3 without the code: the model guessed 7 days.

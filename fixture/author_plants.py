@@ -206,6 +206,22 @@ def p3_cases_page_size():
     edit(f, "const itemsPerPage = ref(25)\n", "const itemsPerPage = ref(40)\n")
 
 
+def p6_entity_stats_window():
+    edit(
+        "src/dispatch/static/dispatch/src/signal/instance/store.js",
+        """        const fetchSignalStats = async (entity) => {
+          try {
+            return await SignalApi.getStats(entity.entity_type.id, entity.value)
+""",
+        """        // the entity table shows recent activity only
+        const STATS_DAYS = 30
+        const fetchSignalStats = async (entity) => {
+          try {
+            return await SignalApi.getStats(entity.entity_type.id, entity.value, STATS_DAYS)
+""",
+    )
+
+
 def p5_snooze_refactor():
     edit(
         "src/dispatch/signal/service.py",
@@ -280,6 +296,7 @@ PLANTS = [
     ("p1-default-dedup-window", p1_default_dedup_window),
     ("p2-redact-raw", p2_redact_raw),
     ("p3-cases-page-size", p3_cases_page_size),
+    ("p6-entity-stats-window", p6_entity_stats_window),
     ("p5-snooze-refactor", p5_snooze_refactor),
     ("p4-dedup-window-seconds", p4_dedup_window_seconds),
 ]

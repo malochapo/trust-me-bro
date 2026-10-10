@@ -1,0 +1,137 @@
+{
+  "answer": "I can't see the repository, so this is from memory of Dispatch's code and I haven't verified it.\n\n- **Endpoint:** The signal instance views appear to call a stats route on the signal router, `GET /signals/stats`. It takes the entity (an entity value plus an entity type id) as query parameters and returns the four numbers: instances alerted, instances snoozed, active snoozes and expired snoozes.\n- **Function:** The route hands off to `get_signal_stats` in the signal service, which does the counting.\n- **Scope:** I believe the counts are not limited to the signal being viewed. They are keyed on the entity, so they cover every signal in which that entity appeared. This is what lets the UI show how noisy an entity is overall.\n- **Period:** I recall the alerted and snoozed instance counts using a recent window, defaulting to 7 days, rather than all time.\n\nThe scope and the 7-day default are the parts I'm least sure of, so check them against the service code.\n\nENDPOINT: GET /signals/stats\nFUNCTION: get_signal_stats\nSCOPED_TO_SIGNAL: no\nINSTANCE_WINDOW: 7",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 9117,
+    "duration_ms": 9404,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1132,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1974,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.0154425,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 1045,
+        "provider": "firstParty",
+        "thinkingTokens": 663,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't see the repository, so this is from memory of Dispatch's code and I haven't verified it.\n\n- **Endpoint:** The signal instance views appear to call a stats route on the signal router, `GET /signals/stats`. It takes the entity (an entity value plus an entity type id) as query parameters and returns the four numbers: instances alerted, instances snoozed, active snoozes and expired snoozes.\n- **Function:** The route hands off to `get_signal_stats` in the signal service, which does the counting.\n- **Scope:** I believe the counts are not limited to the signal being viewed. They are keyed on the entity, so they cover every signal in which that entity appeared. This is what lets the UI show how noisy an entity is overall.\n- **Period:** I recall the alerted and snoozed instance counts using a recent window, defaulting to 7 days, rather than all time.\n\nThe scope and the 7-day default are the parts I'm least sure of, so check them against the service code.\n\nENDPOINT: GET /signals/stats\nFUNCTION: get_signal_stats\nSCOPED_TO_SIGNAL: no\nINSTANCE_WINDOW: 7",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "2ba34f58-1324-4c9e-a5f5-f77db134a378",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 277,
+    "total_cost_usd": 0.0154425,
+    "ttft_ms": 6672,
+    "ttft_stream_ms": 1131,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1974
+      },
+      "cache_creation_input_tokens": 1974,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1974
+          },
+          "cache_creation_input_tokens": 1974,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 1045,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 1045,
+      "output_tokens_details": {
+        "thinking_tokens": 663
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "893069db-e5af-4ef3-88d6-f1675d4f5436"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "endpoint",
+          "matched": true,
+          "pattern": "ENDPOINT:\\s*`?GET\\s+\\S*/signals/stats\\b(?!/)"
+        },
+        {
+          "id": "function",
+          "matched": true,
+          "pattern": "FUNCTION:\\s*`?(\\S*\\.)?get_signal_stats\\b"
+        },
+        {
+          "id": "scope",
+          "matched": true,
+          "pattern": "SCOPED_TO_SIGNAL:\\s*`?no\\b"
+        },
+        {
+          "id": "window",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": [
+        {
+          "id": "per-signal-endpoint",
+          "matched": false
+        }
+      ]
+    },
+    "pass": false,
+    "score": 0.75
+  }
+}

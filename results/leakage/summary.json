@@ -1,0 +1,7 @@
+{
+  "leaked": [
+    "qa-ui-entity-stats"
+  ],
+  "model": "claude-sonnet-5-5",
+  "reps": 3
+}

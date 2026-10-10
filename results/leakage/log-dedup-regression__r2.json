@@ -1,0 +1,132 @@
+{
+  "answer": "I can't determine the root cause from here. I have no tools in this session, so I can't read `signal-worker.log` or the repository, and I have no commit history to identify an introducing commit. Anything specific I named would be a guess, and a made-up commit hash would send the on-call down the wrong path.\n\n**Where I would look.** Since the filter configuration is unchanged (window 120) and only one signal is affected, the fault is probably in how the dedup window is evaluated, not in the filter itself. This is a hypothesis, not a finding:\n\n1. **Dedup lookup in the signal worker.** In Dispatch this is typically a function like `filter_dedup` or `filter_signal` in `src/dispatch/signal/service.py`. Check how it computes the window start (`now - window`) and which instances it compares against. Common faults are a unit change (minutes vs. seconds), a timezone-naive vs. aware comparison, and a changed fingerprint or `case_id` match.\n2. **What is special about this signal.** If its instances share a field that the dedup key now includes or excludes, such as a per-event ID, timestamp, or request ID in the raw payload, every instance looks unique. A change that began on 2025-08-14 could also be a change in the upstream GuardDuty payload shape.\n3. **Log evidence.** In the log, compare the last instance that joined a case (on 2025-08-13 or early 08-14) with the first that opened a new one. Look for the dedup query's window or fingerprint values, any \"no matching instances\" message, or a deploy or restart line just before the change. Then run `git log -L` or `git blame` on that function around the same date to find the commit.\n\nIf you paste the relevant log lines or the function and its recent diff, I can pin it down.\n\nFILE: unknown (unverified; possibly `src/dispatch/signal/service.py`)\nFUNCTION: unknown (unverified; possibly `filter_dedup` or `filter_signal`)\nCAUSE: Cannot be determined without access to the logs and code; the likely area is the dedup window or fingerprint matching for this signal's instances.\nINTRODUCED_BY: unknown (no commit history available)",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 8893,
+    "duration_ms": 9166,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1157,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 2009,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.014360000000000001,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 928,
+        "provider": "firstParty",
+        "thinkingTokens": 222,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't determine the root cause from here. I have no tools in this session, so I can't read `signal-worker.log` or the repository, and I have no commit history to identify an introducing commit. Anything specific I named would be a guess, and a made-up commit hash would send the on-call down the wrong path.\n\n**Where I would look.** Since the filter configuration is unchanged (window 120) and only one signal is affected, the fault is probably in how the dedup window is evaluated, not in the filter itself. This is a hypothesis, not a finding:\n\n1. **Dedup lookup in the signal worker.** In Dispatch this is typically a function like `filter_dedup` or `filter_signal` in `src/dispatch/signal/service.py`. Check how it computes the window start (`now - window`) and which instances it compares against. Common faults are a unit change (minutes vs. seconds), a timezone-naive vs. aware comparison, and a changed fingerprint or `case_id` match.\n2. **What is special about this signal.** If its instances share a field that the dedup key now includes or excludes, such as a per-event ID, timestamp, or request ID in the raw payload, every instance looks unique. A change that began on 2025-08-14 could also be a change in the upstream GuardDuty payload shape.\n3. **Log evidence.** In the log, compare the last instance that joined a case (on 2025-08-13 or early 08-14) with the first that opened a new one. Look for the dedup query's window or fingerprint values, any \"no matching instances\" message, or a deploy or restart line just before the change. Then run `git log -L` or `git blame` on that function around the same date to find the commit.\n\nIf you paste the relevant log lines or the function and its recent diff, I can pin it down.\n\nFILE: unknown (unverified; possibly `src/dispatch/signal/service.py`)\nFUNCTION: unknown (unverified; possibly `filter_dedup` or `filter_signal`)\nCAUSE: Cannot be determined without access to the logs and code; the likely area is the dedup window or fingerprint matching for this signal's instances.\nINTRODUCED_BY: unknown (no commit history available)",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "7d18fcfd-cac1-4c28-add6-e97f34a431b5",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 267,
+    "total_cost_usd": 0.014360000000000001,
+    "ttft_ms": 3367,
+    "ttft_stream_ms": 1157,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 2009
+      },
+      "cache_creation_input_tokens": 2009,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 2009
+          },
+          "cache_creation_input_tokens": 2009,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 928,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 928,
+      "output_tokens_details": {
+        "thinking_tokens": 222
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "8b34b9b2-6b95-4e68-a97e-415a3b44f04f"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "cause",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "commit",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.0
+  }
+}

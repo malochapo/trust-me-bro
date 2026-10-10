@@ -1,0 +1,127 @@
+{
+  "answer": "I can't confirm this. I can't see the repository and have no tools, and I don't reliably remember this detail of Dispatch's signal handling, so a specific number or setting name from me would be a guess.\n\nWhat I do know is that Dispatch's signal flow has deduplication and snooze filters. Grouping an unfiltered signal into a recent case is a fallback that applies when no filter matches. The window is probably a time constant in the signal service code, or a setting in the config module. I can't tell you which, or what the value is.\n\nTo find it, search the repo for the signal instance creation path, likely `src/dispatch/signal/service.py` or `src/dispatch/signal/flows.py`. Look for a `timedelta(...)` near the code that handles signals with an empty `filters` list. Then check `src/dispatch/config.py` for an environment-backed setting that feeds it. If it's a hardcoded `timedelta`, an operator can only change it by editing the code.\n\nVALUE: unknown (not verified, I won't guess)\nSETTING: unknown (not verified)\nFILE: unknown (candidates to check: src/dispatch/signal/service.py, src/dispatch/config.py)\n\nIf you paste the relevant code or give me file access, I can fill in these three lines properly.",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 8837,
+    "duration_ms": 9149,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1535,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1857,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.01406,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 936,
+        "provider": "firstParty",
+        "thinkingTokens": 526,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't confirm this. I can't see the repository and have no tools, and I don't reliably remember this detail of Dispatch's signal handling, so a specific number or setting name from me would be a guess.\n\nWhat I do know is that Dispatch's signal flow has deduplication and snooze filters. Grouping an unfiltered signal into a recent case is a fallback that applies when no filter matches. The window is probably a time constant in the signal service code, or a setting in the config module. I can't tell you which, or what the value is.\n\nTo find it, search the repo for the signal instance creation path, likely `src/dispatch/signal/service.py` or `src/dispatch/signal/flows.py`. Look for a `timedelta(...)` near the code that handles signals with an empty `filters` list. Then check `src/dispatch/config.py` for an environment-backed setting that feeds it. If it's a hardcoded `timedelta`, an operator can only change it by editing the code.\n\nVALUE: unknown (not verified, I won't guess)\nSETTING: unknown (not verified)\nFILE: unknown (candidates to check: src/dispatch/signal/service.py, src/dispatch/config.py)\n\nIf you paste the relevant code or give me file access, I can fill in these three lines properly.",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "09c4f5b0-e70b-46d9-ade5-3a927b64864b",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 309,
+    "total_cost_usd": 0.01406,
+    "ttft_ms": 5815,
+    "ttft_stream_ms": 1535,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1857
+      },
+      "cache_creation_input_tokens": 1857,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1857
+          },
+          "cache_creation_input_tokens": 1857,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 936,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 936,
+      "output_tokens_details": {
+        "thinking_tokens": 526
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "58f56593-fc1d-49d0-99f8-961e2e6cfdfd"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "value",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "setting",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.0
+  }
+}

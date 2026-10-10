@@ -39,6 +39,13 @@
       "message": "feat(ui): page the cases table by 40"
     },
     {
+      "id": "p6-entity-stats-window",
+      "after": "f658731462a8a32c3cc614c86bfbd6970d1ec343",
+      "author": "Jordan Lee <jordan.lee@example.com>",
+      "date": "2025-07-31T14:10:34-07:00",
+      "message": "feat(ui): limit entity signal stats to the last 30 days"
+    },
+    {
       "id": "p5-snooze-refactor",
       "after": "556220f148eb1930cf3ea0722f85de1aea7c3dc2",
       "author": "Sam Ortega <sam.ortega@example.com>",

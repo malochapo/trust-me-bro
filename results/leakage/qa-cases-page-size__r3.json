@@ -1,0 +1,127 @@
+{
+  "answer": "I can't see the repository and have no tools, so this comes from my memory of the open-source Netflix Dispatch codebase and may be wrong.\n\n- **Initial page size:** I believe the Cases table opens showing 25 cases per page. The component sets this when it loads, overriding the store's default.\n- **Where it's set:** `src/dispatch/static/dispatch/src/case/Table.vue`, which applies the initial table options (page size, sort by reported date, descending) when it is created.\n- **Store default:** the Vuex module at `src/dispatch/static/dispatch/src/case/store.js` declares `table.options.itemsPerPage` as 10.\n\nI'm unsure about the 25 and about which file wins, so check `Table.vue` and `store.js` for `itemsPerPage` to confirm.\n\nDEFAULT: 25\nFILE: src/dispatch/static/dispatch/src/case/Table.vue\nSTORE_DEFAULT: 10",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 5534,
+    "duration_ms": 5817,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1198,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1864,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.011077499999999999,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 636,
+        "provider": "firstParty",
+        "thinkingTokens": 320,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't see the repository and have no tools, so this comes from my memory of the open-source Netflix Dispatch codebase and may be wrong.\n\n- **Initial page size:** I believe the Cases table opens showing 25 cases per page. The component sets this when it loads, overriding the store's default.\n- **Where it's set:** `src/dispatch/static/dispatch/src/case/Table.vue`, which applies the initial table options (page size, sort by reported date, descending) when it is created.\n- **Store default:** the Vuex module at `src/dispatch/static/dispatch/src/case/store.js` declares `table.options.itemsPerPage` as 10.\n\nI'm unsure about the 25 and about which file wins, so check `Table.vue` and `store.js` for `itemsPerPage` to confirm.\n\nDEFAULT: 25\nFILE: src/dispatch/static/dispatch/src/case/Table.vue\nSTORE_DEFAULT: 10",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "d1ba6fb9-b9f7-459e-97b9-08540efc02b4",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 277,
+    "total_cost_usd": 0.011077499999999999,
+    "ttft_ms": 3691,
+    "ttft_stream_ms": 1198,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1864
+      },
+      "cache_creation_input_tokens": 1864,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1864
+          },
+          "cache_creation_input_tokens": 1864,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 636,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 636,
+      "output_tokens_details": {
+        "thinking_tokens": 320
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "f0a91f3d-c3b8-49f1-b179-c753a2412536"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "default",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "file",
+          "matched": true,
+          "pattern": "FILE:\\s*`?(src/dispatch/static/dispatch/)?(src/)?case/Table\\.vue\\b"
+        },
+        {
+          "id": "store",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.3333333333333333
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "answer": "I can't see the repository, so this comes from my memory of Dispatch's code and may be off in details.\n\n- **Endpoint:** The signal instance views call the signals stats route, `GET /signals/stats`. It takes an entity (its value and entity type id) and an optional time window as query parameters.\n- **Function:** The route hands off to `get_signal_stats` in `dispatch/signal/service.py`. It queries signal instances for the entity and counts how many were alerted, how many were snoozed, and how many snoozes are active or expired.\n- **Scoping:** The counts are not limited to the signal being viewed. They are keyed by the entity (value and type), not by a signal id, so they cover every signal instance that contains that entity.\n\nENDPOINT: GET /signals/stats\nFUNCTION: get_signal_stats\nSCOPED_TO_SIGNAL: no",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 8173,
+    "duration_ms": 8427,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 2852,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1934,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.0129125,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 802,
+        "provider": "firstParty",
+        "thinkingTokens": 516,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't see the repository, so this comes from my memory of Dispatch's code and may be off in details.\n\n- **Endpoint:** The signal instance views call the signals stats route, `GET /signals/stats`. It takes an entity (its value and entity type id) and an optional time window as query parameters.\n- **Function:** The route hands off to `get_signal_stats` in `dispatch/signal/service.py`. It queries signal instances for the entity and counts how many were alerted, how many were snoozed, and how many snoozes are active or expired.\n- **Scoping:** The counts are not limited to the signal being viewed. They are keyed by the entity (value and type), not by a signal id, so they cover every signal instance that contains that entity.\n\nENDPOINT: GET /signals/stats\nFUNCTION: get_signal_stats\nSCOPED_TO_SIGNAL: no",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "e7cd6f0c-ef9f-4cb6-9b7d-7a5d7d441783",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 246,
+    "total_cost_usd": 0.0129125,
+    "ttft_ms": 6594,
+    "ttft_stream_ms": 2851,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1934
+      },
+      "cache_creation_input_tokens": 1934,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1934
+          },
+          "cache_creation_input_tokens": 1934,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 802,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 802,
+      "output_tokens_details": {
+        "thinking_tokens": 516
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "15e59f2f-c39a-4486-b031-6424c68bfb37"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "endpoint",
+          "matched": true,
+          "pattern": "ENDPOINT:\\s*`?GET\\s+\\S*/signals/stats\\b(?!/)"
+        },
+        {
+          "id": "function",
+          "matched": true,
+          "pattern": "FUNCTION:\\s*`?(\\S*\\.)?get_signal_stats\\b"
+        },
+        {
+          "id": "scope",
+          "matched": true,
+          "pattern": "SCOPED_TO_SIGNAL:\\s*`?no\\b"
+        }
+      ],
+      "must_not": [
+        {
+          "id": "per-signal-endpoint",
+          "matched": false
+        }
+      ]
+    },
+    "pass": true,
+    "score": 1.0
+  }
+}

@@ -24,7 +24,7 @@ Published numbers for these tools mostly measure bytes saved on synthetic inputs
 
 ## What is in it
 
-- [fixture/](fixture/): the code base. It is [Netflix Dispatch](https://github.com/Netflix/dispatch) (Apache-2.0, archived in 2025, so it no longer changes): a FastAPI backend, a Vue frontend and a signal-ingestion pipeline. Seven commits are planted in its real history: facts that memory cannot supply and bugs to diagnose or fix. The build is deterministic: the same inputs give the same commit ids.
+- [fixture/](fixture/): the code base. It is [Netflix Dispatch](https://github.com/Netflix/dispatch) (Apache-2.0, archived in 2025, so it no longer changes): a FastAPI backend, a Vue frontend and a signal-ingestion pipeline. Eight commits are planted in its real history: facts that memory cannot supply and bugs to diagnose or fix. The build is deterministic: the same inputs give the same commit ids.
 - [tasks/](tasks/): ten pilot tasks across six families: code questions, a cross-layer question, a frontend question, a git-history question, log diagnosis, bug fixes and a cross-layer change. They are graded by expected facts, hidden tests or a blind judge. `tasks/validate.py` checks each task against its reference answer.
 - [harness/](harness/): runs one task under one arm in an isolated home directory, collects token usage from Claude Code's output, grades the run and builds the report.
 - [arms/](arms/): installs each tool at a pinned version and configures it per run.
