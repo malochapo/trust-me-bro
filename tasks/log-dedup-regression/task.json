@@ -9,7 +9,7 @@
       {
         "id": "file",
         "any_of": [
-          "FILE:\\s*`?(src/)?dispatch/signal/service\\.py\\b"
+          "FILE:\\s*`?\\S*signal/service\\.py\\b"
         ]
       },
       {

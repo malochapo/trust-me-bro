@@ -1,5 +1,3 @@
 build/
-results/raw/
-results/graded/
 __pycache__/
 *.pyc

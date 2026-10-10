@@ -21,7 +21,7 @@
       {
         "id": "file",
         "any_of": [
-          "FILE:\\s*`?(src/)?dispatch/config\\.py\\b"
+          "FILE:\\s*`?\\S*dispatch/config\\.py\\b"
         ]
       }
     ],

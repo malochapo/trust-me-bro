@@ -1,0 +1,72 @@
+Everything below is in `src/dispatch/signal/flows.py` and `src/dispatch/signal/service.py`, and it describes what the code does now.
+
+## Entry point and order of checks
+
+`signal_instance_create_flow` in `flows.py` runs this for each signal instance:
+
+1. It loads the instance and redacts `raw` with `redact_raw`.
+2. It extracts entities, using the signal's entity types plus all entity types with scope `all`. This happens before any filtering, because both filter types match on entities.
+3. It calls `signal_service.filter_signal`. If that returns True, the flow returns early. It does not create a case, run workflows or engage anyone.
+   - It does update the Slack signal message when `case_id` is set, the case has a conversation, and `_should_update_signal_message` allows it.
+4. If the instance is a canary, the flow returns. The code comment calls this "limited support for canary signals, just store the instance and return".
+5. If `signal.create_case` is false, the flow returns.
+6. Otherwise it builds a `CaseCreate` and calls `case_service.create`.
+   - Case type, priority, oncall service and conversation target resolve in this order: the instance's own value, then the signal's, then the case type's. Priority only falls back to the signal. Severity falls back through the instance, signal and case type.
+   - The flow then runs `case_new_create_flow`, `engage_signal_identity` if the signal has engagements and entities, and the signal's workflows.
+
+## `filter_signal` (service.py:866)
+
+- It always calls `filter_snooze` first.
+- It calls `filter_dedup` only if `filter_action` is still unset, so a snoozed instance is never deduplicated.
+- If no action was set, it writes `filter_action = SignalFilterAction.none` and returns False.
+- Otherwise it returns True.
+- It commits in either case.
+
+## `filter_snooze` (service.py:743)
+
+It loops over `signal.filters`. It skips any filter whose `mode` is not `active` or whose `action` is not `snooze`. For each remaining filter:
+
+- **No expiration.** It logs a warning and `continue`s to the next filter.
+- **Expired.** If `expiration` (naive datetime, treated as UTC) is `<= now`, it hits `break`, not `continue`. That ends the whole loop, so any snooze filters after an expired one are not evaluated.
+- **Matching.** It queries `SignalInstance` rows for the same `signal_id`, applies `apply_filter_specific_joins` and `apply_filters` using `f.expression`, and restricts to `SignalInstance.id == this instance`.
+  - If the expression is non-empty and that returns the instance, it sets `filter_action = snooze` and breaks.
+  - If the expression is empty, it snoozes unconditionally and breaks.
+- **Side effects.** A snoozed instance gets no `case_id` and no case. The snooze check has no time window beyond the filter's expiration, and it does not exclude canaries.
+
+## `filter_dedup` (service.py:789)
+
+- **Canary.** The function returns immediately if `signal_instance.canary` is true.
+- **No filters on the signal.** It uses a default rule:
+  - It looks for the most recent instance (`created_at` descending) of the same signal.
+  - That instance must have been created within `SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES * 60` seconds, have a non-null `case_id`, be a different instance, and not be a canary.
+  - If it finds one, it copies that `case_id` and sets `filter_action = deduplicate`.
+  - Entities are ignored.
+- **Signal has filters.** It loops over them, skipping any whose mode is not `active` or whose action is not `deduplicate`. For each remaining filter it queries as follows:
+  - Same signal, not a canary, joined to entities and entity types.
+  - `apply_filters(query, f.expression)` is applied, then `created_at >= now - f.window` seconds.
+  - It then requires an entity whose id is in this instance's entity ids, and excludes the instance itself.
+  - It orders by `created_at` ascending, so it picks the earliest match.
+  - On a match it takes the `case_id` of the earliest instance, sets `deduplicate`, and breaks.
+  - The match is therefore on shared entities, narrowed by the filter expression.
+- **Quirk: filters present but none are active dedup filters.** If a signal has only snooze filters, or only inactive filters, the default rule does not apply, because the check is `if not signal.filters`. The loop does nothing and the instance falls through to a new case.
+- **Quirk: matched instance has no case.** The filter-based query does not require `case_id` to be non-null. If the earliest match has `case_id = None` (for example it was snoozed, or the signal doesn't create cases), the new instance gets `case_id = None` but is still marked `deduplicate`. It is treated as filtered, so no case is created.
+
+## Time windows
+
+| Item | Unit | Default |
+|---|---|---|
+| `SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES` (`config.py`) | minutes, converted to seconds with `* 60` in `filter_dedup` | 45, overridable by env var |
+| `SignalFilter.window` (DB column) | seconds | `60 * 60` (3600, one hour) |
+| `SignalFilterBase.window` (pydantic) | seconds | 600 (ten minutes) |
+| `SignalFilter.expiration` | naive datetime, treated as UTC | none, and a snooze filter without one is ignored |
+
+- The `filter_signal` docstring says the default rule groups instances for a 1-hour window. The code uses the 45-minute config default.
+- The column default and the pydantic default for `window` disagree (3600 vs 600 seconds). A filter created through the schema without an explicit window therefore gets 600 seconds.
+- `_window_start(seconds)` turns either window into `now - seconds`, in UTC.
+
+## Canary signals
+
+- **Snooze.** A canary can still be snoozed, since `filter_snooze` doesn't check `canary`. A snoozed canary returns early with `filter_action = snooze`.
+- **Dedup.** A canary is never deduplicated. `filter_dedup` returns before querying, so its `filter_action` stays unset and `filter_signal` sets it to `none`.
+- **Flow.** `filter_signal` returns False, then `signal_instance_create_flow` returns at the canary check. No case is created and no workflows or engagements run. The instance is only stored.
+- **Other instances' dedup.** Canary rows are excluded from the lookback queries in both branches of `filter_dedup` (`~SignalInstance.canary`). A canary therefore never becomes the dedup target for a later real instance.

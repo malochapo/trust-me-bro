@@ -82,3 +82,7 @@ A run succeeds when its grader passes, or when the judge gives it 2 or more. A r
 - 2026-10-10, phase 0 (`results/leakage/`, `results/leakage-v2/`):
   - five of the six fact tasks were never answered correctly without the code (0/3 each);
   - `qa-ui-entity-stats` was answered from memory 3/3. It now also asks for the period the counts cover, which plant `p6-entity-stats-window` sets to 30 days. The rewritten task scored 0/3 without the code: the model guessed 7 days.
+- 2026-10-10, during the pilot's first repetition, three grader defects rejected correct answers. All three were fixed, and every fact-graded run was re-graded with the final rules, the same for every arm:
+  - `INSTANCE_WINDOW: 30` was refused because the rule wanted "30 days", although the requested format is a number of days;
+  - `GET signals/stats` was refused for lacking the leading slash. Path rules now accept any correct way of writing the path: `FILE` in three tasks, `ENDPOINT`, and `REDACTION_FUNCTION`;
+  - the rule meant to reject a per-signal endpoint also matched prose that cited that endpoint in order to rule it out. It now only applies to the `ENDPOINT:` line.

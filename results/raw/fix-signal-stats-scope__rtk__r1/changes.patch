@@ -1,0 +1,70 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..9fa573d9 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -33,6 +33,7 @@ from .exceptions import (
+     SignalNotIdentifiedException,
+ )
+ from .models import (
++    assoc_signal_filters,
+     assoc_signal_instance_entities,
+     Signal,
+     SignalCreate,
+@@ -1019,6 +1020,15 @@ def get_signal_stats(
+         active_count.label("active_count"), expired_count.label("expired_count")
+     ).filter(cast(SignalFilter.expression, JSONB).op("@>")(entity_subquery))
+ 
++    if signal_id:
++        query = query.filter(
++            SignalFilter.id.in_(
++                select(assoc_signal_filters.c.signal_filter_id).where(
++                    assoc_signal_filters.c.signal_id == signal_id
++                )
++            )
++        )
++
+     snooze_result = db_session.execute(query).fetchone()
+ 
+     # Calculate the date threshold based on num_days
+diff --git a/tests/signal/test_signal_stats_service.py b/tests/signal/test_signal_stats_service.py
+index 34b4261d..ecd4c810 100644
+--- a/tests/signal/test_signal_stats_service.py
++++ b/tests/signal/test_signal_stats_service.py
+@@ -236,3 +236,37 @@ def test_get_signal_stats_with_signal_id_filter(session, entity, entity_type):
+         + signal_data_signal2.num_signal_instances_snoozed
+         == 2
+     )
++
++
++def test_get_signal_stats_snoozes_scoped_to_signal(session, entity, entity_type, signal):
++    """Snooze counts only include filters attached to the given signal."""
++    from dispatch.signal.service import get_signal_stats
++    from tests.factories import SignalFactory, SignalFilterFactory
++
++    entity.entity_type = entity_type
++    expression = [{"or": [{"model": "Entity", "field": "id", "op": "==", "value": entity.id}]}]
++    tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
++    yesterday = datetime.now(timezone.utc) - timedelta(days=1)
++
++    other_signal = SignalFactory()
++    mine_active = SignalFilterFactory(expression=expression, action="snooze", expiration=tomorrow)
++    mine_expired = SignalFilterFactory(expression=expression, action="snooze", expiration=yesterday)
++    theirs = SignalFilterFactory(expression=expression, action="snooze", expiration=tomorrow)
++    signal.filters.extend([mine_active, mine_expired])
++    other_signal.filters.append(theirs)
++    session.commit()
++
++    scoped = get_signal_stats(
++        db_session=session,
++        entity_value=entity.value,
++        entity_type_id=entity_type.id,
++        signal_id=signal.id,
++    )
++    assert scoped.num_snoozes_active == 1
++    assert scoped.num_snoozes_expired == 1
++
++    unscoped = get_signal_stats(
++        db_session=session, entity_value=entity.value, entity_type_id=entity_type.id
++    )
++    assert unscoped.num_snoozes_active == 2
++    assert unscoped.num_snoozes_expired == 1

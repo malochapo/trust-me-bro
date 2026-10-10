@@ -1,0 +1,16 @@
+{
+  "arm": "rtk",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The answer gives the correct order: snooze, then dedup, then case creation. It names the functions involved. It covers the break on an expired snooze filter, which stops the loop. It gives the 45-minute default from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES and says that default applies only when the signal has no filters, even if the only filters are snooze filters. It also notes that the filter_signal docstring still says 1 hour. It treats per-filter windows as seconds, with a column default of 3600 and a Pydantic default of 600. It leaves out the mismatch with the UI's minute labels, which is a minor gap. Its canary handling matches the reference: canaries can be snoozed, are never deduplicated or used as dedup targets, and never open a case. I found no false statements. Its extra points, that the filter path does not check for a non-null case_id and that the default path picks the newest instance, are plausible and do not contradict the reference.",
+    "score": 3
+  },
+  "graded_at": "2026-10-10T18:16:19+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-filter-overview__rtk__r1",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

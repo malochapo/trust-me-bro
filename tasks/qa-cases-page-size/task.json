@@ -15,7 +15,7 @@
       {
         "id": "file",
         "any_of": [
-          "FILE:\\s*`?(src/dispatch/static/dispatch/)?(src/)?case/Table\\.vue\\b"
+          "FILE:\\s*`?\\S*case/Table\\.vue\\b"
         ]
       },
       {

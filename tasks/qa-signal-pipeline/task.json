@@ -9,7 +9,7 @@
       {
         "id": "function",
         "any_of": [
-          "REDACTION_FUNCTION:\\s*`?(src\\.)?dispatch\\.signal\\.redaction\\.redact_raw\\b"
+          "REDACTION_FUNCTION:\\s*`?\\S*redaction\\S*redact_raw\\b"
         ]
       },
       {

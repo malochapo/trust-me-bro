@@ -1,0 +1,31 @@
+{
+  "arm": "rtk",
+  "details": {
+    "must": [
+      {
+        "id": "value",
+        "matched": true,
+        "pattern": "VALUE:\\s*45\\s*(min|minutes)\\b"
+      },
+      {
+        "id": "setting",
+        "matched": true,
+        "pattern": "SETTING:\\s*`?SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES\\b"
+      },
+      {
+        "id": "file",
+        "matched": true,
+        "pattern": "FILE:\\s*`?\\S*dispatch/config\\.py\\b"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-10T18:39:40+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-default-dedup-window__rtk__r1",
+  "score": 1.0,
+  "task_id": "qa-default-dedup-window",
+  "task_sha256": "be5e2a851cc2c7896850860c6dfe160201f93c86a64bb030be08d03abaeba4f0"
+}

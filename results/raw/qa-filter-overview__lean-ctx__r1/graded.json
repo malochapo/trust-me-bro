@@ -1,0 +1,16 @@
+{
+  "arm": "lean-ctx",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The candidate gets the order right: snooze, then dedup, then canary and create_case checks, then case creation. It describes filter_snooze correctly: skips filters with no expiration, uses `break` on an expired filter so later filters are never checked, and snoozes every instance when the filter has no expression. It gives the 45-minute default from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, applied only when the signal has no filters, and notes the docstring's one-hour claim is stale. It treats per-filter windows as seconds, with the DB default 3600 and the pydantic default 600. It covers the shared-entity requirement and the earliest-match rule. Its canary handling matches the reference: never deduplicated, never a dedup target, can be snoozed, and no case is created. It does not mention the UI minutes-versus-seconds mismatch. It also hedges on which window default applies. Both are minor gaps and neither contradicts the code.",
+    "score": 3
+  },
+  "graded_at": "2026-10-10T18:15:53+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-filter-overview__lean-ctx__r1",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

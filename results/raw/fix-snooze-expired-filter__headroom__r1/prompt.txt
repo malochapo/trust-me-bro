@@ -1,0 +1,3 @@
+This repository is Dispatch, an incident management platform. Bug report: the signal "Okta: Impossible travel" has two snooze filters for the same user, one that expired last week and one that is valid until next month. New instances for that user are no longer snoozed and keep opening cases. Snoozing that user worked before the second filter was added. Fix the bug in the code and add a regression test.
+
+The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.

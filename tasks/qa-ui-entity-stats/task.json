@@ -9,7 +9,7 @@
       {
         "id": "endpoint",
         "any_of": [
-          "ENDPOINT:\\s*`?GET\\s+\\S*/signals/stats\\b(?!/)"
+          "ENDPOINT:\\s*`?GET\\s+\\S*?/?signals/stats\\b(?!/)"
         ]
       },
       {
@@ -27,14 +27,14 @@
       {
         "id": "window",
         "any_of": [
-          "INSTANCE_WINDOW:\\s*`?30\\s*days?\\b"
+          "INSTANCE_WINDOW:\\s*`?30\\b(?!\\s*(hours?|minutes?|h\\b|min))"
         ]
       }
     ],
     "must_not": [
       {
         "id": "per-signal-endpoint",
-        "regex": "ENDPOINT:[^\\n]*\\{signal_id\\}"
+        "regex": "^\\s*ENDPOINT:[^\\n]*\\{signal_id\\}"
       }
     ]
   },

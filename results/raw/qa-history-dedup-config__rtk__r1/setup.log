@@ -1,0 +1,16 @@
+--- setup.sh exit 0
+--- stdout
+{}
+--- stderr
+
+RTK hook registered (global).
+
+  Command:   rtk hook claude
+  RTK.md:    /tmp/sobre-bench-work/run-49e3834f62d1/home/.claude/RTK.md (awareness: default)
+  CLAUDE.md: @RTK.md reference added
+
+  settings.json: hook added
+  Restart Claude Code. Test with: git status
+  filters:   /tmp/sobre-bench-work/run-49e3834f62d1/home/.config/rtk/filters.toml (template, edit to add user-global filters)
+
+

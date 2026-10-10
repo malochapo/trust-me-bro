@@ -1,0 +1,3 @@
+Fixed: `get_signal_stats` in `src/dispatch/signal/service.py` now counts only the snooze filters attached to the given signal when a `signal_id` is passed. It does this by restricting to filter ids in `assoc_signal_filters` for that signal. Without a `signal_id` it still counts every signal's snooze filters, and the instance counts are unchanged.
+
+I added `test_get_signal_stats_snoozes_scoped_to_signal` in `tests/signal/test_signal_service.py`. It gives one signal an active snooze filter and gives another signal an active and an expired one, all on the same entity. The scoped call returns 1 active and 0 expired. The unscoped call returns 2 active and 1 expired. I ran `tests/signal/test_signal_service.py` only, not the full suite: 15 passed, 1 skipped.
