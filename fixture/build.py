@@ -30,11 +30,12 @@ def git(*args, cwd=None, env=None, capture=True):
     return result.stdout.strip() if capture else ""
 
 
-def identity_env(name, email, date, base=None):
-    env = dict(base or os.environ)
+def identity_env(name, email, date):
+    """Upstream lands every pull request as a squash merge committed by GitHub; plants do too."""
+    env = dict(os.environ)
     env.update(
         GIT_AUTHOR_NAME=name, GIT_AUTHOR_EMAIL=email, GIT_AUTHOR_DATE=date,
-        GIT_COMMITTER_NAME=name, GIT_COMMITTER_EMAIL=email, GIT_COMMITTER_DATE=date,
+        GIT_COMMITTER_NAME="GitHub", GIT_COMMITTER_EMAIL="noreply@github.com", GIT_COMMITTER_DATE=date,
     )
     return env
 
