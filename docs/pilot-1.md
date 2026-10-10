@@ -48,3 +48,4 @@ On these tasks, every tool costs more than Claude Code alone, and each 95% inter
    - One rtk run ran `pip install` twice while trying to get tests to run. It did not reach the upstream code.
    - One rtk run's hook made no rewrite, so its probe saw no activity.
 6. **Cost per task varies a lot from one repetition to the next.** For example, sobre on `fix-signal-stats-scope` cost $0.177 in repetition 1 and $0.08 in repetition 2. Two repetitions are a minimum; phase 2 should run at least three.
+7. **What made sobre dearer, and a fix.** A development build of sobre was measured on the same tasks after the pilot. It costs what native costs (1.009, 95% CI 0.956–1.066). An A/A arm showed the noise of this design: about ±5% on 10 tasks × 2 repetitions. See [sobre-dev.md](sobre-dev.md). Phase 2 should include such an arm.
