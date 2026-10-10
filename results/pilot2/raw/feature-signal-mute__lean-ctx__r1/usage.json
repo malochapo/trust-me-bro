@@ -4,23 +4,24 @@
       "cache_read": 922933,
       "cache_write_1h": 0,
       "cache_write_5m": 71367,
-      "client_cost_usd": 0.3731108,
-      "cost_usd": 0.4654041,
+      "client_cost_usd": 0.373111,
+      "cost_usd": 0.37311079999999996,
       "input": 40,
       "output": 10232,
       "price_key": "claude-sonnet-5-5"
     }
   },
-  "client_total_cost_usd": 0.3731108,
-  "cost_usd": 0.465404,
+  "client_total_cost_usd": 0.373111,
+  "conversation_turns": 1,
+  "cost_usd": 0.373111,
   "duration_api_ms": 72320,
   "duration_ms": 98694,
   "flags": [],
   "is_error": false,
   "num_turns": 36,
   "prices": {
-    "as_of": "2026-10-10, to verify against the public pricing page",
-    "source": "to verify against the public pricing page (https://www.anthropic.com/pricing, https://platform.claude.com/docs/en/about-claude/pricing)"
+    "as_of": "2026-10-10",
+    "source": "https://platform.claude.com/docs/en/about-claude/pricing (model pricing table, footnote 2 and long context pricing), read on 2026-10-10"
   },
   "result_subtype": "success",
   "source": "modelUsage",

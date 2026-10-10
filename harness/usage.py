@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """Token counts and cost of one run, computed from its stream.jsonl.
 
-Tokens per model come from the `result` event's `modelUsage`, which includes subagents.
+Tokens per model come from the `result` events' `modelUsage`, which includes subagents.
+A multi-turn run resumes the session once per turn, and each turn ends with its own
+`result` event: their `modelUsage` are summed.
 Claude Code reports cache writes there as one number; the 5-minute / 1-hour split comes
 from the per-message `usage.cache_creation` of the assistant events (each API response
 counted once: its message id repeats across events). Without a split, writes count as
 1-hour writes, the TTL a subscription gets, and a flag says so.
 
-Cost = tokens x harness/prices.json. The client's own estimate, `total_cost_usd`, is
-reported next to it as a cross-check.
+Cost = tokens x harness/prices.json. A model priced by prompt length (Haiku 5.5 over 100K
+tokens) has its long-prompt share of each token class taken from the assistant events: the
+input, cache read and cache write tokens of its requests over the threshold, and for output,
+the share of those requests. The client's own estimate, `total_cost_usd`, is reported next
+to it as a cross-check.
 
 Usage: python3 -I harness/usage.py <run dir | stream.jsonl> [--prices FILE]
 """
@@ -27,6 +32,7 @@ from common import BENCH_ROOT
 
 DEFAULT_PRICES = BENCH_ROOT / "harness" / "prices.json"
 TOKEN_CLASSES = ["input", "output", "cache_read", "cache_write_5m", "cache_write_1h"]
+LONG_PROMPT_THRESHOLDS = (100_000,)  # the thresholds harness/prices.json uses
 
 
 def read_events(path):
@@ -49,8 +55,12 @@ def init_event(events):
 
 
 def result_event(events):
-    results = [e for e in events if e.get("type") == "result"]
+    results = result_events(events)
     return results[-1] if results else None
+
+
+def result_events(events):
+    return [e for e in events if e.get("type") == "result"]
 
 
 def message_usage(events):
@@ -65,11 +75,18 @@ def message_usage(events):
             continue
         seen.add(msg_id)
         m = by_model.setdefault(model, Counter())
+        prompt = Counter(input=usage.get("input_tokens") or 0,
+                         cache_read=usage.get("cache_read_input_tokens") or 0,
+                         cache_write=usage.get("cache_creation_input_tokens") or 0)
         m["messages"] += 1
-        m["input"] += usage.get("input_tokens") or 0
         m["output"] += usage.get("output_tokens") or 0  # a placeholder: the count at message_start
-        m["cache_read"] += usage.get("cache_read_input_tokens") or 0
-        m["cache_write"] += usage.get("cache_creation_input_tokens") or 0
+        m.update(prompt)
+        # Kept per prompt length, for models priced by it.
+        for threshold in LONG_PROMPT_THRESHOLDS:
+            if sum(prompt.values()) > threshold:
+                m[f"over_{threshold}_messages"] += 1
+                for k, v in prompt.items():
+                    m[f"over_{threshold}_{k}"] += v
         split = usage.get("cache_creation")
         if isinstance(split, dict):
             m["split_5m"] += split.get("ephemeral_5m_input_tokens") or 0
@@ -92,20 +109,27 @@ def split_cache_writes(total, msgs, model, flags):
     return w5, total - w5
 
 
-def tokens_by_model(result, msg_usage, flags):
+def tokens_by_model(results, msg_usage, flags):
     by_base = {base_model(k): v for k, v in msg_usage.items()}
+    summed = {}
+    for result in results:
+        for model, mu in (result.get("modelUsage") or {}).items():
+            acc = summed.setdefault(model, Counter())
+            for key in ("inputTokens", "outputTokens", "cacheReadInputTokens", "cacheCreationInputTokens"):
+                acc[key] += mu.get(key) or 0
+            acc["costUSD"] += mu.get("costUSD") or 0
     out = {}
-    if result and result.get("modelUsage"):
-        for model, mu in result["modelUsage"].items():
+    if summed:
+        for model, mu in summed.items():
             msgs = msg_usage.get(model) or by_base.get(base_model(model))
-            w5, w1 = split_cache_writes(mu.get("cacheCreationInputTokens") or 0, msgs, model, flags)
+            w5, w1 = split_cache_writes(mu["cacheCreationInputTokens"], msgs, model, flags)
             out[model] = {
-                "input": mu.get("inputTokens") or 0,
-                "output": mu.get("outputTokens") or 0,
-                "cache_read": mu.get("cacheReadInputTokens") or 0,
+                "input": mu["inputTokens"],
+                "output": mu["outputTokens"],
+                "cache_read": mu["cacheReadInputTokens"],
                 "cache_write_5m": w5,
                 "cache_write_1h": w1,
-                "client_cost_usd": mu.get("costUSD"),
+                "client_cost_usd": round(mu["costUSD"], 6),
             }
         return out, "modelUsage"
     flags.append("no_model_usage: tokens from assistant messages, output tokens are placeholders")
@@ -160,12 +184,40 @@ def tool_stats(events):
     }
 
 
+def long_prompt_shares(msgs, threshold):
+    """Share of each token class spent in requests whose prompt is over `threshold`."""
+    if not msgs or not msgs["messages"]:
+        return {c: 0.0 for c in TOKEN_CLASSES}
+    def share(key):
+        total = msgs[key]
+        return msgs[f"over_{threshold}_{key}"] / total if total else 0.0
+    write = share("cache_write")
+    return {"input": share("input"), "cache_read": share("cache_read"),
+            "cache_write_5m": write, "cache_write_1h": write,
+            "output": msgs[f"over_{threshold}_messages"] / msgs["messages"]}
+
+
+def price_tokens(tokens, price, msgs):
+    """Cost in USD of one model's tokens, with its long-prompt prices when it has them."""
+    long = price.get("long_prompt")
+    if not long:
+        return sum(tokens[c] * price[c] for c in TOKEN_CLASSES) / 1e6, None
+    if long["over_tokens"] not in LONG_PROMPT_THRESHOLDS:
+        raise SystemExit(f"prices.json: long_prompt.over_tokens {long['over_tokens']} is not tracked")
+    shares = long_prompt_shares(msgs, long["over_tokens"])
+    cost = sum(tokens[c] * ((1 - shares[c]) * price[c] + shares[c] * long[c]) for c in TOKEN_CLASSES) / 1e6
+    return cost, {c: round(v, 4) for c, v in shares.items()}
+
+
 def compute(stream_path, prices_path=DEFAULT_PRICES):
     price_table = json.loads(Path(prices_path).read_text())
     events = read_events(stream_path)
-    result = result_event(events)
+    results = result_events(events)
+    result = results[-1] if results else None
     flags = []
-    by_model, source = tokens_by_model(result, message_usage(events), flags)
+    msg_usage = message_usage(events)
+    by_model, source = tokens_by_model(results, msg_usage, flags)
+    by_base = {base_model(k): v for k, v in msg_usage.items()}
 
     totals = Counter()
     cost = 0.0
@@ -175,7 +227,10 @@ def compute(stream_path, prices_path=DEFAULT_PRICES):
             flags.append(f"unpriced_model:{model}")
             tokens["cost_usd"] = None
         else:
-            tokens["cost_usd"] = sum(tokens[c] * price[c] for c in TOKEN_CLASSES) / 1e6
+            msgs = msg_usage.get(model) or by_base.get(base_model(model))
+            tokens["cost_usd"], shares = price_tokens(tokens, price, msgs)
+            if shares is not None:
+                tokens["long_prompt_shares"] = shares
             cost += tokens["cost_usd"]
         tokens["price_key"] = key
         for c in TOKEN_CLASSES:
@@ -188,10 +243,11 @@ def compute(stream_path, prices_path=DEFAULT_PRICES):
         "by_model": by_model,
         "tokens": {c: totals[c] for c in TOKEN_CLASSES},
         "cost_usd": round(cost, 6),
-        "client_total_cost_usd": result.get("total_cost_usd") if result else None,
-        "num_turns": result.get("num_turns") if result else None,
-        "duration_ms": result.get("duration_ms") if result else None,
-        "duration_api_ms": result.get("duration_api_ms") if result else None,
+        "client_total_cost_usd": round(sum(r.get("total_cost_usd") or 0 for r in results), 6) if results else None,
+        "num_turns": sum(r.get("num_turns") or 0 for r in results) if results else None,
+        "duration_ms": sum(r.get("duration_ms") or 0 for r in results) if results else None,
+        "duration_api_ms": sum(r.get("duration_api_ms") or 0 for r in results) if results else None,
+        "conversation_turns": len(results),
         "result_subtype": result.get("subtype") if result else None,
         "is_error": result.get("is_error") if result else None,
         **tool_stats(events),

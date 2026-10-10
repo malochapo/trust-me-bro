@@ -92,7 +92,7 @@ class RunTest(unittest.TestCase):
         self.assertIn("+edited by the agent", patch)
         self.assertIn("+new file from the agent", patch)
         usage = json.loads((run_dir / "usage.json").read_text())
-        self.assertAlmostEqual(usage["cost_usd"], 0.025328, places=6)
+        self.assertAlmostEqual(usage["cost_usd"], 0.024828, places=6)
         self.assertEqual(meta["fixture_head"], meta["fixture_head"].strip())
         self.assertEqual(len(meta["fixture_head"]), 40)
         self.assertIn("stub", meta["claude_version"])

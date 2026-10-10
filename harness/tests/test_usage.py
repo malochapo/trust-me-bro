@@ -43,18 +43,52 @@ class UsageTest(unittest.TestCase):
         # modelUsage: 4500 cache writes; messages msg_1 (0/3000) + msg_2 (500/1000), msg_1 counted once.
         self.assertEqual((sonnet["cache_write_5m"], sonnet["cache_write_1h"]), (500, 4000))
         self.assertEqual((sonnet["input"], sonnet["output"], sonnet["cache_read"]), (14, 700, 5000))
-        # 14*2 + 700*10 + 5000*0.2 + 500*2.5 + 4000*4 = 25278 -> $0.025278
-        self.assertAlmostEqual(sonnet["cost_usd"], 0.025278, places=9)
+        # 14*2 + 700*10 + 5000*0.1 + 500*2.5 + 4000*4 = 24778 -> $0.024778
+        self.assertAlmostEqual(sonnet["cost_usd"], 0.024778, places=9)
         haiku = u["by_model"]["claude-haiku-5-5"]
         self.assertEqual((haiku["cache_write_5m"], haiku["cache_write_1h"]), (200, 0))
         # 50*0.1 + 40*0.5 + 200*0.125 = 50 -> $0.00005
         self.assertAlmostEqual(haiku["cost_usd"], 0.00005, places=9)
-        self.assertAlmostEqual(u["cost_usd"], 0.025328, places=9)
+        self.assertAlmostEqual(u["cost_usd"], 0.024828, places=9)
         self.assertEqual(u["tokens"], {"input": 64, "output": 740, "cache_read": 5000,
                                        "cache_write_5m": 700, "cache_write_1h": 4000})
         self.assertEqual(u["client_total_cost_usd"], 0.0301)
         self.assertEqual((u["num_turns"], u["duration_ms"]), (3, 12345))
         self.assertEqual(u["flags"], [])
+
+    def test_turns_are_summed_and_long_prompts_priced(self):
+        """Two resumed turns, each with its result event; one Haiku request over 100K tokens."""
+        def assistant(msg_id, inp, read, write):
+            return {"type": "assistant", "message": {
+                "id": msg_id, "model": "claude-haiku-5-5", "content": [],
+                "usage": {"input_tokens": inp, "output_tokens": 1, "cache_read_input_tokens": read,
+                          "cache_creation_input_tokens": write,
+                          "cache_creation": {"ephemeral_5m_input_tokens": write, "ephemeral_1h_input_tokens": 0}}}}
+
+        def result(inp, out, read, write, cost):
+            return {"type": "result", "subtype": "success", "num_turns": 1, "duration_ms": 10,
+                    "total_cost_usd": cost, "modelUsage": {"claude-haiku-5-5": {
+                        "inputTokens": inp, "outputTokens": out, "cacheReadInputTokens": read,
+                        "cacheCreationInputTokens": write, "costUSD": cost}}}
+
+        events = [assistant("m1", 10, 50_000, 1_000), result(10, 100, 50_000, 1_000, 0.01),
+                  assistant("m2", 10, 120_000, 1_000), result(10, 100, 120_000, 1_000, 0.02)]
+        path = Path(self.tmp) / "stream.jsonl"
+        path.write_text("".join(json.dumps(e) + "\n" for e in events))
+        u = usage.compute(path)
+        haiku = u["by_model"]["claude-haiku-5-5"]
+        self.assertEqual((haiku["input"], haiku["output"], haiku["cache_read"], haiku["cache_write_5m"]),
+                         (20, 200, 170_000, 2_000))
+        self.assertEqual(u["conversation_turns"], 2)
+        self.assertAlmostEqual(u["client_total_cost_usd"], 0.03)
+        self.assertEqual(u["num_turns"], 2)
+        # m2's prompt (131,010 tokens) is over 100K: its tokens, and half the output (1 of 2
+        # requests), take the long-prompt prices.
+        expected = (10 * 0.10 + 10 * 0.50            # input
+                    + 100 * 0.50 + 100 * 2.50        # output
+                    + 50_000 * 0.01 + 120_000 * 0.05  # cache read
+                    + 1_000 * 0.125 + 1_000 * 0.625) / 1e6
+        self.assertAlmostEqual(haiku["cost_usd"], expected, places=12)
 
     def test_tool_stats(self):
         u = usage.compute(fake_stream(self.tmp))
