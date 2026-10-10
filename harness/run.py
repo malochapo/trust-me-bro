@@ -38,6 +38,7 @@ import os
 import shutil
 import signal
 import subprocess
+import tempfile
 import time
 
 import common
@@ -183,13 +184,34 @@ def stop_daemon(home):
     return "still running"
 
 
-def run_agent(cmd, cwd, env, out_dir, timeout_s, append=False):
-    """Runs claude in its own session; returns (exit code, timed out). A later turn of a
+def isolation_prefix():
+    """Runs that overlap (bench.py --jobs) share the machine's processes, so one agent's
+    `pkill -f pytest` would reach another run's tests and its `claude`. Each turn
+    therefore runs in its own PID namespace, when `unshare` can make one: the agent sees
+    and signals only its own processes. A shell is the namespace's PID 1 and `claude`
+    its child, so the timeout's SIGINT reaches `claude` as it would outside."""
+    unshare = shutil.which("unshare")
+    if not unshare or os.environ.get("BENCH_NO_ISOLATION"):
+        return []
+    probe = subprocess.run([unshare, "--pid", "--fork", "--mount-proc", "--kill-child", "true"],
+                           capture_output=True)
+    if probe.returncode != 0:
+        return []
+    # The shell exports PWD; unset it so the agent gets the environment run.py built.
+    return [unshare, "--pid", "--fork", "--mount-proc", "--kill-child", "sh", "-c", 'unset PWD OLDPWD; "$@"', "sh"]
+
+
+def run_agent(cmd, cwd, env, out_dir, timeout_s, append=False, prompt=None):
+    """Runs claude in its own session; returns (exit code, timed out). The prompt goes in
+    on stdin, as typed text does, so it is not in any process's argv. A later turn of a
     multi-turn run appends to the first turn's stream and stderr."""
     mode = "ab" if append else "wb"
-    with open(out_dir / "stream.jsonl", mode) as so, open(out_dir / "stderr.txt", mode) as se:
-        proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=so, stderr=se,
-                                start_new_session=True)
+    with open(out_dir / "stream.jsonl", mode) as so, open(out_dir / "stderr.txt", mode) as se, \
+            tempfile.TemporaryFile() as si:
+        si.write((prompt or "").encode())
+        si.seek(0)
+        proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdin=si if prompt is not None else subprocess.DEVNULL,
+                                stdout=so, stderr=se, start_new_session=True)
         timed_out = False
         try:
             rc = proc.wait(timeout=timeout_s)
@@ -348,7 +370,9 @@ def execute(args, task, run_id, out_dir, work, claude, version, creds, auth):
                "--permission-mode", "bypassPermissions",
                "--max-turns", str(args.max_turns), "--max-budget-usd", f"{args.max_budget_usd:g}",
                  "--disallowedTools", "WebFetch", "WebSearch"]  # variadic: keep it last
-        meta["cmd"] = [claude, "-p", "<prompt.txt>", *flags]
+        isolation = isolation_prefix()
+        meta["cmd"] = [*isolation, claude, "-p", *flags, "< prompt.txt"]
+        meta["isolated"] = bool(isolation)
         meta["turns_planned"], meta["turns"] = len(prompts), []
         meta["start_utc"] = common.utc_now()
         start = time.monotonic()
@@ -357,8 +381,8 @@ def execute(args, task, run_id, out_dir, work, claude, version, creds, auth):
         for n, text in enumerate(prompts, 1):
             # A later turn resumes the session, as a user typing their next message would.
             resume = ["--resume", session_id] if session_id else []
-            rc, timed_out = run_agent([claude, "-p", text, *resume, *flags], repo, agent_env, out_dir,
-                                      max(1.0, deadline - time.monotonic()), append=n > 1)
+            rc, timed_out = run_agent([*isolation, claude, "-p", *resume, *flags], repo, agent_env, out_dir,
+                                      max(1.0, deadline - time.monotonic()), append=n > 1, prompt=text)
             meta["turns"].append({"exit_code": rc, "timed_out": timed_out})
             meta["exit_code"], meta["timed_out"] = rc, timed_out
             if timed_out or rc != 0 or n == len(prompts):

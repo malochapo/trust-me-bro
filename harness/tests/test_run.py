@@ -1,6 +1,7 @@
 """run.py end to end with the stub claude: environment isolation, flags, captures, status."""
 
 import json
+import subprocess
 import os
 import tempfile
 import unittest
@@ -70,10 +71,12 @@ class RunTest(unittest.TestCase):
         argv = rec["argv"]
         work = self.work / run.work_name(meta["run_id"])
         self.assertEqual(argv[0], "-p")
-        prompt = argv[1]
+        prompt = rec["stdin"]  # on stdin, in no process's argv
+        self.assertNotIn(prompt, argv)
+        self.assertTrue(meta["isolated"])
         self.assertIn(str(work / "data") + "/app.log", prompt)
         self.assertTrue((work / "data" / "app.log").exists())
-        pairs = {argv[i]: argv[i + 1] for i in range(2, len(argv) - 1) if argv[i].startswith("--")}
+        pairs = {argv[i]: argv[i + 1] for i in range(1, len(argv) - 1) if argv[i].startswith("--")}
         self.assertEqual(pairs["--model"], "claude-sonnet-5-5")
         self.assertEqual(pairs["--effort"], "medium")
         self.assertEqual(pairs["--output-format"], "stream-json")
@@ -108,7 +111,7 @@ class RunTest(unittest.TestCase):
         self.assertEqual(meta["status"], "ok", meta.get("invalid_reason"))
         self.assertEqual((meta["turns_planned"], meta["turns_completed"]), (3, 3))
         argv = rec["argv"]  # the last turn's
-        self.assertEqual(argv[:2], ["-p", "Third, again in " + str(self.work / run.work_name(meta["run_id"]) / "data") + "."])
+        self.assertEqual(rec["stdin"], "Third, again in " + str(self.work / run.work_name(meta["run_id"]) / "data") + ".")
         self.assertEqual(argv[argv.index("--resume") + 1], "00000000-0000-4000-8000-000000000001")
         events = [json.loads(l) for l in (run_dir / "stream.jsonl").read_text().splitlines() if l.strip()]
         self.assertEqual(sum(1 for e in events if e.get("type") == "result"), 3)
@@ -117,6 +120,14 @@ class RunTest(unittest.TestCase):
         u = json.loads((run_dir / "usage.json").read_text())
         self.assertEqual(u["conversation_turns"], 3)
         self.assertAlmostEqual(u["cost_usd"], 3 * 0.024828, places=6)
+
+    def test_the_agent_sees_only_its_own_processes(self):
+        if not run.isolation_prefix():
+            self.skipTest("unshare cannot make a PID namespace here")
+        r = subprocess.run([*run.isolation_prefix(), "ps", "-e", "-o", "pid="], capture_output=True, text=True)
+        pids = [int(p) for p in r.stdout.split()]
+        self.assertEqual(pids[0], 1)
+        self.assertLess(len(pids), 5, r.stdout)
 
     def test_arm_extra_env_mcp_and_daemon(self):
         r, run_dir, meta, rec = self.run_arm("stubarm")
