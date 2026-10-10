@@ -1,0 +1,130 @@
+diff --git a/src/dispatch/database/revisions/tenant/versions/2025-09-03_3b9d0c4a7e21.py b/src/dispatch/database/revisions/tenant/versions/2025-09-03_3b9d0c4a7e21.py
+new file mode 100644
+index 00000000..4c1bc811
+--- /dev/null
++++ b/src/dispatch/database/revisions/tenant/versions/2025-09-03_3b9d0c4a7e21.py
+@@ -0,0 +1,24 @@
++"""Adds muted_until to signals.
++
++Revision ID: 3b9d0c4a7e21
++Revises: ff08d822ef2c
++Create Date: 2025-09-03 11:00:00.000000
++
++"""
++
++from alembic import op
++import sqlalchemy as sa
++
++# revision identifiers, used by Alembic.
++revision = "3b9d0c4a7e21"
++down_revision = "ff08d822ef2c"
++branch_labels = None
++depends_on = None
++
++
++def upgrade():
++    op.add_column("signal", sa.Column("muted_until", sa.DateTime(), nullable=True))
++
++
++def downgrade():
++    op.drop_column("signal", "muted_until")
+diff --git a/src/dispatch/signal/models.py b/src/dispatch/signal/models.py
+index d583b957..6f75a116 100644
+--- a/src/dispatch/signal/models.py
++++ b/src/dispatch/signal/models.py
+@@ -112,6 +112,7 @@ class SignalFilterMode(DispatchEnum):
+ class SignalFilterAction(DispatchEnum):
+     deduplicate = "deduplicate"
+     snooze = "snooze"
++    mute = "mute"
+     none = "none"
+ 
+ 
+@@ -138,6 +139,7 @@ class Signal(Base, TimeStampMixin, ProjectMixin):
+     default = Column(Boolean, default=False)
+     lifecycle = Column(String)
+     runbook = Column(String)
++    muted_until = Column(DateTime, nullable=True)
+ 
+     # GenAI specific fields
+     genai_enabled = Column(Boolean, default=True)
+@@ -335,6 +337,7 @@ class SignalBase(DispatchBase):
+     variant: str | None = None
+     lifecycle: str | None = None
+     runbook: str | None = None
++    muted_until: datetime | None = None
+     genai_enabled: bool | None = True
+     genai_model: str | None = None
+     genai_system_message: str | None = None
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..adf3e491 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -882,6 +882,13 @@ def filter_signal(*, db_session: Session, signal_instance: SignalInstance) -> bo
+     """
+     filtered = False
+ 
++    # a muted signal records its instances but filters every one of them until the mute ends
++    muted_until = signal_instance.signal.muted_until
++    if muted_until and muted_until.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
++        signal_instance.filter_action = SignalFilterAction.mute
++        db_session.commit()
++        return True
++
+     signal_instance = filter_snooze(db_session=db_session, signal_instance=signal_instance)
+ 
+     # we only dedupe if we haven't been snoozed
+diff --git a/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue b/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
+index b91cd91b..b1a669a5 100644
+--- a/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
++++ b/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
+@@ -80,6 +80,17 @@
+                     name="Runbook"
+                   />
+                 </v-col>
++                <v-col cols="12">
++                  <v-text-field
++                    v-model="muted_until"
++                    label="Muted until"
++                    type="datetime-local"
++                    hint="New instances are filtered until this time."
++                    persistent-hint
++                    clearable
++                    name="Muted until"
++                  />
++                </v-col>
+                 <v-col cols="12">
+                   <v-text-field
+                     v-model="variant"
+@@ -394,6 +405,7 @@ export default {
+       "selected.genai_enabled",
+       "selected.genai_model",
+       "selected.genai_prompt",
++      "selected.muted_until",
+       "selected.genai_system_message",
+       "selected.id",
+       "selected.lifecycle",
+diff --git a/src/dispatch/static/dispatch/src/signal/Table.vue b/src/dispatch/static/dispatch/src/signal/Table.vue
+index 3d922919..f0cd253e 100644
+--- a/src/dispatch/static/dispatch/src/signal/Table.vue
++++ b/src/dispatch/static/dispatch/src/signal/Table.vue
+@@ -132,6 +132,7 @@ export default {
+         { title: "Create Case", value: "create_case", sortable: true, width: "100px" },
+         { title: "Owner", value: "owner" },
+         { title: "Lifecycle", value: "lifecycle" },
++        { title: "Muted until", value: "muted_until", sortable: true },
+         { title: "Case Type", value: "case_type" },
+         { title: "Case Priority", value: "case_priority" },
+         { title: "External URL", value: "external_url", sortable: false },
+diff --git a/src/dispatch/static/dispatch/src/signal/store.js b/src/dispatch/static/dispatch/src/signal/store.js
+index a2cec415..052e6979 100644
+--- a/src/dispatch/static/dispatch/src/signal/store.js
++++ b/src/dispatch/static/dispatch/src/signal/store.js
+@@ -21,6 +21,7 @@ const getDefaultSelectedState = () => {
+     genai_enabled: false,
+     genai_model: null,
+     genai_prompt: null,
++    muted_until: null,
+     genai_system_message: null,
+     id: null,
+     lifecycle: null,

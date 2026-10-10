@@ -6,8 +6,9 @@ field, so the planted changes sit inside a real history instead of on top of it.
 Replayed commits keep their author, committer and dates, so the build is
 deterministic: the same inputs always give the same commit ids.
 
-Usage: python3 -I fixture/build.py [--cache DIR] [--out DIR]
+Usage: python3 -I fixture/build.py [--spec fixture/plants.json] [--cache DIR] [--out DIR]
 Writes OUT/fixture.git (bare, branch main) and OUT/plants.json (plant id -> commit).
+Pilot 2's fixture: --spec fixture/plants-pilot2.json --out build/pilot2.
 """
 
 import argparse
@@ -95,10 +96,11 @@ def build(spec, cache, out):
     if missing:
         sys.exit(f"plants anchored outside the replayed range: {sorted(missing)}")
 
-    planted = {}
+    planted, replayed = {}, {}
     for commit in replay:
         git("cherry-pick", "--quiet", "--allow-empty", "--keep-redundant-commits", commit,
             cwd=work, env=committer_env(work, commit))
+        replayed[commit] = git("rev-parse", "HEAD", cwd=work)
         if commit in after:
             p = after[commit]
             planted[p["id"]] = plant(work, p)
@@ -121,7 +123,9 @@ def build(spec, cache, out):
     shutil.rmtree(work)
 
     head = git("rev-parse", "main", cwd=bare)
-    (out / "plants.json").write_text(json.dumps({"head": head, "plants": planted}, indent=2) + "\n")
+    # replayed: upstream commit -> its id in the fixture, so a task can name an upstream commit
+    (out / "plants.json").write_text(
+        json.dumps({"head": head, "plants": planted, "replayed": replayed}, indent=2) + "\n")
     print(f"fixture {head} ({len(replay)} replayed commits, {len(planted)} plants) -> {bare}")
 
 
@@ -129,8 +133,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cache", type=Path, default=Path.home() / ".cache" / "sobre-bench")
     parser.add_argument("--out", type=Path, default=HERE.parent / "build")
+    parser.add_argument("--spec", type=Path, default=HERE / "plants.json")
     args = parser.parse_args()
-    spec = json.loads((HERE / "plants.json").read_text())
+    spec = json.loads(args.spec.read_text())
     build(spec, args.cache, args.out.resolve())
 
 

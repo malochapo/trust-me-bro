@@ -1,0 +1,132 @@
+{
+  "answer": "I can't identify the root cause from here. I haven't seen the logs or any Dispatch code, and `{DATA_DIR}` is an unfilled placeholder. Anything specific I named, such as a file, function or commit hash, would be invented.\n\n**What the symptom suggests**\n- Daily triage reminders still work and the settings are unchanged, so the scheduler, the notification channel and the assignee lookup are probably fine.\n- Only the weekly Monday job for long-running triage and stable cases stopped, and it stopped in mid-August. The fault is therefore probably in something specific to the weekly job, introduced shortly before then. Likely candidates:\n  - The weekly job's case filter, such as the status or age criteria for \"long-running\". A change to status enums, case-state names or the age calculation could make it match zero cases.\n  - The weekly schedule or cron evaluation, such as day-of-week handling, timezone handling or a changed week-boundary calculation. A job that no longer fires on Mondays would look the same.\n  - A change to the API endpoint the scheduler calls to fetch cases, such as pagination, a renamed parameter or a new default filter, so the weekly query returns an empty list without an error.\n  - An exception swallowed inside the weekly job, such as a serialization or permission error, that leaves the daily job untouched.\n\n**How to confirm it with the logs**\n1. In `scheduler.log`, find the last Monday on which the weekly job ran (probably 2025-08-11) and the first Monday it didn't (probably 2025-08-18). Check whether the job is not triggered at all, or is triggered and finds zero cases.\n2. In `api.log`, compare the weekly job's case-fetch request before and after that boundary: query parameters, status codes, response sizes and result counts.\n3. Find the first deploy or version change in the logs after the last good run. Then run `git log --since=2025-08-01 -- <weekly reminder module and the case query code>` to find the commit that touched that logic.\n\nIf you paste the relevant log excerpts or the weekly reminder code and recent diffs, I can pinpoint the cause.\n\nFILE: unknown (not determinable without the repository or logs)\nFUNCTION: unknown\nCAUSE: Unknown; I couldn't inspect the logs or code, so I can't say why the weekly reminder job stopped reaching assignees.\nINTRODUCED_BY: unknown",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 8655,
+    "duration_ms": 8911,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1126,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1994,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.014252500000000001,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 921,
+        "provider": "firstParty",
+        "thinkingTokens": 131,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't identify the root cause from here. I haven't seen the logs or any Dispatch code, and `{DATA_DIR}` is an unfilled placeholder. Anything specific I named, such as a file, function or commit hash, would be invented.\n\n**What the symptom suggests**\n- Daily triage reminders still work and the settings are unchanged, so the scheduler, the notification channel and the assignee lookup are probably fine.\n- Only the weekly Monday job for long-running triage and stable cases stopped, and it stopped in mid-August. The fault is therefore probably in something specific to the weekly job, introduced shortly before then. Likely candidates:\n  - The weekly job's case filter, such as the status or age criteria for \"long-running\". A change to status enums, case-state names or the age calculation could make it match zero cases.\n  - The weekly schedule or cron evaluation, such as day-of-week handling, timezone handling or a changed week-boundary calculation. A job that no longer fires on Mondays would look the same.\n  - A change to the API endpoint the scheduler calls to fetch cases, such as pagination, a renamed parameter or a new default filter, so the weekly query returns an empty list without an error.\n  - An exception swallowed inside the weekly job, such as a serialization or permission error, that leaves the daily job untouched.\n\n**How to confirm it with the logs**\n1. In `scheduler.log`, find the last Monday on which the weekly job ran (probably 2025-08-11) and the first Monday it didn't (probably 2025-08-18). Check whether the job is not triggered at all, or is triggered and finds zero cases.\n2. In `api.log`, compare the weekly job's case-fetch request before and after that boundary: query parameters, status codes, response sizes and result counts.\n3. Find the first deploy or version change in the logs after the last good run. Then run `git log --since=2025-08-01 -- <weekly reminder module and the case query code>` to find the commit that touched that logic.\n\nIf you paste the relevant log excerpts or the weekly reminder code and recent diffs, I can pinpoint the cause.\n\nFILE: unknown (not determinable without the repository or logs)\nFUNCTION: unknown\nCAUSE: Unknown; I couldn't inspect the logs or code, so I can't say why the weekly reminder job stopped reaching assignees.\nINTRODUCED_BY: unknown",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "3ac52b31-4542-498f-84bf-5e4669db0e1e",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 253,
+    "total_cost_usd": 0.014252500000000001,
+    "ttft_ms": 2183,
+    "ttft_stream_ms": 1125,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1994
+      },
+      "cache_creation_input_tokens": 1994,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1994
+          },
+          "cache_creation_input_tokens": 1994,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 921,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 921,
+      "output_tokens_details": {
+        "thinking_tokens": 131
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "dff034d6-dd1d-4a4a-818e-25e2de9220d2"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "cause",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "commit",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.0
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "answer": "I can't answer this reliably. I have no access to the Dispatch repository or its git history here, and I have no tools to run `git log`. Commit hashes can't be reconstructed from memory, and listing guesses would give you fabricated identifiers.\n\nTo get the real list, run this in the repo (the relevant logic lives in the signal service, likely `src/dispatch/signal/service.py`, around `filter_snooze`, `filter_dedup`, and the dedup window handling):\n\n```\ngit log --since=2025-05-22 --oneline -- src/dispatch/signal/service.py src/dispatch/signal/models.py\ngit log --since=2025-05-22 -G'snooze|dedup|window' --oneline -- src/dispatch/signal\n```\n\nThen check each candidate with `git show <hash>` and keep only those that change the snooze or dedup decision, including the time windows. Commits that only touch the UI, tests, or unrelated signal code should be dropped. If you paste the log output here, I can help sort which ones qualify.\n\nCOMMITS: none (unable to determine without repository access)",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 4514,
+    "duration_ms": 4763,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 2106,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1858,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.0082325,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 353,
+        "provider": "firstParty",
+        "thinkingTokens": 0,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't answer this reliably. I have no access to the Dispatch repository or its git history here, and I have no tools to run `git log`. Commit hashes can't be reconstructed from memory, and listing guesses would give you fabricated identifiers.\n\nTo get the real list, run this in the repo (the relevant logic lives in the signal service, likely `src/dispatch/signal/service.py`, around `filter_snooze`, `filter_dedup`, and the dedup window handling):\n\n```\ngit log --since=2025-05-22 --oneline -- src/dispatch/signal/service.py src/dispatch/signal/models.py\ngit log --since=2025-05-22 -G'snooze|dedup|window' --oneline -- src/dispatch/signal\n```\n\nThen check each candidate with `git show <hash>` and keep only those that change the snooze or dedup decision, including the time windows. Commits that only touch the UI, tests, or unrelated signal code should be dropped. If you paste the log output here, I can help sort which ones qualify.\n\nCOMMITS: none (unable to determine without repository access)",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "a03a1121-d1d0-49da-8c91-c71bbc1ce3cf",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 244,
+    "total_cost_usd": 0.0082325,
+    "ttft_ms": 4739,
+    "ttft_stream_ms": 2105,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1858
+      },
+      "cache_creation_input_tokens": 1858,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1858
+          },
+          "cache_creation_input_tokens": 1858,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 353,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 353,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "29bc40a8-57bf-4710-84ff-d89a97b22839"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "canary",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "default-window",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "snooze-refactor",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "window-seconds",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": [
+        {
+          "id": "redaction",
+          "matched": false
+        },
+        {
+          "id": "log-outcome",
+          "matched": false
+        }
+      ]
+    },
+    "pass": false,
+    "score": 0.0
+  }
+}

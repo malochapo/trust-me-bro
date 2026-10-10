@@ -1,0 +1,98 @@
+{
+  "upstream": "https://github.com/Netflix/dispatch",
+  "head": "dd2837e82a0bf5565b1b4b4b91ea30b7262d4061",
+  "replay_depth": 150,
+  "plants": [
+    {
+      "id": "t0-test-teardown",
+      "after": "cc8bbbed258cee24c102ec1ed1f3fe08c9c4c669",
+      "author": "Sam Ortega <sam.ortega@example.com>",
+      "date": "2025-05-27T13:55:17-07:00",
+      "message": "test: release pooled connections before dropping the test database"
+    },
+    {
+      "id": "p0-log-filter-outcome",
+      "after": "fad3a725b46302e9343612f5113d10e449157960",
+      "author": "Sam Ortega <sam.ortega@example.com>",
+      "date": "2025-06-10T16:30:10-07:00",
+      "message": "feat(signal): log the outcome of each processed signal instance"
+    },
+    {
+      "id": "p1-default-dedup-window",
+      "after": "93deaec6a291a2ee3e555ced9ee8d12a85351ce8",
+      "author": "Jordan Lee <jordan.lee@example.com>",
+      "date": "2025-06-19T10:03:33-07:00",
+      "message": "feat(signal): make the default deduplication window configurable\n\nThe window applied to signals without a deduplication filter was\nhard-coded. It is now read from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES."
+    },
+    {
+      "id": "p2-redact-raw",
+      "after": "2b1c5f636042f328e8012acdd4364b48610e408a",
+      "author": "Sam Ortega <sam.ortega@example.com>",
+      "date": "2025-07-03T14:20:00-07:00",
+      "message": "feat(signal): mask sensitive raw fields before processing"
+    },
+    {
+      "id": "p3-cases-page-size",
+      "after": "aea194e7387081dc316078164831addda3238de8",
+      "author": "Jordan Lee <jordan.lee@example.com>",
+      "date": "2025-07-24T14:59:30-07:00",
+      "message": "feat(ui): page the cases table by 40"
+    },
+    {
+      "id": "p6-entity-stats-window",
+      "after": "f658731462a8a32c3cc614c86bfbd6970d1ec343",
+      "author": "Jordan Lee <jordan.lee@example.com>",
+      "date": "2025-07-31T14:10:34-07:00",
+      "message": "feat(ui): limit entity signal stats to the last 30 days"
+    },
+    {
+      "id": "p5-snooze-refactor",
+      "after": "556220f148eb1930cf3ea0722f85de1aea7c3dc2",
+      "author": "Sam Ortega <sam.ortega@example.com>",
+      "date": "2025-08-07T11:15:00-07:00",
+      "message": "refactor(signal): simplify snooze filter checks"
+    },
+    {
+      "id": "p4-dedup-window-seconds",
+      "after": "6178d683dddfcd8eb1b58fb4451e756b3dca4262",
+      "author": "Jordan Lee <jordan.lee@example.com>",
+      "date": "2025-08-14T12:15:52-05:00",
+      "message": "refactor(signal): share the lookback window computation"
+    },
+    {
+      "id": "q5-unprotected-event-delete",
+      "after": "ec2570e1e3d644b8de4b8cd02b081d0acd12f4f9",
+      "author": "Sam Ortega <sam.ortega@example.com>",
+      "date": "2025-07-14T14:02:00-07:00",
+      "message": "refactor(incident): tidy custom event routes"
+    },
+    {
+      "id": "q4-reminder-day",
+      "after": "c7ba2dd16ba7071f2eba771822dfe70015a60bbc",
+      "author": "Jordan Lee <jordan.lee@example.com>",
+      "date": "2025-08-12T14:05:00-07:00",
+      "message": "refactor(case): share the weekly reminder check"
+    },
+    {
+      "id": "q1-restricted-case-filter",
+      "after": "ed1e08cf34d36639360d6e18790dd7f65951bcbd",
+      "author": "Sam Ortega <sam.ortega@example.com>",
+      "date": "2025-09-02T09:28:30-07:00",
+      "message": "refactor(database): flatten the restricted case filter"
+    },
+    {
+      "id": "q2-case-cost-cutoff",
+      "after": "f24f0beb3cfcdd9bd1edbc717839630e4989862e",
+      "author": "Jordan Lee <jordan.lee@example.com>",
+      "date": "2025-09-02T09:29:50-07:00",
+      "message": "fix(case_cost): use the latest status timestamp as the cost cut-off"
+    },
+    {
+      "id": "q3-entity-first-match",
+      "after": "3aafd4e04ed74fdeebb7c3e125b26026c9d9ba34",
+      "author": "Sam Ortega <sam.ortega@example.com>",
+      "date": "2025-09-02T09:35:00-07:00",
+      "message": "perf(entity): stop at the first JSONPath match"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "log-reminders-stopped",
+  "family": "log-diagnosis",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform; it is the code we run in production. Since mid-August, assignees no longer get the weekly Monday reminders to close their long-running triage and stable cases, while the daily triage reminders still arrive. Nobody changed the reminder settings. The scheduler's and the API's logs from 2025-07-28 to 2025-08-20 are in {DATA_DIR}/scheduler.log and {DATA_DIR}/api.log. Find the root cause.\n\nFinish your answer with these four lines, in this exact form:\nFILE: <path of the file with the faulty code>\nFUNCTION: <name of the function with the faulty code>\nCAUSE: <one sentence>\nINTRODUCED_BY: <hash of the commit that introduced it, at least 8 characters>\n",
+  "data": "build/pilot2/data/log-reminders-stopped",
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "file",
+        "any_of": [
+          "^\\s*FILE:\\s*`?\\S*case/scheduled\\.py\\b"
+        ]
+      },
+      {
+        "id": "function",
+        "any_of": [
+          "^\\s*FUNCTION:\\s*`?(\\S*\\.)?_is_reminder_day\\b"
+        ]
+      },
+      {
+        "id": "cause",
+        "any_of": [
+          "^\\s*CAUSE:[^\\n]*(calendar\\.MONDAY|isoweekday|\\b0\\b[^\\n]*\\b1\\b|\\b1\\b[^\\n]*\\b0\\b)"
+        ]
+      },
+      {
+        "id": "commit",
+        "any_of": [
+          "^\\s*INTRODUCED_BY:\\s*`?{plant:q4-reminder-day:short}"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Plant q4 compares date.isoweekday() (Monday = 1) with calendar.MONDAY (0), so the weekly close and stable reminders never fire after the 2025-08-13 deploy. The logs (several MB, two services) show the jobs still running on 2025-08-18 with no reminder sent, next to red herrings."
+}

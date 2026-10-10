@@ -1,0 +1,29 @@
+{
+  "id": "feature-signal-mute",
+  "family": "cross-layer",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. Feature request: let operators mute a signal definition until a given time. While a signal is muted, its new instances are still recorded, but each one is filtered with a new filter action `mute` and never opens a case; snooze and deduplication filters are not evaluated for a muted signal. The mute ends by itself at the given time. Concretely, add an optional `muted_until` timestamp to signal definitions:\n- store it in the database, with an Alembic migration in the tenant revisions;\n- accept it when a signal is created or updated through the API, and return it when signals are read;\n- in the web UI, show it as a \"Muted until\" column in the signal definitions table, and let users set it in the signal create/edit dialog.\n\nThe test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.\n",
+  "data": null,
+  "grader": {
+    "kind": "tests",
+    "command": [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/signal/test_hidden_signal_mute.py"
+    ],
+    "regression": [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/signal"
+    ]
+  },
+  "notes": "Cross-layer feature: enum, model column, Pydantic schema, filter_signal, Alembic migration, Vue table, store and dialog. Hidden tests check the behavior (mute filters, ends by itself, wins over an active snooze), the API models, and statically the migration and the two Vue files. Needs most of the signal pipeline in context."
+}

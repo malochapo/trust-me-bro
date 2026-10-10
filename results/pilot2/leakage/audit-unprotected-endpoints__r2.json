@@ -1,0 +1,154 @@
+{
+  "answer": "I can't see the repository and have no tools, so this comes from my memory of upstream Netflix Dispatch, not from the code. Check it against the files before relying on it.\n\nIn upstream Dispatch, the data-changing routes in both files normally declare `dependencies=[Depends(PermissionsDependency([...]))]`. Examples are update, delete, escalate, join, subscribe and the report routes. The two routes I remember as having no such dependency are the creation endpoints (`POST \"\"`). Any authenticated user can create a case or incident, so they rely on the router-level authentication and not on a permission class.\n\n- `case.create_case`: `POST \"\"` has no `PermissionsDependency`.\n- `incident.create_incident`: `POST \"\"` has no `PermissionsDependency`.\n\nYour copy may differ from upstream. A fork may have added routes, such as extra POST actions, or removed a dependency. To confirm, grep each file for `@router.(post|put|patch|delete)` and check that each decorator has a `PermissionsDependency`.\n\nUNPROTECTED: case.create_case, incident.create_incident",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 8581,
+    "duration_ms": 8836,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1289,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1897,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.015090000000000001,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 1029,
+        "provider": "firstParty",
+        "thinkingTokens": 666,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't see the repository and have no tools, so this comes from my memory of upstream Netflix Dispatch, not from the code. Check it against the files before relying on it.\n\nIn upstream Dispatch, the data-changing routes in both files normally declare `dependencies=[Depends(PermissionsDependency([...]))]`. Examples are update, delete, escalate, join, subscribe and the report routes. The two routes I remember as having no such dependency are the creation endpoints (`POST \"\"`). Any authenticated user can create a case or incident, so they rely on the router-level authentication and not on a permission class.\n\n- `case.create_case`: `POST \"\"` has no `PermissionsDependency`.\n- `incident.create_incident`: `POST \"\"` has no `PermissionsDependency`.\n\nYour copy may differ from upstream. A fork may have added routes, such as extra POST actions, or removed a dependency. To confirm, grep each file for `@router.(post|put|patch|delete)` and check that each decorator has a `PermissionsDependency`.\n\nUNPROTECTED: case.create_case, incident.create_incident",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "0b2e3f82-e8ef-44e6-90fb-f978cabd561f",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 252,
+    "total_cost_usd": 0.015090000000000001,
+    "ttft_ms": 5990,
+    "ttft_stream_ms": 1288,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1897
+      },
+      "cache_creation_input_tokens": 1897,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1897
+          },
+          "cache_creation_input_tokens": 1897,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 1029,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 1029,
+      "output_tokens_details": {
+        "thinking_tokens": 666
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "5f883ca0-8e57-4aaa-b371-37cb26284d1d"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "create_case",
+          "matched": true,
+          "pattern": "^\\s*UNPROTECTED:[^\\n]*\\bcase\\.create_case\\b(?!_)"
+        },
+        {
+          "id": "create_case_channel",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "create_case_resources",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "create_incident",
+          "matched": true,
+          "pattern": "^\\s*UNPROTECTED:[^\\n]*\\bincident\\.create_incident\\b(?!_)"
+        },
+        {
+          "id": "incident_delete_custom_event",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": [
+        {
+          "id": "case_delete_custom_event",
+          "matched": false
+        },
+        {
+          "id": "incident_create_resources",
+          "matched": false
+        },
+        {
+          "id": "protected_case",
+          "matched": false
+        },
+        {
+          "id": "protected_incident",
+          "matched": false
+        }
+      ]
+    },
+    "pass": false,
+    "score": 0.4
+  }
+}

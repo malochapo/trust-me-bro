@@ -1,0 +1,14 @@
+diff --git a/src/dispatch/entity/service.py b/src/dispatch/entity/service.py
+index 885a25a0a..8e9cfe062 100644
+--- a/src/dispatch/entity/service.py
++++ b/src/dispatch/entity/service.py
+@@ -286,7 +286,8 @@ def find_entities(
+         for entity_type, _, jpath in entity_type_pairs:
+             if jpath:
+                 try:
+-                    matches = jpath.find(signal_instance.raw)
++                    # a JSONPath names one field: keep its first match
++                    matches = jpath.find(signal_instance.raw)[:1]
+                     for match in matches:
+                         if isinstance(match.value, str):
+                             yield EntityCreate(

@@ -1,0 +1,12 @@
+diff --git a/src/dispatch/incident/views.py b/src/dispatch/incident/views.py
+index b901f1f35..a4ca2d4c7 100644
+--- a/src/dispatch/incident/views.py
++++ b/src/dispatch/incident/views.py
+@@ -503,7 +503,6 @@ def export_timeline_event(
+ @router.delete(
+     "/{incident_id}/event/{event_uuid}",
+     summary="Deletes a custom event.",
+-    dependencies=[Depends(PermissionsDependency([IncidentEventPermission]))],
+ )
+ def delete_custom_event(
+     db_session: DbSession,

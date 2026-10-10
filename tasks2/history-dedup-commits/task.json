@@ -1,0 +1,47 @@
+{
+  "id": "history-dedup-commits",
+  "family": "history-qa",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. Since 2025-05-22, which commits changed how Dispatch decides whether a new signal instance is snoozed or deduplicated, including the time windows it uses for that? List every such commit, and only those.\n\nFinish your answer with this line, in this exact form:\nCOMMITS: <comma-separated commit hashes, at least 8 characters each>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "canary",
+        "any_of": [
+          "^\\s*COMMITS:[^\\n]*{plant:e46fa023b7b8899f4a5f24336ce84699618ed196:short}"
+        ]
+      },
+      {
+        "id": "default-window",
+        "any_of": [
+          "^\\s*COMMITS:[^\\n]*{plant:p1-default-dedup-window:short}"
+        ]
+      },
+      {
+        "id": "snooze-refactor",
+        "any_of": [
+          "^\\s*COMMITS:[^\\n]*{plant:p5-snooze-refactor:short}"
+        ]
+      },
+      {
+        "id": "window-seconds",
+        "any_of": [
+          "^\\s*COMMITS:[^\\n]*{plant:p4-dedup-window-seconds:short}"
+        ]
+      }
+    ],
+    "must_not": [
+      {
+        "id": "redaction",
+        "regex": "^\\s*COMMITS:[^\\n]*{plant:p2-redact-raw:short}"
+      },
+      {
+        "id": "log-outcome",
+        "regex": "^\\s*COMMITS:[^\\n]*{plant:p0-log-filter-outcome:short}"
+      }
+    ]
+  },
+  "notes": "Four commits change filter_snooze or filter_dedup (or the windows they use) since 2025-05-22: upstream #6026 (no dedup on canary signals), and plants p1, p5, p4. Plants p2 (redaction) and p0 (logging) touch the same flow without changing the decision, which tests precision. Exercises git log -L / -S / show over a 5,000-commit history."
+}

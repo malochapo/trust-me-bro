@@ -1,0 +1,29 @@
+{
+  "id": "refactor-merge-action",
+  "family": "refactor",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. Rename the signal filter action `deduplicate` to `merge` everywhere: the `SignalFilterAction` member and its value, every place the code uses it (backend and web UI), and the values already stored in the database, with an Alembic migration in the tenant revisions that rewrites existing rows of both signal filters and filtered signal instances. Behavior must not change. Update the existing tests that use the old name; afterwards the word `deduplicate` must not remain in src/dispatch outside the migrations.\n\nThe test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.\n",
+  "data": null,
+  "grader": {
+    "kind": "tests",
+    "command": [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/signal/test_hidden_merge_rename.py"
+    ],
+    "regression": [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/signal"
+    ]
+  },
+  "notes": "Rename across models, service, flows, two Vue components and the tests, plus a data migration for two tables. Hidden tests: a copy of the signal service tests written with `merge`, a check that the enum has `merge` and no `deduplicate`, a grep of src/dispatch for the old word outside migrations, and a check of the migration's updates."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "ci-red-regressions",
+  "family": "bug-fix",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. CI has been red on main since this week's merges: tests fail in several packages. Get the whole test suite green again by fixing the code. The existing tests are correct; do not change them. Each failure comes from a real bug, so fix the cause rather than the symptom.\n\nThe test suite needs PostgreSQL, which is running locally; run it with `python -m pytest` (tests/ai/test_ai_service.py needs network access you do not have: ignore it).\n",
+  "data": null,
+  "grader": {
+    "kind": "tests",
+    "command": [
+      "bash",
+      "-c",
+      "git checkout {FIXTURE_HEAD} -- tests && python -m pytest -q -p no:cacheprovider tests --deselect tests/ai/test_ai_service.py"
+    ],
+    "regression": []
+  },
+  "notes": "Plants q1 (restricted case filter flattened: members see every restricted case), q2 (case cost cut-off uses the latest status timestamp instead of the earliest), q3 (entity extraction keeps only the first JSONPath match) land in the last commits before HEAD and break existing tests in tests/database, tests/case_cost and tests/entity. The grader restores the original tests before running the whole suite, so editing tests cannot pass. Long, repeated pytest output: where output compression matters."
+}

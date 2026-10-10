@@ -36,8 +36,11 @@ PLACEHOLDER = re.compile(r"\{plant:([A-Za-z0-9_.-]+?)(:short)?\}")
 
 
 def load_plants(path):
+    """Plant ids and replayed upstream commits (by their upstream sha) -> fixture commit ids."""
     data = common.read_json(path, {}) or {}
-    return data.get("plants", data)
+    if "plants" not in data:
+        return data
+    return {**data.get("replayed", {}), **data["plants"]}
 
 
 def resolve_plants(pattern, plants):
@@ -51,6 +54,12 @@ def resolve_plants(pattern, plants):
 
 def search(pattern, text, plants):
     return re.search(resolve_plants(pattern, plants), text, re.IGNORECASE | re.MULTILINE)
+
+
+def plants_for(meta):
+    """The plants of the fixture the run used: its plants.json sits next to fixture.git."""
+    beside = Path(meta.get("fixture") or "").parent / "plants.json"
+    return beside if beside.is_file() else common.DEFAULT_PLANTS
 
 
 def grade_facts(grader, answer, plants):
@@ -100,10 +109,13 @@ def grade_tests(grader, task, run_dir, meta):
     regression = grader.get("regression", DEFAULT_REGRESSION)
     if not common.postgres_ready():
         raise SystemExit("Postgres is not reachable on localhost:5432")
+    # {FIXTURE_HEAD} lets a command restore files from the commit the run started from,
+    # e.g. the original tests, so that a run cannot pass by editing them.
+    fill = lambda cmd: [c.replace("{FIXTURE_HEAD}", meta.get("fixture_head") or "HEAD") for c in cmd] if cmd else cmd
     with tempfile.TemporaryDirectory(prefix="grade-home-") as home, common.bench_lock():
         env = common.clean_env(home, path)
-        tests = run_logged(grader["command"], repo, env, run_dir / "grade_tests.log")
-        reg = run_logged(regression, repo, env, run_dir / "grade_regression.log") if regression else None
+        tests = run_logged(fill(grader["command"]), repo, env, run_dir / "grade_tests.log")
+        reg = run_logged(fill(regression), repo, env, run_dir / "grade_regression.log") if regression else None
     ok = tests["exit"] == 0 and (reg is None or reg["exit"] == 0)
     return {"score": 1.0 if ok else 0.0, "pass": ok,
             "details": {"hidden_files": copied, "tests": tests, "regression": reg}}
@@ -129,7 +141,7 @@ def grade_run(run_dir, args):
     kind = grader["kind"]
     answer = (run_dir / "answer.md").read_text() if (run_dir / "answer.md").exists() else ""
     if kind == "facts":
-        graded = grade_facts(grader, answer, load_plants(args.plants))
+        graded = grade_facts(grader, answer, load_plants(args.plants or plants_for(meta)))
     elif kind == "tests":
         graded = grade_tests(grader, task, run_dir, meta)
     elif kind == "judge":
@@ -148,7 +160,8 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("run_dirs", nargs="+")
     p.add_argument("--task-file", help="default: the task_file recorded in meta.json")
-    p.add_argument("--plants", default=str(common.DEFAULT_PLANTS))
+    p.add_argument("--plants", default=None,
+                   help="default: plants.json next to the run's fixture, else " + str(common.DEFAULT_PLANTS))
     p.add_argument("--judge-model", default="claude-sonnet-5-5")
     p.add_argument("--claude-bin", default="claude")
     p.add_argument("--force", action="store_true", help="re-grade runs that have graded.json")

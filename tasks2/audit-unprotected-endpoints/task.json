@@ -1,0 +1,61 @@
+{
+  "id": "audit-unprotected-endpoints",
+  "family": "code-qa",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. Security review: which endpoints of the case API (src/dispatch/case/views.py) and the incident API (src/dispatch/incident/views.py) change data (POST, PUT, PATCH or DELETE routes) without declaring a PermissionsDependency in their route definition? List all of them, and only them.\n\nFinish your answer with this line, in this exact form:\nUNPROTECTED: <comma-separated handlers written as case.<function> or incident.<function>>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "create_case",
+        "any_of": [
+          "^\\s*UNPROTECTED:[^\\n]*\\bcase\\.create_case\\b(?!_)"
+        ]
+      },
+      {
+        "id": "create_case_channel",
+        "any_of": [
+          "^\\s*UNPROTECTED:[^\\n]*\\bcase\\.create_case_channel\\b"
+        ]
+      },
+      {
+        "id": "create_case_resources",
+        "any_of": [
+          "^\\s*UNPROTECTED:[^\\n]*\\bcase\\.create_case_resources\\b"
+        ]
+      },
+      {
+        "id": "create_incident",
+        "any_of": [
+          "^\\s*UNPROTECTED:[^\\n]*\\bincident\\.create_incident\\b(?!_)"
+        ]
+      },
+      {
+        "id": "incident_delete_custom_event",
+        "any_of": [
+          "^\\s*UNPROTECTED:[^\\n]*\\bincident\\.delete_custom_event\\b"
+        ]
+      }
+    ],
+    "must_not": [
+      {
+        "id": "case_delete_custom_event",
+        "regex": "^\\s*UNPROTECTED:[^\\n]*\\bcase\\.delete_custom_event\\b"
+      },
+      {
+        "id": "incident_create_resources",
+        "regex": "^\\s*UNPROTECTED:[^\\n]*\\bincident\\.create_incident_resources\\b"
+      },
+      {
+        "id": "protected_case",
+        "regex": "^\\s*UNPROTECTED:[^\\n]*\\bcase\\.(update_case|escalate_case|delete_case|join_case)\\b"
+      },
+      {
+        "id": "protected_incident",
+        "regex": "^\\s*UNPROTECTED:[^\\n]*\\bincident\\.(update_incident|delete_incident|join_incident|subscribe_to_incident)\\b"
+      }
+    ]
+  },
+  "notes": "Upstream leaves create_case, create_case_channel, create_case_resources and create_incident without a PermissionsDependency (incident's create_incident_resources has one). Plant q5 drops the dependency of incident.delete_custom_event, while case.delete_custom_event keeps its own. Needs every route of two ~600-line view modules."
+}

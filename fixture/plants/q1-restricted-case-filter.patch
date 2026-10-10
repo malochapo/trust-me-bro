@@ -1,0 +1,17 @@
+diff --git a/src/dispatch/database/service.py b/src/dispatch/database/service.py
+index 32e34f85b..e927a5614 100644
+--- a/src/dispatch/database/service.py
++++ b/src/dispatch/database/service.py
+@@ -833,10 +833,8 @@ def restricted_case_filter(query: orm.Query, current_user: DispatchUser, role: U
+         .filter(
+             or_(
+                 Case.visibility == Visibility.open,
+-                and_(
+-                    Case.visibility == Visibility.restricted,
+-                    IndividualContact.email == current_user.email,
+-                ),
++                Case.visibility == Visibility.restricted,
++                IndividualContact.email == current_user.email,
+             )
+         )
+     )

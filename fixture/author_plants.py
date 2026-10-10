@@ -2,8 +2,10 @@
 
 Run once by a maintainer, not by the benchmark: the patches it writes are
 committed under fixture/plants/. Usage:
-    python3 -I author_plants.py <dispatch checkout at the pinned commit> <out dir>
+    python3 -I author_plants.py <dispatch checkout at the pinned commit> <out dir> [--pilot2]
 Each plant is diffed against the previous one, in the order they enter history.
+--pilot2 also writes the plants that only pilot 2's fixture carries; they touch
+files no pilot 1 plant touches, so their patches apply in either order.
 """
 
 import subprocess
@@ -290,6 +292,82 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
     )
 
 
+def q1_restricted_case_filter():
+    edit(
+        "src/dispatch/database/service.py",
+        """            or_(
+                Case.visibility == Visibility.open,
+                and_(
+                    Case.visibility == Visibility.restricted,
+                    IndividualContact.email == current_user.email,
+                ),
+            )
+""",
+        """            or_(
+                Case.visibility == Visibility.open,
+                Case.visibility == Visibility.restricted,
+                IndividualContact.email == current_user.email,
+            )
+""",
+    )
+
+
+def q2_case_cost_cutoff():
+    edit(
+        "src/dispatch/case_cost/service.py",
+        "            participant_role_renounced_at = min(timestamps)\n",
+        "            participant_role_renounced_at = max(timestamps)\n",
+    )
+
+
+def q3_entity_first_match():
+    edit(
+        "src/dispatch/entity/service.py",
+        "                    matches = jpath.find(signal_instance.raw)\n",
+        "                    # a JSONPath names one field: keep its first match\n"
+        "                    matches = jpath.find(signal_instance.raw)[:1]\n",
+    )
+
+
+def q4_reminder_day():
+    f = "src/dispatch/case/scheduled.py"
+    edit(f, "import logging\n", "import calendar\nimport logging\n")
+    edit(
+        f,
+        """log = logging.getLogger(__name__)
+""",
+        """log = logging.getLogger(__name__)
+
+
+def _is_reminder_day() -> bool:
+    \"\"\"Reminders about long-running cases go out once a week, on Mondays.\"\"\"
+    return date.today().isoweekday() == calendar.MONDAY
+""",
+    )
+    edit(f, "if q >= 1 and date.today().isoweekday() == 1:", "if q >= 1 and _is_reminder_day():", count=2)
+
+
+def q5_unprotected_event_delete():
+    edit(
+        "src/dispatch/incident/views.py",
+        """    summary="Deletes a custom event.",
+    dependencies=[Depends(PermissionsDependency([IncidentEventPermission]))],
+)
+def delete_custom_event(""",
+        """    summary="Deletes a custom event.",
+)
+def delete_custom_event(""",
+    )
+
+
+PLANTS2 = [
+    ("q5-unprotected-event-delete", q5_unprotected_event_delete),
+    ("q4-reminder-day", q4_reminder_day),
+    ("q1-restricted-case-filter", q1_restricted_case_filter),
+    ("q2-case-cost-cutoff", q2_case_cost_cutoff),
+    ("q3-entity-first-match", q3_entity_first_match),
+]
+
 PLANTS = [
     ("t0-test-teardown", t0_test_teardown),
     ("p0-log-filter-outcome", p0_log_filter_outcome),
@@ -303,7 +381,7 @@ PLANTS = [
 
 if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
-    for name, plant in PLANTS:
+    for name, plant in PLANTS + (PLANTS2 if "--pilot2" in sys.argv else []):
         plant()
         snapshot(name)
         print("wrote", name)

@@ -43,7 +43,11 @@ def reset(repo):
     run(["git", "clean", "-qfdx", "-e", "*.egg-info"], cwd=repo)
 
 
+FIXTURE_HEAD = "HEAD"
+
+
 def tests_pass(task, repo, venv, command):
+    command = [c.replace("{FIXTURE_HEAD}", FIXTURE_HEAD) for c in command]
     env = {"PATH": f"{venv / 'bin'}:/usr/bin:/bin", "HOME": str(Path.home()), "LANG": "C.UTF-8"}
     result = run(command, cwd=repo, env=env, check=False)
     return result.returncode == 0, result.stdout.strip().splitlines()[-1:] if result.stdout else result.stderr[-300:]
@@ -55,13 +59,15 @@ def validate(task_dir, repo, venv):
     hidden = task_dir / "hidden"
 
     reset(repo)
-    shutil.copytree(hidden, repo, dirs_exist_ok=True)
+    if hidden.is_dir():
+        shutil.copytree(hidden, repo, dirs_exist_ok=True)
     ok, tail = tests_pass(task, repo, venv, grader["command"])
     problems = [] if not ok else [f"hidden tests pass on the unfixed fixture: {tail}"]
 
     reset(repo)
     run(["git", "apply", str(task_dir / "solution.patch")], cwd=repo)
-    shutil.copytree(hidden, repo, dirs_exist_ok=True)
+    if hidden.is_dir():
+        shutil.copytree(hidden, repo, dirs_exist_ok=True)
     ok, tail = tests_pass(task, repo, venv, grader["command"])
     if not ok:
         problems.append(f"hidden tests fail with the solution: {tail}")
@@ -83,8 +89,8 @@ def facts_pass(grader, answer, plants):
         return re.sub(r"\{plant:([\w-]+)(:short)?\}", sub, pattern)
 
     answer = resolve(answer)
-    musts = all(any(re.search(resolve(p), answer, re.I) for p in m["any_of"]) for m in grader["must"])
-    nots = any(re.search(resolve(m["regex"]), answer, re.I) for m in grader.get("must_not", []))
+    musts = all(any(re.search(resolve(p), answer, re.I | re.M) for p in m["any_of"]) for m in grader["must"])
+    nots = any(re.search(resolve(m["regex"]), answer, re.I | re.M) for m in grader.get("must_not", []))
     return musts and not nots
 
 
@@ -102,12 +108,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--fixture", type=Path, required=True)
     parser.add_argument("--deps-venv", type=Path, required=True)
+    parser.add_argument("--tasks-dir", type=Path, default=TASKS, help="e.g. tasks2 for pilot 2")
     parser.add_argument("tasks", nargs="*")
     args = parser.parse_args()
 
-    dirs = [TASKS / t for t in args.tasks] or sorted(d for d in TASKS.iterdir() if (d / "task.json").exists())
+    root = args.tasks_dir.resolve()
+    dirs = [root / t for t in args.tasks] or sorted(d for d in root.iterdir() if (d / "task.json").exists())
     kind = lambda d: json.loads((d / "task.json").read_text())["grader"]["kind"]
-    plants = json.loads((args.fixture.resolve().parent / "plants.json").read_text())["plants"]
+    built = json.loads((args.fixture.resolve().parent / "plants.json").read_text())
+    plants = {**built.get("replayed", {}), **built["plants"]}
+    global FIXTURE_HEAD
+    FIXTURE_HEAD = built["head"]
 
     failed = False
     for d in [d for d in dirs if kind(d) == "facts"]:
