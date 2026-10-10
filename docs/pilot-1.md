@@ -17,23 +17,23 @@ All 100 runs were valid: each was billed to its arm's key, and the MCP servers o
 
 | Arm | Mean cost per run | Cost vs native, geometric mean of per-task ratios | 95% CI | Turns | Cache read | Cache write |
 | --- | --- | --- | --- | --- | --- | --- |
-| native | $0.065 | 1 | | 5.2 | 92.7k | 11.8k |
-| rtk | $0.069 | 1.06 | 1.01–1.12 | 5.8 | 103.5k | 12.6k |
-| Headroom | $0.072 | 1.12 | 1.05–1.21 | 5.6 | 92.2k | 14.5k |
-| sobre | $0.073 | 1.13 | 1.03–1.25 | 6.3 | 108.4k | 13.2k |
-| lean-ctx | $0.103 | 1.59 | 1.42–1.79 | 8.9 | 140.9k | 21.3k |
+| native | $0.055 | 1 | | 5.2 | 92.7k | 11.8k |
+| rtk | $0.059 | 1.06 | 1.01–1.11 | 5.8 | 103.5k | 12.6k |
+| sobre | $0.062 | 1.13 | 1.04–1.24 | 6.3 | 108.4k | 13.2k |
+| Headroom | $0.062 | 1.14 | 1.06–1.25 | 5.6 | 92.2k | 14.5k |
+| lean-ctx | $0.089 | 1.62 | 1.43–1.82 | 8.9 | 140.9k | 21.3k |
 
-On these tasks, every tool costs more than Claude Code alone, and each 95% interval lies above 1. The runs are short: 5 to 9 turns, about 30 seconds, and tool outputs of a few thousand characters. So there is little to compress, and what decides the cost is each tool's fixed overhead: the tool definitions and instructions it adds to the prompt prefix, which is re-read on every turn, and the extra turns its tools invite.
+On these tasks, every tool costs more than Claude Code alone, and each 95% interval lies above 1. The runs are short: 5 to 9 turns, about 30 seconds, and tool outputs of a few thousand characters. So there is little to compress, and what decides the cost is each tool's fixed overhead: the tool definitions and instructions it adds to the prompt prefix, which is written to the cache once and re-read on every turn, and the extra turns its tools invite.
 
-**Spend:** $7.63 for the 100 runs, computed from tokens and public prices. Claude Code's own estimate is about 15% lower. Our formula prices cache writes at 1.25× input, the published rate, and checking the Console bill per key will settle which number is right. Add about $0.17 for the judge and $0.29 for the leakage check.
+**Spend:** $6.56 for the 100 runs, computed from tokens and public prices. That matches Claude Code's own estimate to the cent. A first version of this report overstated it at $7.63: it priced Sonnet 5.5 cache hits at $0.20 per million tokens instead of $0.10 (0.05× base input; PROTOCOL.md changelog). Add about $0.17 for the judge and $0.29 for the leakage check.
 
-| Arm | Computed spend | Claude Code's estimate |
-| --- | --- | --- |
-| native | $1.29 | $1.10 |
-| rtk | $1.38 | $1.18 |
-| Headroom | $1.43 | $1.25 |
-| sobre | $1.46 | $1.25 |
-| lean-ctx | $2.07 | $1.79 |
+| Arm | Computed spend |
+| --- | --- |
+| native | $1.10 |
+| rtk | $1.17 |
+| Headroom | $1.25 |
+| sobre | $1.25 |
+| lean-ctx | $1.79 |
 
 ## What the pilot taught
 
@@ -48,4 +48,4 @@ On these tasks, every tool costs more than Claude Code alone, and each 95% inter
    - One rtk run ran `pip install` twice while trying to get tests to run. It did not reach the upstream code.
    - One rtk run's hook made no rewrite, so its probe saw no activity.
 6. **Cost per task varies a lot from one repetition to the next.** For example, sobre on `fix-signal-stats-scope` cost $0.177 in repetition 1 and $0.08 in repetition 2. Two repetitions are a minimum; phase 2 should run at least three.
-7. **What made sobre dearer, and a fix.** A development build of sobre was measured on the same tasks after the pilot. It costs what native costs (1.009, 95% CI 0.956–1.066). An A/A arm showed the noise of this design: about ±5% on 10 tasks × 2 repetitions. See [sobre-dev.md](sobre-dev.md). Phase 2 should include such an arm.
+7. **What made sobre dearer, and a fix.** A development build of sobre was measured on the same tasks after the pilot. It costs what native costs (1.02, 95% CI 0.97–1.07). An A/A arm showed the noise of this design: about ±5% on 10 tasks × 2 repetitions. See [sobre-dev.md](sobre-dev.md). Phase 2 should include such an arm.

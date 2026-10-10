@@ -8,7 +8,7 @@ The data is pilot 1's 20 sobre runs, paired with native by task and repetition.
 
 | Runs | Cost vs native |
 | --- | --- |
-| All 20 sobre runs | 1.128 |
+| All 20 sobre runs | 1.13 |
 | 4 runs where sobre's post-run hook compressed a Bash output | 1.460 |
 | 16 runs where it did not | 1.042 |
 
@@ -32,23 +32,23 @@ The change is [malochapo/sobre-ai#97](https://github.com/malochapo/sobre-ai/pull
 
 | Arm | Mean cost per run | Cost vs native | 95% CI | Prefix tokens added | Compressed outputs |
 | --- | --- | --- | --- | --- | --- |
-| native | $0.0645 | 1 | | 0 | |
-| sobre 0.1.0-rc.1 | $0.0732 | 1.128 | 1.030–1.253 | 922 | 4 runs |
-| `sobre-dev` | $0.0644 | 1.009 | 0.956–1.066 | 396 | 0 runs |
-| `sobre-hooks` | $0.0677 | 1.029 | 0.977–1.091 | 0 | 0 runs |
-| rtk 0.51.0 | $0.0691 | 1.062 | 1.007–1.121 | 344 | |
+| native | $0.0552 | 1 | | 0 | |
+| sobre 0.1.0-rc.1 | $0.0623 | 1.127 | 1.040–1.239 | 922 | 4 runs |
+| `sobre-dev` | $0.0557 | 1.020 | 0.974–1.072 | 396 | 0 runs |
+| `sobre-hooks` | $0.0575 | 1.026 | 0.980–1.078 | 0 | 0 runs |
+| rtk 0.51.0 | $0.0587 | 1.058 | 1.006–1.113 | 344 | |
 
-`sobre-dev` costs what native costs. `sobre-hooks` is the same build with its MCP server and skill removed. Its prompt is the size of native's (16,525 tokens on the first request, the same median), and its hook compressed nothing. On these tasks it is therefore native under another name, which makes it an A/A test. Its 1.029, with an interval that spans 1, shows how far two identical setups can drift on 10 tasks × 2 repetitions. Differences of a few percent, like the 2% the remaining prefix should cost, are below what this design can resolve.
+Costs use the corrected price of Sonnet 5.5 cache hits ($0.10 per million tokens; PROTOCOL.md changelog). `sobre-dev` costs what native costs. `sobre-hooks` is the same build with its MCP server and skill removed. Its prompt is the size of native's (16,525 tokens on the first request, the same median), and its hook compressed nothing. On these tasks it is therefore native under another name, which makes it an A/A test. Its 1.026, with an interval that spans 1, shows how far two identical setups can drift on 10 tasks × 2 repetitions. Differences of a few percent, like the 2% the remaining prefix should cost, are below what this design can resolve.
 
 ### Pilot 2: 6 harder tasks × 2 repetitions, all runs successful
 
 | Arm | Mean cost per run | Cost vs native | 95% CI |
 | --- | --- | --- | --- |
-| native | $0.091 | 1 | |
-| sobre 0.1.0-rc.1 | $0.107 | 1.086 | 0.952–1.266 |
-| `sobre-dev` | $0.093 | 1.005 | 0.908–1.106 |
-| `sobre-hooks` | $0.088 | 0.967 | 0.823–1.077 |
-| rtk 0.51.0 | $0.101 | 1.116 | 0.917–1.477 |
+| native | $0.077 | 1 | |
+| sobre 0.1.0-rc.1 | $0.088 | 1.076 | 0.960–1.229 |
+| `sobre-dev` | $0.079 | 1.011 | 0.920–1.102 |
+| `sobre-hooks` | $0.074 | 0.974 | 0.827–1.088 |
+| rtk 0.51.0 | $0.085 | 1.104 | 0.914–1.440 |
 
 Pilot 2 tells the same story with wider intervals: `sobre-dev` is at parity, and `sobre-hooks` (native under another name) lands 3% under native.
 

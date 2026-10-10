@@ -16,9 +16,9 @@ sobre's maintainer wrote this benchmark. To keep that from tilting it, the proto
 
 ## Status
 
-- **Pilot 1 is done** ([docs/pilot-1.md](docs/pilot-1.md)): 100 runs, all successful. Its tasks were too easy to separate the arms on success. On cost, against Claude Code alone: rtk 1.06, Headroom 1.12, sobre 1.13, lean-ctx 1.59.
-- **Pilot 2 is done** ([docs/pilot-2.md](docs/pilot-2.md)): 84 runs on harder tasks, all successful again. On cost, against Claude Code alone: sobre 1.09, rtk 1.12, Headroom 1.25, lean-ctx 1.77, with wide intervals over 6 tasks.
-- **sobre's development arms** ([docs/sobre-dev.md](docs/sobre-dev.md)) measure a build of sobre that removes rc.1's overhead. It costs what Claude Code alone costs: 1.01 on pilot 1 and 1.00 on pilot 2, against 1.13 and 1.09 for rc.1. They are kept apart from the released tools' results.
+- **Pilot 1 is done** ([docs/pilot-1.md](docs/pilot-1.md)): 100 runs, all successful. Its tasks were too easy to separate the arms on success. On cost, against Claude Code alone: rtk 1.06, sobre 1.13, Headroom 1.14, lean-ctx 1.62.
+- **Pilot 2 is done** ([docs/pilot-2.md](docs/pilot-2.md)): 84 runs on harder tasks, all successful again. On cost, against Claude Code alone: sobre 1.08, rtk 1.10, Headroom 1.30, lean-ctx 1.81, with wide intervals over 6 tasks.
+- **sobre's development arms** ([docs/sobre-dev.md](docs/sobre-dev.md)) measure a build of sobre that removes rc.1's overhead. It costs what Claude Code alone costs: 1.02 on pilot 1 and 1.01 on pilot 2, against 1.13 and 1.08 for rc.1. They are kept apart from the released tools' results.
 
 ## Why another benchmark
 

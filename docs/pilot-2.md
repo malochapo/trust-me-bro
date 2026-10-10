@@ -47,21 +47,23 @@ The pilot ran 6 tasks × 7 arms × 2 repetitions, 84 runs in all. Every run was 
 
 | Arm | Mean cost per run | Cost vs native, geometric mean of per-task ratios | 95% CI | Turns |
 | --- | --- | --- | --- | --- |
-| native | $0.091 | 1 | | 7.0 |
-| rtk 0.51.0 | $0.101 | 1.12 | 0.92–1.48 | 8.2 |
-| Headroom 0.40.0 | $0.114 | 1.25 | 1.17–1.35 | 7.0 |
-| sobre 0.1.0-rc.1 | $0.107 | 1.09 | 0.95–1.27 | 7.8 |
-| lean-ctx 3.11.2 | $0.166 | 1.77 | 1.49–2.07 | 11.0 |
-| `sobre-dev` | $0.093 | 1.00 | 0.91–1.11 | 6.9 |
-| `sobre-hooks` | $0.088 | 0.97 | 0.82–1.08 | 6.7 |
+| native | $0.077 | 1 | | 7.0 |
+| sobre 0.1.0-rc.1 | $0.088 | 1.08 | 0.96–1.23 | 7.8 |
+| rtk 0.51.0 | $0.085 | 1.10 | 0.91–1.44 | 8.2 |
+| Headroom 0.40.0 | $0.100 | 1.30 | 1.22–1.40 | 7.0 |
+| lean-ctx 3.11.2 | $0.141 | 1.81 | 1.52–2.11 | 11.0 |
+| `sobre-dev` | $0.079 | 1.01 | 0.92–1.10 | 6.9 |
+| `sobre-hooks` | $0.074 | 0.97 | 0.83–1.09 | 6.7 |
 
-**Spend:** $8.70 computed for the 84 runs. Across both pilots and every arm, the computed spend is $19.40, plus about $1 for the judge and the leakage checks.
+Costs use the corrected price of Sonnet 5.5 cache hits ($0.10 per million tokens; PROTOCOL.md changelog).
+
+**Spend:** $7.72 computed for the 84 runs. Across both pilots and every arm, the computed spend is $16.54, plus about $1 for the judge and the leakage checks.
 
 **Flag:** one rtk run (`ci-red-regressions`, repetition 1) ran a network command.
 
 ## What pilot 2 taught
 
-1. **Harder tasks did not separate the arms on success either.** Sonnet 5.5 solved all 84 runs, the three-regression CI task and the cross-layer feature included. Runs cost 40% more than in pilot 1 ($0.091 against $0.065 for native), with more turns. They were still not long enough to strain the context.
+1. **Harder tasks did not separate the arms on success either.** Sonnet 5.5 solved all 84 runs, the three-regression CI task and the cross-layer feature included. Runs cost 40% more than in pilot 1 ($0.077 against $0.055 for native), with more turns. They were still not long enough to strain the context.
 2. **The agent keeps its outputs small by itself.** Even with megabytes of logs and full test-suite runs, it piped into `head`, `tail` and `cut`, and counted with `grep -c`. Tool results made up about 24% of native's cost. Logs, history and test output, the part a tool could compress without touching source code, made up about 12%.
 3. **The noise is wide with 6 tasks.** One cheap rtk run on the log task moves rtk's interval from 0.68 to 1.48 in repetition 1. `sobre-hooks` is native under another name on these tasks (same prompt, no compression), and it measured 0.97. Phase 2 needs more tasks and at least three repetitions, and an A/A arm that reports this noise directly.
 4. **Lean-ctx, Headroom and rc.1 sobre stay above 1 on harder tasks too.** lean-ctx's tools invite more turns (11 against 7). Headroom writes more to the cache (24k tokens per run against 15k), which its rewriting of the prompt may cause.
