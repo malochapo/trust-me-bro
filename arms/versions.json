@@ -41,6 +41,16 @@
       "extras_note": "[sandbox] = headroom's documented torch-free bundle (proxy, code, relevance, reports, otel, html, mcp, spreadsheet); [all] would add torch (ml), memory, image, voice, evals, which do not fit this disk",
       "python": "3.13",
       "binary": "headroom"
+    },
+    "sobre-dev": {
+      "tool": "sobre",
+      "version": "dev build of malochapo/sobre-ai@d4e6151fd (branch sobre-8ff0b8)",
+      "source": "local-build",
+      "commit": "d4e6151fd",
+      "build": "cargo build --locked --bin sobre (debug profile)",
+      "sha256": "8710dbf080be2d13ee57a769451aa9de3b92f2f36a919f9b34733abcfe57453c",
+      "binary": "sobre-dev",
+      "note": "A debug build: same behaviour and tokens as a release build, slower hooks. Install with arms/sobre-dev/install.sh <path to the built sobre binary>."
     }
   }
 }

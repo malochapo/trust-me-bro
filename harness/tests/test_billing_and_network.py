@@ -21,6 +21,13 @@ class CredentialsTest(unittest.TestCase):
             self.assertEqual(common.credentials("sobre"),
                              ({"CLAUDE_CODE_OAUTH_TOKEN": "sk-ant-oat01-y"}, "oauth_token"))
 
+    def test_dev_build_falls_back_to_its_arms_key(self):
+        with mock.patch.dict(os.environ, {"BENCH_KEY_SOBRE": "sk-ant-api03-s"}, clear=True):
+            self.assertEqual(common.credentials("sobre-dev"), ({"ANTHROPIC_API_KEY": "sk-ant-api03-s"}, "api_key"))
+        env = {"BENCH_KEY_SOBRE": "sk-ant-api03-s", "BENCH_KEY_SOBREDEV": "sk-ant-api03-d"}
+        with mock.patch.dict(os.environ, env, clear=True):
+            self.assertEqual(common.credentials("sobre-dev"), ({"ANTHROPIC_API_KEY": "sk-ant-api03-d"}, "api_key"))
+
     def test_nothing_set(self):
         with mock.patch.dict(os.environ, {}, clear=True):
             self.assertEqual(common.credentials("judge"), ({}, None))
