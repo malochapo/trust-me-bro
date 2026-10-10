@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Runs a matrix of (task, arm, rep), then grades it. Sequential.
+"""Runs a matrix of (task, arm, rep), then grades it.
 
 For each rep and each task (tasks shuffled per rep), every arm runs back to back in a
 random order drawn from a fixed seed, so drift over the hours of a bench (API latency,
@@ -8,6 +8,10 @@ timeout or error are skipped; invalid runs are run again (--rerun-errors also re
 timeouts and errors). Each ok run is graded as soon as it ends, then its work dir
 (checkout, venv, home) is deleted unless --keep-work: a run takes a few hundred MB.
 Any ok run still without graded.json is graded at the end.
+
+Runs are sequential by default. --jobs N runs N at a time, each on its own Postgres
+server: ports 5432 to 5432+N-1 (BENCH_DB_PORT for run.py and grade.py, see common.py).
+Every server needs the same user and password (postgres / dispatch).
 
 Usage: python3 -I harness/bench.py --tasks 'tasks/*/task.json' --arms native,sobre --reps 3
 Extra run.py options go after "--", e.g. `-- --effort high --timeout-min 30`.
@@ -20,9 +24,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script
 
 import argparse
 import glob
+import os
+import queue
 import random
 import shutil
 import subprocess
+import threading
 
 import common
 from run import run_id_for
@@ -73,6 +80,7 @@ def main(argv=None):
     p.add_argument("--stop-at-usd", type=float, default=None,
                    help="stop before a run once the computed cost of every run in --out reaches this")
     p.add_argument("--dry-run", action="store_true", help="print the plan and exit")
+    p.add_argument("--jobs", type=int, default=1, help="runs at a time, one Postgres server each")
     args = p.parse_args(argv)
 
     task_files = sorted({f for pattern in args.tasks.split(",") if pattern
@@ -94,26 +102,52 @@ def main(argv=None):
         for _, _, _, run_id in todo:
             print(run_id)
         return 0
-    if todo and "--no-pg-check" not in passthrough and not common.postgres_ready():
-        raise SystemExit("Postgres is not reachable on localhost:5432 (pg_isready -h localhost)")
+    ports = [5432 + i for i in range(max(1, args.jobs))]
+    if todo and "--no-pg-check" not in passthrough:
+        down = [port for port in ports if not common.postgres_ready(port=port)]
+        if down:
+            raise SystemExit(f"Postgres is not reachable on localhost port(s) {down} (pg_isready -h localhost -p PORT)")
 
     grade_opts = ["--claude-bin", args.claude_bin, "--judge-model", args.judge_model]
-    for i, (task_file, arm, rep, run_id) in enumerate(todo, 1):
-        spent = spent_usd(out)
-        if args.stop_at_usd is not None and spent >= args.stop_at_usd:
-            print(f"stopping: ${spent:.2f} spent, limit ${args.stop_at_usd:.2f}", flush=True)
-            break
-        print(f"[{i}/{len(todo)}] {run_id} (${spent:.2f} spent so far)", flush=True)
-        force = ["--force"] if (out / run_id).exists() else []
-        subprocess.run([sys.executable, "-I", str(HERE / "run.py"), "--task-file", task_file,
-                        "--arm", arm, "--rep", str(rep), "--out", str(out), "--claude-bin", args.claude_bin,
-                        *force, *passthrough])
-        meta = common.read_json(out / run_id / "meta.json") or {}
-        if meta.get("status") == "ok" and not args.no_grade:
-            subprocess.run([sys.executable, "-I", str(HERE / "grade.py"), str(out / run_id), *grade_opts])
-        work = (meta.get("work") or {}).get("dir")
-        if work and not args.keep_work:
-            shutil.rmtree(work, ignore_errors=True)
+    items = queue.Queue()
+    for i, item in enumerate(todo, 1):
+        items.put((i, item))
+    print_lock, stopped = threading.Lock(), threading.Event()
+
+    def say(text):
+        with print_lock:
+            print(text, flush=True)
+
+    def worker(port):
+        env = {**os.environ, "BENCH_DB_PORT": str(port)}
+        while not stopped.is_set():
+            try:
+                i, (task_file, arm, rep, run_id) = items.get_nowait()
+            except queue.Empty:
+                return
+            spent = spent_usd(out)
+            if args.stop_at_usd is not None and spent >= args.stop_at_usd:
+                say(f"stopping: ${spent:.2f} spent, limit ${args.stop_at_usd:.2f}")
+                stopped.set()
+                return
+            say(f"[{i}/{len(todo)}] {run_id} (${spent:.2f} spent so far)"
+                + (f" [db {port}]" if len(ports) > 1 else ""))
+            force = ["--force"] if (out / run_id).exists() else []
+            subprocess.run([sys.executable, "-I", str(HERE / "run.py"), "--task-file", task_file,
+                            "--arm", arm, "--rep", str(rep), "--out", str(out), "--claude-bin", args.claude_bin,
+                            *force, *passthrough], env=env)
+            meta = common.read_json(out / run_id / "meta.json") or {}
+            if meta.get("status") == "ok" and not args.no_grade:
+                subprocess.run([sys.executable, "-I", str(HERE / "grade.py"), str(out / run_id), *grade_opts], env=env)
+            work = (meta.get("work") or {}).get("dir")
+            if work and not args.keep_work:
+                shutil.rmtree(work, ignore_errors=True)
+
+    threads = [threading.Thread(target=worker, args=(port,)) for port in ports]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
 
     if args.no_grade:
         return 0

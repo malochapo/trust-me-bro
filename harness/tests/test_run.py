@@ -36,7 +36,7 @@ class RunTest(unittest.TestCase):
         r = run_harness("run.py", ["--task-file", self.task, "--arm", arm, "--rep", 1, "--fixture", self.fixture,
                                    "--out", self.out, "--work", self.work, "--claude-bin", claude,
                                    "--arms-dir", self.arms, "--no-venv", "--no-pg-check", *extra], self.env)
-        run_id = run.run_id_for("t-001", arm, 1)
+        run_id = run.run_id_for(json.loads(Path(self.task).read_text())["id"], arm, 1)
         run_dir = self.out / run_id
         meta = json.loads((run_dir / "meta.json").read_text()) if (run_dir / "meta.json").exists() else None
         rec = json.loads(record.read_text()) if record.exists() else None
@@ -100,6 +100,23 @@ class RunTest(unittest.TestCase):
         for key in ("task_sha256", "start_utc", "end_utc", "wall_seconds", "exit_code", "timed_out", "init"):
             self.assertIn(key, meta)
         self.assertEqual(meta["init"]["mcp_servers"], {})
+
+    def test_followups_resume_the_session(self):
+        self.task = make_task(self.root, task_id="t-turns", prompt="First, in {DATA_DIR}.",
+                              followups=["Second.", "Third, again in {DATA_DIR}."])
+        r, run_dir, meta, rec = self.run_arm("native")
+        self.assertEqual(meta["status"], "ok", meta.get("invalid_reason"))
+        self.assertEqual((meta["turns_planned"], meta["turns_completed"]), (3, 3))
+        argv = rec["argv"]  # the last turn's
+        self.assertEqual(argv[:2], ["-p", "Third, again in " + str(self.work / run.work_name(meta["run_id"]) / "data") + "."])
+        self.assertEqual(argv[argv.index("--resume") + 1], "00000000-0000-4000-8000-000000000001")
+        events = [json.loads(l) for l in (run_dir / "stream.jsonl").read_text().splitlines() if l.strip()]
+        self.assertEqual(sum(1 for e in events if e.get("type") == "result"), 3)
+        self.assertEqual((run_dir / "answers.md").read_text().count(run.TURN_SEPARATOR), 2)
+        self.assertEqual((run_dir / "prompt.txt").read_text().count(run.TURN_SEPARATOR), 2)
+        u = json.loads((run_dir / "usage.json").read_text())
+        self.assertEqual(u["conversation_turns"], 3)
+        self.assertAlmostEqual(u["cost_usd"], 3 * 0.024828, places=6)
 
     def test_arm_extra_env_mcp_and_daemon(self):
         r, run_dir, meta, rec = self.run_arm("stubarm")

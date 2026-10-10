@@ -7,7 +7,8 @@ nothing, probes the arm, and writes everything to <out>/<run_id>/:
 
   stream.jsonl   Claude Code's stream-json output (stdout)
   stderr.txt     its stderr
-  prompt.txt     the exact prompt
+  prompt.txt     the exact prompt (every turn's, for a multi-turn task)
+  answers.md     every turn's final answer, for a multi-turn task (answer.md is the last)
   answer.md      the final answer (the result event's `result`)
   changes.patch  the repo's diff against the fixture commit (agent commits included), plus
                  untracked files as new-file diffs, listed on top
@@ -42,6 +43,7 @@ import time
 import common
 import usage
 
+TURN_SEPARATOR = "\n\n----- next turn -----\n\n"
 RESERVED_ENV = {"PATH", "HOME", "CLAUDE_CONFIG_DIR", "CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"}
 
 # Shell commands that reach the network: the agent could fetch upstream Dispatch and diff it.
@@ -181,9 +183,11 @@ def stop_daemon(home):
     return "still running"
 
 
-def run_agent(cmd, cwd, env, out_dir, timeout_s):
-    """Runs claude in its own session; returns (exit code, timed out)."""
-    with open(out_dir / "stream.jsonl", "wb") as so, open(out_dir / "stderr.txt", "wb") as se:
+def run_agent(cmd, cwd, env, out_dir, timeout_s, append=False):
+    """Runs claude in its own session; returns (exit code, timed out). A later turn of a
+    multi-turn run appends to the first turn's stream and stderr."""
+    mode = "ab" if append else "wb"
+    with open(out_dir / "stream.jsonl", mode) as so, open(out_dir / "stderr.txt", mode) as se:
         proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdin=subprocess.DEVNULL, stdout=so, stderr=se,
                                 start_new_session=True)
         timed_out = False
@@ -262,23 +266,30 @@ def main_loop_models(events):
 
 
 def decide_status(meta, events, result, model, expected_servers):
-    reason, summary = validate_init(usage.init_event(events), model, expected_servers)
+    inits = [e for e in events if e.get("type") == "system" and e.get("subtype") == "init"]
+    reason, summary = validate_init(inits[0] if inits else None, model, expected_servers)
     meta["init"] = summary
+    for later in inits[1:]:  # each resumed turn starts its own process: check its billing too
+        if not reason and meta.get("auth") == "api_key" and later.get("apiKeySource") != "ANTHROPIC_API_KEY":
+            reason = f"a later turn was not billed to the arm's API key (apiKeySource {later.get('apiKeySource')!r})"
     other = sorted(m for m in main_loop_models(events) if m != model and not m.startswith(model))
     if not reason and other:
         reason = f"main loop answered by {other}"
     if not reason and meta.get("auth") == "api_key" and (summary or {}).get("apiKeySource") != "ANTHROPIC_API_KEY":
         # Without this the run could be billed to credentials the machine provides, not the arm's key.
         reason = f"not billed to the arm's API key (apiKeySource {(summary or {}).get('apiKeySource')!r})"
-    if not reason and result and result.get("is_error") and result.get("subtype") == "success":
-        # An API failure (auth, usage limit, ...) surfaced as the result: not the agent's doing.
-        reason = f"API error: {str(result.get('result'))[:300]}"
+    for r in usage.result_events(events):
+        if not reason and r.get("is_error") and r.get("subtype") == "success":
+            # An API failure (auth, usage limit, ...) surfaced as the result: not the agent's doing.
+            reason = f"API error: {str(r.get('result'))[:300]}"
     if reason:
         return "invalid", reason
     if meta["timed_out"]:
         return "timeout", None
     if result is None or result.get("subtype") == "error_during_execution":
         return "error", None
+    if meta.get("turns_completed", 1) < meta.get("turns_planned", 1):
+        return "error", None  # a turn failed, so the conversation never reached its last message
     return "ok", None
 
 
@@ -306,8 +317,9 @@ def execute(args, task, run_id, out_dir, work, claude, version, creds, auth):
         meta["fixture_head"] = git("rev-parse", "HEAD", cwd=repo).strip()
         data = copy_data(task, work / "data")
         meta["work"]["data"] = str(data) if data else None
-        prompt = task["prompt"].replace("{DATA_DIR}", str(data or work / "data"))
-        (out_dir / "prompt.txt").write_text(prompt)
+        data_dir = str(data or work / "data")
+        prompts = [text.replace("{DATA_DIR}", data_dir) for text in [task["prompt"], *(task.get("followups") or [])]]
+        (out_dir / "prompt.txt").write_text(TURN_SEPARATOR.join(prompts))
         if not args.no_venv:
             common.build_run_venv(venv, repo, args.deps_venv, log)
         make_toolbin(toolbin, args.arm, args.bench_tools)
@@ -329,18 +341,32 @@ def execute(args, task, run_id, out_dir, work, claude, version, creds, auth):
         agent_path = ([] if args.no_venv else [venv / "bin"]) + base_path
         agent_env = common.clean_env(home, agent_path, extra)
         agent_env.update(creds)
-        cmd = [claude, "-p", prompt,
-               "--model", args.model, "--effort", args.effort,
+        flags = ["--model", args.model, "--effort", args.effort,
                "--output-format", "stream-json", "--verbose",
                "--setting-sources", "user",
                "--strict-mcp-config", "--mcp-config", str(mcp_config),
                "--permission-mode", "bypassPermissions",
                "--max-turns", str(args.max_turns), "--max-budget-usd", f"{args.max_budget_usd:g}",
-               "--disallowedTools", "WebFetch", "WebSearch"]  # variadic: keep it last
-        meta["cmd"] = [c if c != prompt else "<prompt.txt>" for c in cmd]
+                 "--disallowedTools", "WebFetch", "WebSearch"]  # variadic: keep it last
+        meta["cmd"] = [claude, "-p", "<prompt.txt>", *flags]
+        meta["turns_planned"], meta["turns"] = len(prompts), []
         meta["start_utc"] = common.utc_now()
         start = time.monotonic()
-        meta["exit_code"], meta["timed_out"] = run_agent(cmd, repo, agent_env, out_dir, args.timeout_min * 60)
+        deadline = start + args.timeout_min * 60  # one limit for the whole conversation
+        session_id = None
+        for n, text in enumerate(prompts, 1):
+            # A later turn resumes the session, as a user typing their next message would.
+            resume = ["--resume", session_id] if session_id else []
+            rc, timed_out = run_agent([claude, "-p", text, *resume, *flags], repo, agent_env, out_dir,
+                                      max(1.0, deadline - time.monotonic()), append=n > 1)
+            meta["turns"].append({"exit_code": rc, "timed_out": timed_out})
+            meta["exit_code"], meta["timed_out"] = rc, timed_out
+            if timed_out or rc != 0 or n == len(prompts):
+                break
+            session_id = (usage.init_event(usage.read_events(out_dir / "stream.jsonl")) or {}).get("session_id")
+            if not session_id:
+                break
+        meta["turns_completed"] = sum(1 for t in meta["turns"] if t["exit_code"] == 0 and not t["timed_out"])
         meta["wall_seconds"] = round(time.monotonic() - start, 1)
         meta["end_utc"] = common.utc_now()
 
@@ -356,6 +382,9 @@ def execute(args, task, run_id, out_dir, work, claude, version, creds, auth):
     events = usage.read_events(out_dir / "stream.jsonl")
     result = usage.result_event(events)
     (out_dir / "answer.md").write_text((result or {}).get("result") or "")
+    if meta.get("turns_planned", 1) > 1:
+        (out_dir / "answers.md").write_text(TURN_SEPARATOR.join(
+            r.get("result") or "" for r in usage.result_events(events)))
     meta["untracked_files"] = capture_changes(repo, meta["fixture_head"], out_dir / "changes.patch")
     meta["agent_commits"] = int(git("rev-list", "--count", f"{meta['fixture_head']}..HEAD", cwd=repo))
     run_usage = usage.compute(out_dir / "stream.jsonl")

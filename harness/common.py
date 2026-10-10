@@ -16,18 +16,23 @@ ARMS_DIR = BENCH_ROOT / "arms"
 DEFAULT_FIXTURE = BENCH_ROOT / "build" / "fixture.git"
 DEFAULT_PLANTS = BENCH_ROOT / "build" / "plants.json"
 DEFAULT_WORK = Path("/tmp/sobre-bench-work")
-ALL_ARMS = ["native", "sobre", "sobre-dev", "sobre-hooks", "lean-ctx", "headroom", "rtk"]
-# Variants of an arm (a development build, or the same build set up differently) bill to
-# that arm's key unless they have their own.
-VARIANT_SUFFIXES = ("-dev", "-hooks")
+ALL_ARMS = ["native", "sobre", "sobre-dev", "sobre-dev-06", "sobre-dev-09", "sobre-hooks", "lean-ctx", "headroom", "rtk"]
+# The released tools' arms. A variant of one (a development build, or the same build set up
+# differently) is named "<arm>-<variant>" and bills to that arm's key unless it has its own.
+BASE_ARMS = ["native", "sobre", "lean-ctx", "headroom", "rtk"]
 
 # The agent sees only these system directories, never the harness's own PATH
 # (which, inside another Claude Code session, holds that session's tooling).
 SYSTEM_PATH = ["/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/sbin", "/bin"]
 
 # Runs and grading share one Postgres database (`dispatch-test`, hard-coded in the
-# fixture's tests/conftest.py), so they take this lock and never overlap.
-LOCK_FILE = Path(os.environ.get("BENCH_LOCK_FILE", "/tmp/sobre-bench.lock"))
+# fixture's tests/conftest.py), so they take this lock and never overlap. A run's slot is
+# the Postgres server it uses, BENCH_DB_PORT (default 5432), which Dispatch reads as
+# DATABASE_PORT: each slot has its own lock, so runs on different servers can overlap
+# (bench.py --jobs).
+DB_PORT = int(os.environ.get("BENCH_DB_PORT") or 5432)
+LOCK_FILE = Path(os.environ.get("BENCH_LOCK_FILE")
+                 or ("/tmp/sobre-bench.lock" if DB_PORT == 5432 else f"/tmp/sobre-bench.{DB_PORT}.lock"))
 
 
 def read_json(path, default=None):
@@ -60,6 +65,8 @@ def clean_env(home, path_dirs, extra=None):
         "IS_SANDBOX": "1",
         "DISABLE_AUTOUPDATER": "1",
     }
+    if DB_PORT != 5432:
+        env["DATABASE_PORT"] = str(DB_PORT)
     env.update(extra or {})
     return env
 
@@ -80,9 +87,9 @@ def credentials(who):
     """
     env_name = lambda name: "BENCH_KEY_" + name.upper().replace("-", "").replace("_", "")
     key = os.environ.get(env_name(who))
-    variant = next((s for s in VARIANT_SUFFIXES if who.endswith(s)), None)
-    if not key and variant:
-        key = os.environ.get(env_name(who[: -len(variant)]))
+    base = next((a for a in sorted(BASE_ARMS, key=len, reverse=True) if who.startswith(a + "-")), None)
+    if not key and base:
+        key = os.environ.get(env_name(base))
     if key:
         return {"ANTHROPIC_API_KEY": key}, "api_key"
     token = oauth_token()
@@ -125,8 +132,9 @@ def claude_version(claude):
     return (r.stdout or r.stderr).strip()
 
 
-def postgres_ready(host="localhost", port=5432):
-    """pg_isready when installed, else a plain TCP connect."""
+def postgres_ready(host="localhost", port=None):
+    """pg_isready when installed, else a plain TCP connect. Default port: this slot's."""
+    port = port or DB_PORT
     if shutil.which("pg_isready"):
         r = subprocess.run(["pg_isready", "-h", host, "-p", str(port)], capture_output=True)
         return r.returncode == 0

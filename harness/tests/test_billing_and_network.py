@@ -31,6 +31,9 @@ class CredentialsTest(unittest.TestCase):
     def test_hooks_variant_falls_back_to_its_arms_key(self):
         with mock.patch.dict(os.environ, {"BENCH_KEY_SOBRE": "sk-ant-api03-s"}, clear=True):
             self.assertEqual(common.credentials("sobre-hooks"), ({"ANTHROPIC_API_KEY": "sk-ant-api03-s"}, "api_key"))
+            self.assertEqual(common.credentials("sobre-dev-09"), ({"ANTHROPIC_API_KEY": "sk-ant-api03-s"}, "api_key"))
+        with mock.patch.dict(os.environ, {"BENCH_KEY_LEANCTX": "sk-ant-api03-l"}, clear=True):
+            self.assertEqual(common.credentials("lean-ctx-dev"), ({"ANTHROPIC_API_KEY": "sk-ant-api03-l"}, "api_key"))
 
     def test_nothing_set(self):
         with mock.patch.dict(os.environ, {}, clear=True):

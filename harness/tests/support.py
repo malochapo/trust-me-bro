@@ -38,7 +38,8 @@ def make_fixture(root):
     return bare
 
 
-def make_task(root, task_id="t-001", data=True, grader=None, prompt="Read {DATA_DIR}/app.log and answer."):
+def make_task(root, task_id="t-001", data=True, grader=None, prompt="Read {DATA_DIR}/app.log and answer.",
+              followups=None):
     d = root / "tasks" / task_id
     d.mkdir(parents=True)
     if data:
@@ -46,6 +47,8 @@ def make_task(root, task_id="t-001", data=True, grader=None, prompt="Read {DATA_
         (d / "data" / "app.log").write_text("log line\n")
     task = {"id": task_id, "family": "code-qa", "prompt": prompt, "data": data,
             "grader": grader or {"kind": "facts", "must": [{"id": "v", "any_of": [r"VALUE:\s*45"]}], "must_not": []}}
+    if followups:
+        task["followups"] = followups
     (d / "task.json").write_text(json.dumps(task))
     return d / "task.json"
 
