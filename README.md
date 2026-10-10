@@ -41,7 +41,7 @@ VIRTUAL_ENV=~/.cache/sobre-bench/deps uv pip install -r fixture/requirements.loc
 python3 -I tasks/validate.py --fixture build/fixture.git --deps-venv ~/.cache/sobre-bench/deps
 ```
 
-Running the benchmark itself is described in [harness/README.md](harness/README.md).
+Running the benchmark itself is described in [harness/README.md](harness/README.md). The steps for phases 0 and 1 are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 ## License
 

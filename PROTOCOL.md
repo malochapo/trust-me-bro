@@ -14,7 +14,7 @@ With Claude Code and Sonnet 5.5, does each tool lower the cost of completing rea
 
 These are the same for every arm:
 - **Model and effort:** `claude-sonnet-5-5` at effort `medium`. Claude Code is pinned to one version.
-- **Limits:** at most 80 turns, an $8 budget cap and a 25-minute timeout per run.
+- **Limits:** at most 80 turns, a $3 budget cap and a 25-minute timeout per run.
 - **Isolation:** each run gets an empty home directory, its own `CLAUDE_CONFIG_DIR`, explicit settings and MCP configuration (`--setting-sources user --strict-mcp-config`), and an environment rebuilt from scratch. Permissions are bypassed.
 - **No web:** WebFetch and WebSearch are disabled, and the agent's shell gets no proxy. Some hosts may still be reachable directly, so any run whose shell commands look like network access (curl, wget, git clone/fetch/pull, package installs, URLs) is flagged and listed in the report. That way, an agent that fetched upstream Dispatch to diff away the planted changes is visible.
 - **Authentication:** one API key per arm, so the console bills each arm separately, or else a Claude subscription token. A run that should have been billed to its arm's key but was not (its `apiKeySource` shows otherwise) is invalid. Cache writes are counted with their actual lifetime (5 minutes or 1 hour), whatever Claude Code uses with that authentication.
@@ -55,8 +55,8 @@ A run succeeds when its grader passes, or when the judge gives it 2 or more. A r
 
 ## Phases
 
-- **Phase 0:** harness smoke runs and the leakage check.
-- **Phase 1, the pilot:** 10 tasks × 5 arms × 2 repetitions = 100 runs. It checks the harness and estimates variance and cost, which set the number of tasks and repetitions for phase 2. It makes no claims.
+- **Phase 0:** the leakage check (`harness/leakage.py`).
+- **Phase 1, the pilot:** it runs on $100 of API credit, with one key per arm, so each arm's billed cost can be checked against the cost formula. First, one run per arm on a single task, inspected by hand. Then 10 tasks × 5 arms × 1 repetition = 50 runs, plus a second repetition if the credit allows. The pilot checks the harness and estimates variance and cost, which set the number of tasks and repetitions for phase 2. It makes no claims. The steps are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
 - **Phase 2:** 40 to 60 tasks × 5 arms × 3 or more repetitions, under this protocol frozen.
 - **Phase 3:** a subset of SWE-QA-Pro, as an external task set.
 
@@ -78,3 +78,4 @@ A run succeeds when its grader passes, or when the judge gives it 2 or more. A r
   - timeouts and crashes are scored as failures;
   - shell network access is flagged;
   - Headroom is installed with `[sandbox]`.
+- 2026-10-10: the pilot runs on API credit, with a $3 cap per run and one repetition, plus a second if the credit allows.

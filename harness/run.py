@@ -62,7 +62,7 @@ def parse_args(argv):
     p.add_argument("--model", default="claude-sonnet-5-5")
     p.add_argument("--effort", default="medium")
     p.add_argument("--max-turns", type=int, default=80)
-    p.add_argument("--max-budget-usd", type=float, default=8)
+    p.add_argument("--max-budget-usd", type=float, default=3)
     p.add_argument("--timeout-min", type=float, default=25)
     p.add_argument("--claude-bin", default="claude")
     p.add_argument("--bench-tools", default=os.environ.get("BENCH_TOOLS", str(Path.home() / ".cache/sobre-bench/tools")))

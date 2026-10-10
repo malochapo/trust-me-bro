@@ -81,7 +81,7 @@ class RunTest(unittest.TestCase):
         self.assertEqual(pairs["--mcp-config"], str(work / "home" / "mcp.json"))
         self.assertEqual(pairs["--permission-mode"], "bypassPermissions")
         self.assertEqual(pairs["--max-turns"], "80")
-        self.assertEqual(pairs["--max-budget-usd"], "8")
+        self.assertEqual(pairs["--max-budget-usd"], "3")
         self.assertIn("--verbose", argv)
         self.assertIn("--strict-mcp-config", argv)
         self.assertEqual(argv[-3:], ["--disallowedTools", "WebFetch", "WebSearch"])

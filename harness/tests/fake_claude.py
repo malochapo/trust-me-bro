@@ -145,9 +145,11 @@ def stream(argv, scenario):
     emit(result)
 
 
-def judge(argv):
+def judge(argv, scenario="ok"):
+    # "leak": the model answers a fact task right without the code (leakage.py's case)
+    result = "It is 45 minutes.\nVALUE: 45 minutes" if scenario == "leak" else ""
     print(json.dumps({"type": "result", "subtype": "success", "is_error": False, "session_id": SESSION,
-                      "result": "", "num_turns": 2, "total_cost_usd": 0.001,
+                      "result": result, "num_turns": 2, "total_cost_usd": 0.001,
                       "structured_output": {"score": 2, "reasons": "stub judge"}}))
 
 
@@ -163,7 +165,7 @@ def main():
         Path(record_to).write_text(json.dumps({"argv": argv, "env": dict(os.environ),
                                                "cwd": os.getcwd(), "stdin": stdin}))
     if opt(argv, "--output-format") == "json":
-        judge(argv)
+        judge(argv, scenario)
     else:
         stream(argv, scenario)
 
