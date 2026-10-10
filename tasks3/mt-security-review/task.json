@@ -1,0 +1,107 @@
+{
+  "id": "mt-security-review",
+  "family": "multi-turn",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. Security review: which endpoints of the case API (src/dispatch/case/views.py) and the incident API (src/dispatch/incident/views.py) change data (POST, PUT, PATCH or DELETE routes) without declaring a PermissionsDependency in their route definition? List all of them, and only them. Do not change any code yet.\n",
+  "followups": [
+    "Thanks. Some of those are open on purpose: anyone may report a case or an incident. Is any of the others a regression rather than a design choice? If so, find the commit that removed its check, restore the check it had, and add a test that fails if the check goes missing again. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.\n",
+    "Another finding from the same review: a member of the security team says the cases list shows them restricted cases they do not take part in. Find the cause and fix it. The existing tests are correct; do not change them. Which commit introduced it?\n",
+    "Thanks. For the review report, give me a recap that ends with these four lines, in this exact form:\nUNPROTECTED_AT_START: <every handler that changed data without a PermissionsDependency before your changes, comma-separated, as case.<function> or incident.<function>>\nRESTORED: <the handler whose check you restored, as case.<function> or incident.<function>>\nREMOVED_BY: <hash of the commit that removed its check, at least 8 characters>\nVISIBILITY_BUG: <hash of the commit that let members see restricted cases they do not take part in, at least 8 characters>\n"
+  ],
+  "data": null,
+  "grader": {
+    "kind": "all",
+    "graders": [
+      {
+        "kind": "tests",
+        "command": [
+          "bash",
+          "-c",
+          "git checkout {FIXTURE_HEAD} -- tests/database && python -m pytest -q -p no:cacheprovider tests/database tests/event/test_hidden_mt_event_permission.py"
+        ],
+        "regression": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/case",
+          "tests/event"
+        ]
+      },
+      {
+        "kind": "facts",
+        "must": [
+          {
+            "id": "create_case",
+            "any_of": [
+              "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bcase\\.create_case\\b(?!_)"
+            ]
+          },
+          {
+            "id": "create_case_channel",
+            "any_of": [
+              "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bcase\\.create_case_channel\\b"
+            ]
+          },
+          {
+            "id": "create_case_resources",
+            "any_of": [
+              "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bcase\\.create_case_resources\\b"
+            ]
+          },
+          {
+            "id": "create_incident",
+            "any_of": [
+              "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bincident\\.create_incident\\b(?!_)"
+            ]
+          },
+          {
+            "id": "incident_delete_custom_event",
+            "any_of": [
+              "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bincident\\.delete_custom_event\\b"
+            ]
+          },
+          {
+            "id": "restored",
+            "any_of": [
+              "^\\s*RESTORED:\\s*`?incident\\.delete_custom_event\\b"
+            ]
+          },
+          {
+            "id": "removed-by",
+            "any_of": [
+              "^\\s*REMOVED_BY:\\s*`?{plant:q5-unprotected-event-delete:short}"
+            ]
+          },
+          {
+            "id": "visibility-bug",
+            "any_of": [
+              "^\\s*VISIBILITY_BUG:\\s*`?{plant:q1-restricted-case-filter:short}"
+            ]
+          }
+        ],
+        "must_not": [
+          {
+            "id": "case_delete_custom_event",
+            "regex": "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bcase\\.delete_custom_event\\b"
+          },
+          {
+            "id": "incident_create_resources",
+            "regex": "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bincident\\.create_incident_resources\\b"
+          },
+          {
+            "id": "protected_case",
+            "regex": "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bcase\\.(update_case|escalate_case|delete_case|join_case)\\b"
+          },
+          {
+            "id": "protected_incident",
+            "regex": "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bincident\\.(update_incident|delete_incident|join_incident|subscribe_to_incident)\\b"
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Turn 1 is tasks2/audit-unprotected-endpoints. Turn 2: of the three entries left once creation is set aside, only incident.delete_custom_event is a regression: plant q5 (Sam Ortega, 2025-07-14, \"refactor(incident): tidy custom event routes\") dropped its PermissionsDependency([IncidentEventPermission]), which git log -L or -S shows; create_case_channel and create_case_resources never had one. Hidden test: the DELETE route's dependency tree holds a PermissionsDependency with IncidentEventPermission. Turn 3 is plant q1 (the restricted case filter flattened into an or_), checked by the original tests/database, restored before the run. The recap's first line must list the handlers as they were before turn 2 restored one: a fresh look at the code after the fixes gives four, not five."
+}

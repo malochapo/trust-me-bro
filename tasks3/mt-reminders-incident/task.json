@@ -1,0 +1,81 @@
+{
+  "id": "mt-reminders-incident",
+  "family": "multi-turn",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform; it is the code we run in production. Since mid-August, assignees no longer get the weekly Monday reminders to close their long-running triage and stable cases, while the daily triage reminders still arrive. Nobody changed the reminder settings. The scheduler's and the API's logs from 2025-07-28 to 2025-08-20 are in {DATA_DIR}/scheduler.log and {DATA_DIR}/api.log. Find the root cause, and the deploy that shipped it to production. Do not change any code yet.\n",
+  "followups": [
+    "Thanks. Please fix it, and add a regression test that would have caught it. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.\n",
+    "While you were in those logs: the case close reminder job also logs a TypeError every evening. Find out what causes it. Those cases should still get their weekly reminder: when the timestamp the job counts from is missing, count from when the case was created instead. Fix it and add a test.\n",
+    "Good. I am writing the incident report. Give me a recap that ends with these six lines, in this exact form:\nFILE: <path of the file with the weekday bug>\nFUNCTION: <name of the function with the weekday bug>\nINTRODUCED_BY: <hash of the commit that introduced the weekday bug, at least 8 characters>\nDEPLOYED_IMAGE: <image tag of the deploy that shipped it>\nFIRST_MISSED: <date of the first Monday whose weekly reminders were not sent, YYYY-MM-DD>\nMISSING_FIELD: <the case attribute whose absence caused the evening TypeError>\n"
+  ],
+  "data": "build/pilot2/data/log-reminders-stopped",
+  "grader": {
+    "kind": "all",
+    "graders": [
+      {
+        "kind": "tests",
+        "command": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/case/test_hidden_mt_case_reminders.py"
+        ],
+        "regression": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/case"
+        ]
+      },
+      {
+        "kind": "facts",
+        "must": [
+          {
+            "id": "file",
+            "any_of": [
+              "^\\s*FILE:\\s*`?\\S*case/scheduled\\.py\\b"
+            ]
+          },
+          {
+            "id": "function",
+            "any_of": [
+              "^\\s*FUNCTION:\\s*`?(\\S*\\.)?_is_reminder_day\\b"
+            ]
+          },
+          {
+            "id": "commit",
+            "any_of": [
+              "^\\s*INTRODUCED_BY:\\s*`?{plant:q4-reminder-day:short}"
+            ]
+          },
+          {
+            "id": "image",
+            "any_of": [
+              "^\\s*DEPLOYED_IMAGE:[^\\n]*main-{plant:17b016b61a604caa0f0a090ec5ec018ca0c13dbf:short}"
+            ]
+          },
+          {
+            "id": "first-missed",
+            "any_of": [
+              "^\\s*FIRST_MISSED:\\s*`?2025-08-18\\b"
+            ]
+          },
+          {
+            "id": "missing-field",
+            "any_of": [
+              "^\\s*MISSING_FIELD:\\s*`?(case\\.|Case\\.)?triage_at\\b"
+            ]
+          }
+        ],
+        "must_not": []
+      }
+    ]
+  },
+  "notes": "Turn 1 is the log diagnosis of tasks2/log-reminders-stopped (plant q4: _is_reminder_day compares isoweekday(), Monday = 1, with calendar.MONDAY, 0), plus the deploy: the scheduler and API pods rolled out at 2025-08-13T16:40Z run image main-81d8ae42, the replayed upstream commit 17b016b6 (#6183), which already contains q4; Mondays 07-28, 08-04 and 08-11 sent close reminders, 08-18 sent none. Turn 2 fixes it (hidden tests run the unwrapped jobs from scheduler.registered_tasks with the case modules' date and datetime frozen on Monday 2025-08-18 and on Tuesday 2025-08-19). Turn 3 needs the logs again: every evening case_close_reminder logs `unsupported operand type(s) for -: 'datetime.datetime' and 'NoneType'` from `datetime.utcnow() - case.triage_at`, for a case imported straight into Triage without triage_at (case_stable_reminder logged the same error for stable_at until the 08-13 deploy, whose code guards it). The requested behavior, counting from created_at, is checked by the hidden tests, which also require that no error is logged. The recap repeats facts from turns 1 and 3 after two turns of code changes; the function asked for is the one with the bug, even if turn 2 renamed or removed it."
+}

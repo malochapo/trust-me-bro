@@ -1,0 +1,76 @@
+{
+  "id": "mt-dedup-snooze-regressions",
+  "family": "multi-turn",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. Since 2025-05-22, which commits changed how Dispatch decides whether a new signal instance is snoozed or deduplicated, including the time windows it uses for that? For each one, give its hash and what it changed, with the windows' values and units as the code applies them today. Do not change any code yet.\n",
+  "followups": [
+    "Thanks. Since one of those changes, deduplication filters group far fewer instances than they should. The signal \"GuardDuty: Unauthorized API call\" has a deduplication filter whose window is set to 30 in the UI, yet two of its instances for the same user, ten minutes apart, opened two cases. Which of the commits you listed caused it? Fix the code so that a filter's window means what the UI says, and existing filters work without being edited. Add a regression test. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.\n",
+    "Another report, maybe from the same batch of changes: the signal \"Okta: Impossible travel\" has two snooze filters for the same user, one that expired last week and one that is valid until next month, and new instances for that user are no longer snoozed. Find the cause, fix it, and add a regression test.\n",
+    "Thanks. For the changelog, give me a recap that ends with these five lines, in this exact form:\nDEDUP_WINDOW_BUG: <hash of the commit that broke deduplication windows, at least 8 characters>\nSNOOZE_BUG: <hash of the commit that broke snoozing, at least 8 characters>\nCANARY: <hash of the commit that changed how canary signals are deduplicated, at least 8 characters>\nDEFAULT_WINDOW: <the grouping window that applies to signals without any filter, number and unit>\nDEFAULT_WINDOW_SETTING: <name of the setting that changes it>\n"
+  ],
+  "data": null,
+  "grader": {
+    "kind": "all",
+    "graders": [
+      {
+        "kind": "tests",
+        "command": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/signal/test_hidden_mt_dedup_window.py",
+          "tests/signal/test_hidden_mt_snooze_filters.py"
+        ],
+        "regression": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/signal"
+        ]
+      },
+      {
+        "kind": "facts",
+        "must": [
+          {
+            "id": "dedup-window-bug",
+            "any_of": [
+              "^\\s*DEDUP_WINDOW_BUG:\\s*`?{plant:p4-dedup-window-seconds:short}"
+            ]
+          },
+          {
+            "id": "snooze-bug",
+            "any_of": [
+              "^\\s*SNOOZE_BUG:\\s*`?{plant:p5-snooze-refactor:short}"
+            ]
+          },
+          {
+            "id": "canary",
+            "any_of": [
+              "^\\s*CANARY:\\s*`?{plant:e46fa023b7b8899f4a5f24336ce84699618ed196:short}"
+            ]
+          },
+          {
+            "id": "default-window",
+            "any_of": [
+              "^\\s*DEFAULT_WINDOW:\\s*`?45\\s*(min|minutes)\\b"
+            ]
+          },
+          {
+            "id": "default-window-setting",
+            "any_of": [
+              "^\\s*DEFAULT_WINDOW_SETTING:\\s*`?SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES\\b"
+            ]
+          }
+        ],
+        "must_not": []
+      }
+    ]
+  },
+  "notes": "Turn 1 is the history question of tasks2/history-dedup-commits: upstream #6026 (no deduplication of canary signals), and plants p1 (default window configurable, 45 minutes, SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES), p5 (snooze refactor) and p4 (per-filter window read as seconds). Turn 2 asks which listed commit broke deduplication windows (p4; the UI labels the window in minutes, the SignalFilter model's comment says seconds) and to fix it so that stored windows keep their UI meaning; hidden test: a filter with window 30 groups an instance with one from 10 minutes earlier, and a window of 5 does not. Turn 3 is the bug of tasks/fix-snooze-expired-filter (p5: `break` on an expired snooze filter), with that task's hidden test. The recap needs the canary commit and the default window from turn 1, after two turns of fixes."
+}
