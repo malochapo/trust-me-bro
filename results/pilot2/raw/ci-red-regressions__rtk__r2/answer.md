@@ -1,0 +1,6 @@
+The suite is green again: 351 passed and 4 skipped, with `tests/ai/test_ai_service.py` ignored as you said. Two real bugs were behind the failures, and I didn't touch any tests.
+
+- **Case visibility (`src/dispatch/database/service.py`):** `restricted_case_filter` let members see every restricted case. The restricted check and the participant-email check were two separate `or_` branches instead of being combined with `and_`. A restricted case now shows only to a member who is a participant, which matches how `restricted_incident_filter` already works.
+- **Entity extraction (`src/dispatch/entity/service.py`):** commit `beb60cc4` ("stop at the first JSONPath match") added `[:1]` to `jpath.find(...)`. That dropped matches for multi-value paths like `asset[*].id`. I reverted that change, so every match is yielded again.
+
+`python -m pytest` fails here at conftest with `No module named 'slack_sdk'`, even though a plain `import slack_sdk` works. I didn't find the cause. I ran the suite as `python -c "import pytest,sys; sys.exit(pytest.main([...]))"` instead, which collected and ran normally.

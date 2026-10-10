@@ -1,0 +1,200 @@
+# untracked files (their diffs follow the tracked changes):
+#   src/dispatch/database/revisions/tenant/versions/2025-09-02_a3c1e5d79b24.py
+diff --git a/src/dispatch/signal/models.py b/src/dispatch/signal/models.py
+index d583b957..9b4e1cc5 100644
+--- a/src/dispatch/signal/models.py
++++ b/src/dispatch/signal/models.py
+@@ -112,6 +112,7 @@ class SignalFilterMode(DispatchEnum):
+ class SignalFilterAction(DispatchEnum):
+     deduplicate = "deduplicate"
+     snooze = "snooze"
++    mute = "mute"
+     none = "none"
+ 
+ 
+@@ -134,6 +135,7 @@ class Signal(Base, TimeStampMixin, ProjectMixin):
+     case_priority_id = Column(Integer, ForeignKey(CasePriority.id))
+     case_priority = relationship("CasePriority", backref="signals")
+     create_case = Column(Boolean, default=True)
++    muted_until = Column(DateTime, nullable=True)
+     conversation_target = Column(String)
+     default = Column(Boolean, default=False)
+     lifecycle = Column(String)
+@@ -334,6 +336,7 @@ class SignalBase(DispatchBase):
+     source: SourceBase | None = None
+     variant: str | None = None
+     lifecycle: str | None = None
++    muted_until: datetime | None = None
+     runbook: str | None = None
+     genai_enabled: bool | None = True
+     genai_model: str | None = None
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..5f9b9dab 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -867,7 +867,8 @@ def filter_signal(*, db_session: Session, signal_instance: SignalInstance) -> bo
+     """
+     Apply filter actions to the signal instance.
+ 
+-    The function first checks if the signal instance is snoozed. If not snoozed,
++    If the signal is muted, the instance is filtered with the mute action and
++    nothing else is evaluated. Otherwise the function checks if the instance is snoozed. If not snoozed,
+     it checks for a deduplication rule set on the signal instance. If no
+     deduplication rule is set, a default deduplication rule is applied,
+     grouping all signal instances together for a 1-hour window, regardless of
+@@ -882,6 +883,13 @@ def filter_signal(*, db_session: Session, signal_instance: SignalInstance) -> bo
+     """
+     filtered = False
+ 
++    muted_until = signal_instance.signal.muted_until
++    if muted_until and muted_until.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
++        # a muted signal skips the snooze and dedup filters entirely
++        signal_instance.filter_action = SignalFilterAction.mute
++        db_session.commit()
++        return True
++
+     signal_instance = filter_snooze(db_session=db_session, signal_instance=signal_instance)
+ 
+     # we only dedupe if we haven't been snoozed
+diff --git a/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue b/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
+index b91cd91b..6e0c72ee 100644
+--- a/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
++++ b/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
+@@ -171,6 +171,16 @@
+                     persistent-hint
+                   />
+                 </v-col>
++                <v-col cols="12">
++                  <v-text-field
++                    v-model="mutedUntilInput"
++                    type="datetime-local"
++                    label="Muted until (UTC)"
++                    hint="While muted, new instances of this signal are recorded but never open a case. Leave empty to unmute."
++                    persistent-hint
++                    clearable
++                  />
++                </v-col>
+                 <v-col cols="12">
+                   <case-type-select v-model="case_type" :project="project" label="Type" />
+                 </v-col>
+@@ -376,6 +386,14 @@ export default {
+   },
+ 
+   computed: {
++    mutedUntilInput: {
++      get() {
++        return this.muted_until ? this.muted_until.slice(0, 16) : ""
++      },
++      set(value) {
++        this.muted_until = value ? new Date(`${value}:00Z`).toISOString() : null
++      },
++    },
+     ...mapFields("signal", [
+       "dialogs.showCreateEdit",
+       "selected.runbook",
+@@ -398,6 +416,7 @@ export default {
+       "selected.id",
+       "selected.lifecycle",
+       "selected.loading",
++      "selected.muted_until",
+       "selected.name",
+       "selected.oncall_service",
+       "selected.owner",
+diff --git a/src/dispatch/static/dispatch/src/signal/Table.vue b/src/dispatch/static/dispatch/src/signal/Table.vue
+index 3d922919..e0634681 100644
+--- a/src/dispatch/static/dispatch/src/signal/Table.vue
++++ b/src/dispatch/static/dispatch/src/signal/Table.vue
+@@ -45,6 +45,9 @@
+             <template #item.create_case="{ value }">
+               <v-checkbox-btn :model-value="value" disabled />
+             </template>
++            <template #item.muted_until="{ value }">
++              <span v-if="value">{{ value.slice(0, 16).replace("T", " ") }} UTC</span>
++            </template>
+             <template #item.enabled="{ value }">
+               <v-checkbox-btn :model-value="value" disabled />
+             </template>
+@@ -130,6 +133,7 @@ export default {
+         { title: "Description", value: "description", sortable: false },
+         { title: "Enabled", value: "enabled", sortable: true },
+         { title: "Create Case", value: "create_case", sortable: true, width: "100px" },
++        { title: "Muted until", value: "muted_until", sortable: true },
+         { title: "Owner", value: "owner" },
+         { title: "Lifecycle", value: "lifecycle" },
+         { title: "Case Type", value: "case_type" },
+diff --git a/src/dispatch/static/dispatch/src/signal/store.js b/src/dispatch/static/dispatch/src/signal/store.js
+index a2cec415..cfc4b04d 100644
+--- a/src/dispatch/static/dispatch/src/signal/store.js
++++ b/src/dispatch/static/dispatch/src/signal/store.js
+@@ -25,6 +25,7 @@ const getDefaultSelectedState = () => {
+     id: null,
+     lifecycle: null,
+     loading: false,
++    muted_until: null,
+     name: null,
+     oncall_service: null,
+     owner: null,
+diff --git a/tests/signal/test_signal_service.py b/tests/signal/test_signal_service.py
+index c253a7f3..1495bcce 100644
+--- a/tests/signal/test_signal_service.py
++++ b/tests/signal/test_signal_service.py
+@@ -824,3 +824,29 @@ def test_canary_signals_not_deduplicated(session, signal, project):
+     # Check that the canary signal instance is not deduplicated (should have same case_id as before)
+     assert canary_signal_instance.case_id == initial_case_id
+     assert canary_signal_instance.filter_action != SignalFilterAction.deduplicate
++
++
++def test_filter_signal_muted(session, signal, project):
++    from datetime import datetime, timedelta, timezone
++    from dispatch.signal.models import SignalFilterAction
++    from dispatch.signal.service import filter_signal
++    from tests.factories import SignalInstanceFactory
++
++    signal.muted_until = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=1)
++    instance = SignalInstanceFactory(signal=signal, project=project, case=None)
++    session.add(instance)
++    session.commit()
++
++    assert filter_signal(db_session=session, signal_instance=instance)
++    assert instance.filter_action == SignalFilterAction.mute
++    assert instance.case_id is None
++
++    # an expired mute no longer filters
++    signal.muted_until = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=1)
++    instance2 = SignalInstanceFactory(signal=signal, project=project)
++    session.add(instance2)
++    session.commit()
++
++    assert instance2.filter_action != SignalFilterAction.mute
++    filter_signal(db_session=session, signal_instance=instance2)
++    assert instance2.filter_action != SignalFilterAction.mute
+diff --git a/src/dispatch/database/revisions/tenant/versions/2025-09-02_a3c1e5d79b24.py b/src/dispatch/database/revisions/tenant/versions/2025-09-02_a3c1e5d79b24.py
+new file mode 100644
+index 00000000..63e03f9a
+--- /dev/null
++++ b/src/dispatch/database/revisions/tenant/versions/2025-09-02_a3c1e5d79b24.py
+@@ -0,0 +1,24 @@
++"""Add muted_until to signal
++
++Revision ID: a3c1e5d79b24
++Revises: ff08d822ef2c
++Create Date: 2025-09-02 10:00:00.000000
++
++"""
++
++from alembic import op
++import sqlalchemy as sa
++
++# revision identifiers, used by Alembic.
++revision = "a3c1e5d79b24"
++down_revision = "ff08d822ef2c"
++branch_labels = None
++depends_on = None
++
++
++def upgrade():
++    op.add_column("signal", sa.Column("muted_until", sa.DateTime(), nullable=True))
++
++
++def downgrade():
++    op.drop_column("signal", "muted_until")

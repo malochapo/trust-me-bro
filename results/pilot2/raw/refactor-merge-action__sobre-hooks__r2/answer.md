@@ -1,0 +1,7 @@
+`deduplicate` is now `merge` everywhere, including the stored values, and nothing in `src/dispatch` outside the migrations contains the word any more. I ran `tests/signal` (32 passed, 1 skipped) but not the full suite. I did not run the new migration against a database, and I did not check that `ff08d822ef2c` is still the only tenant head.
+
+- **Backend:** `SignalFilterAction.merge = "merge"` in `signal/models.py`, plus the uses in `signal/service.py` and `signal/flows.py`.
+- **Web UI:** the chip colour and label map in `TableInstanceTriggers.vue`, and the radio option and condition in `SignalFilterCreateDialog.vue`. The radio is now labelled "Merge". I left the instance chip text as "Duplicate" so the UI wording there doesn't change.
+- **Migration:** `2025-09-02_3c1d7a9e5b42.py` (tenant revisions, down revision `ff08d822ef2c`). It updates `signal_filter.action` and `signal_instance.filter_action` from `deduplicate` to `merge`, and the downgrade reverses that.
+- **Tests:** `tests/signal/test_signal_service.py` and `tests/factories.py` now use `merge`, including the test function names and comments.
+- **Docs:** I also updated the enum in `docs/scripts/openapi.yaml`. I left `docs/docs/administration/settings/signal/filter.mdx` alone, since it's outside `src/dispatch` and still says "deduplicate", "deduplicated" and "Deduplication Filter".

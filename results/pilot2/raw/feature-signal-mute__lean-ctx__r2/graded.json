@@ -1,0 +1,44 @@
+{
+  "arm": "lean-ctx",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_signal_mute.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 0,
+      "last_line": "40 passed, 1 skipped in 15.48s",
+      "seconds": 20.5
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_signal_mute.py"
+      ],
+      "exit": 0,
+      "last_line": "6 passed in 5.23s",
+      "seconds": 10.4
+    }
+  },
+  "graded_at": "2026-10-10T21:24:59+00:00",
+  "kind": "tests",
+  "pass": true,
+  "rep": 2,
+  "run_id": "feature-signal-mute__lean-ctx__r2",
+  "score": 1.0,
+  "task_id": "feature-signal-mute",
+  "task_sha256": "e5b92346490ab25409a9e1999692e284fe290f7a224f88cd251593b245de4dc4"
+}

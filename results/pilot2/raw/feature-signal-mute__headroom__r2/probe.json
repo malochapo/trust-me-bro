@@ -1,0 +1,14 @@
+{
+  "active": true,
+  "api_requests": 13,
+  "code_aware": "ENABLED",
+  "kompress": {
+    "backend": "onnx",
+    "ready": true,
+    "status": "healthy"
+  },
+  "primary_model": "claude-sonnet-5-5",
+  "requests_compressed": 13,
+  "tokens_before": 261639,
+  "tokens_removed": 3276
+}
