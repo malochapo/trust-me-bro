@@ -8,7 +8,7 @@ With Claude Code and Sonnet 5.5, does each tool lower the cost of completing rea
 
 ## Arms
 
-`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`. Each one gets its vendor's documented default setup for Claude Code, at the version pinned in `arms/versions.json`. Headroom runs in proxy mode, not through `headroom wrap`, because `wrap` also adds the Serena MCP server, which would make it a different tool. Any tool that documents a one-time index or warm-up step gets it before the run starts, so every run starts warm.
+`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`. Each one gets its vendor's documented default setup for Claude Code, at the version pinned in `arms/versions.json`. Headroom runs in proxy mode, not through `headroom wrap`, because `wrap` also adds the Serena MCP server, which would make it a different tool. It is installed with its `[sandbox]` extra: its documented torch-free bundle, which keeps code-aware compression and Kompress (through ONNX). The `[all]` extra would add torch and features that do not apply to a single run, such as memory, images and voice. Any tool that documents a one-time index or warm-up step gets it before the run starts, so every run starts warm.
 
 ## Fixed run settings
 
@@ -16,8 +16,8 @@ These are the same for every arm:
 - **Model and effort:** `claude-sonnet-5-5` at effort `medium`. Claude Code is pinned to one version.
 - **Limits:** at most 80 turns, an $8 budget cap and a 25-minute timeout per run.
 - **Isolation:** each run gets an empty home directory, its own `CLAUDE_CONFIG_DIR`, explicit settings and MCP configuration (`--setting-sources user --strict-mcp-config`), and an environment rebuilt from scratch. Permissions are bypassed.
-- **No web:** WebFetch and WebSearch are disabled. The agent's shell gets no proxy, so it cannot reach the internet. Only Claude Code itself reaches the API.
-- **Authentication:** a Claude subscription token (`CLAUDE_CODE_OAUTH_TOKEN`).
+- **No web:** WebFetch and WebSearch are disabled, and the agent's shell gets no proxy. Some hosts may still be reachable directly, so any run whose shell commands look like network access (curl, wget, git clone/fetch/pull, package installs, URLs) is flagged and listed in the report. That way, an agent that fetched upstream Dispatch to diff away the planted changes is visible.
+- **Authentication:** one API key per arm, so the console bills each arm separately, or else a Claude subscription token. A run that should have been billed to its arm's key but was not (its `apiKeySource` shows otherwise) is invalid. Cache writes are counted with their actual lifetime (5 minutes or 1 hour), whatever Claude Code uses with that authentication.
 - **Ordering:** the arms run in an interleaved order shuffled with a fixed seed, so drift over time (API load, caching, model serving) does not favor one arm.
 
 ## Fixture
@@ -31,7 +31,7 @@ The pilot has 10 tasks:
 - **Hidden tests (3 tasks):** these tests fail on the fixture and pass with the reference fix. The regression suite must pass too.
 - **Blind judge (1 task):** Claude Sonnet 5.5 scores 0–3 against a reference and a rubric. It never sees the arm, and names that would reveal the arm are masked in the answer.
 
-A run succeeds when its grader passes, or when the judge gives it 2 or more.
+A run succeeds when its grader passes, or when the judge gives it 2 or more. A run that times out or crashes counts as a failure, and its cost counts too: those are the arm's outcomes, and dropping them could favor an arm.
 
 ## Outcomes
 
@@ -49,7 +49,7 @@ A run succeeds when its grader passes, or when the judge gives it 2 or more.
 
 ## Validity
 
-- **Run checks:** a run counts only if its `system/init` event shows the expected model and every MCP server of its arm connected, and if the arm's probe shows activity. Any other run is marked invalid, re-run, and never scored. Invalid runs are listed in the report.
+- **Run checks:** a run is invalid if its `system/init` event does not show the expected model and every MCP server of its arm connected, if the API failed, or if it was billed to the wrong credentials. Invalid runs are re-run and never scored, but the report lists them. A run whose arm probe shows no activity is flagged, still scored, and listed.
 - **Leakage check (phase 0):** each fact task is put to the model with no repository and no tools. A task it answers correctly is dropped.
 - **Judge calibration (phase 2):** a person scores about 50 judged answers blind, and the report gives the agreement (Cohen's kappa).
 
@@ -73,3 +73,8 @@ A run succeeds when its grader passes, or when the judge gives it 2 or more.
 ## Changelog
 
 - 2026-10-10: first draft.
+- 2026-10-10:
+  - per-arm API keys, with a check that each run was billed to its key;
+  - timeouts and crashes are scored as failures;
+  - shell network access is flagged;
+  - Headroom is installed with `[sandbox]`.

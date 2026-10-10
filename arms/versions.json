@@ -1,0 +1,46 @@
+{
+  "as_of": "2026-10-10",
+  "note": "Latest release of each tool on 2026-10-10. install.sh installs exactly these; run.py copies the arm's entry into meta.json.",
+  "arms": {
+    "native": {
+      "tool": null,
+      "version": null
+    },
+    "sobre": {
+      "tool": "sobre",
+      "version": "0.1.0-rc.1",
+      "source": "github-release",
+      "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.1/sobre-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "2dcc5790d05412f906c8ea33bbc71d2fa5d7c989e6d95501849a0fef60e0fd0d",
+      "binary": "sobre",
+      "version_output": "sobre 0.1.0",
+      "version_output_note": "the rc.1 binary prints 'sobre 0.1.0' (fixed after rc.1); the sha256 pins the exact build"
+    },
+    "rtk": {
+      "tool": "rtk",
+      "version": "0.51.0",
+      "source": "github-release",
+      "url": "https://github.com/rtk-ai/rtk/releases/download/v0.51.0/rtk-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "5028d3b19a8f0990d30fec9fbb07e32782bc5698e618fb1861aad8a9ccba4eb5",
+      "binary": "rtk"
+    },
+    "lean-ctx": {
+      "tool": "lean-ctx",
+      "version": "3.11.2",
+      "source": "github-release",
+      "url": "https://github.com/yvgude/lean-ctx/releases/download/v3.11.2/lean-ctx-x86_64-unknown-linux-gnu.tar.gz",
+      "sha256": "25153e740fb217c43f4033e3751d9c6e4aec60d97f410ec0396b418e01d313d8",
+      "binary": "lean-ctx"
+    },
+    "headroom": {
+      "tool": "headroom",
+      "version": "0.40.0",
+      "source": "pypi",
+      "package": "headroom-ai",
+      "extras": "sandbox",
+      "extras_note": "[sandbox] = headroom's documented torch-free bundle (proxy, code, relevance, reports, otel, html, mcp, spreadsheet); [all] would add torch (ml), memory, image, voice, evals, which do not fit this disk",
+      "python": "3.13",
+      "binary": "headroom"
+    }
+  }
+}
