@@ -11,6 +11,8 @@ Grader kinds (task.json `grader.kind`):
          suite; [] for none). pass = both exit 0. Logs: grade_tests.log, grade_regression.log.
          Serial: the fixture's tests use one fixed Postgres database.
   judge  harness/judge.py; pass = score >= grader.pass_score (default 2).
+  all    `graders` = a list of the kinds above; pass = every one passes, score = their
+         mean. For a multi-turn task: the repo's final state and the last answer both count.
 
 Usage: python3 -I harness/grade.py <run dir> [<run dir> ...] [--force]
 """
@@ -166,14 +168,24 @@ def grade_run(run_dir, args):
     grader = task["grader"]
     kind = grader["kind"]
     answer = (run_dir / "answer.md").read_text() if (run_dir / "answer.md").exists() else ""
-    if kind == "facts":
-        graded = grade_facts(grader, answer, load_plants(args.plants or plants_for(meta)))
-    elif kind == "tests":
-        graded = grade_tests(grader, task, run_dir, meta)
-    elif kind == "judge":
-        graded = grade_judge(grader, task, run_dir, args)
+
+    def grade_one(grader):
+        if grader["kind"] == "facts":
+            return grade_facts(grader, answer, load_plants(args.plants or plants_for(meta)))
+        if grader["kind"] == "tests":
+            return grade_tests(grader, task, run_dir, meta)
+        if grader["kind"] == "judge":
+            return grade_judge(grader, task, run_dir, args)
+        raise SystemExit(f"unknown grader kind {grader['kind']!r}")
+
+    if kind == "all":
+        parts = [dict(grade_one(g), kind=g["kind"]) for g in grader["graders"]]
+        scores = [p["score"] for p in parts]
+        graded = {"score": None if None in scores else sum(scores) / len(scores),
+                  "pass": None if any(p["pass"] is None for p in parts) else all(p["pass"] for p in parts),
+                  "details": {"parts": parts}}
     else:
-        raise SystemExit(f"unknown grader kind {kind!r}")
+        graded = grade_one(grader)
     graded.update(run_id=meta["run_id"], task_id=task["id"], arm=meta["arm"], rep=meta["rep"],
                   kind=kind, task_sha256=common.sha256_file(task["_file"]), graded_at=common.utc_now())
     if graded["task_sha256"] != meta.get("task_sha256"):

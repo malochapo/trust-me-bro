@@ -85,6 +85,15 @@ class GradeRunTest(unittest.TestCase):
         self.assertEqual(saved["run_id"], "log-x__native__r1")
         self.assertNotIn("warning", g)
 
+    def test_all_kind_passes_only_when_every_part_passes(self):
+        other = {"kind": "facts", "must": [{"id": "never", "any_of": ["NOT IN THE ANSWER"]}], "must_not": []}
+        for graders, passed, score in (([GRADER, GRADER], True, 1.0), ([GRADER, other], False, 0.5)):
+            self.task_file.write_text(json.dumps({"id": "log-x", "prompt": "q",
+                                                  "grader": {"kind": "all", "graders": graders}}))
+            g = grade.grade_run(self.run_dir, self.args())
+            self.assertEqual((g["kind"], g["pass"], g["score"]), ("all", passed, score))
+            self.assertEqual([part["kind"] for part in g["details"]["parts"]], ["facts", "facts"])
+
     def test_refuses_invalid_runs(self):
         meta = common.read_json(self.run_dir / "meta.json") | {"status": "invalid"}
         common.write_json(self.run_dir / "meta.json", meta)
