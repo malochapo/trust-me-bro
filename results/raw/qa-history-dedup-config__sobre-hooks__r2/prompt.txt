@@ -1,0 +1,7 @@
+This repository is Dispatch, an incident management platform. The grouping window that applies to signals without any filter used to be hard-coded. Find the commit that made it configurable.
+
+Finish your answer with these four lines, in this exact form:
+COMMIT: <commit hash, at least 8 characters>
+AUTHOR: <author name>
+DATE: <YYYY-MM-DD>
+PREVIOUS_VALUE: <value and unit before that commit>

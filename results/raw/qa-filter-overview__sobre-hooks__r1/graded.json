@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-hooks",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The candidate gets the order right: snooze, then dedup, then canary check, then case creation. It describes filter_snooze correctly, including the skip when there is no expiration and the `break` on an expired filter that ends the loop. It gives the 45-minute SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES default, applied only when the signal has no filters at all, and notes that the docstring's \"1 hour\" is wrong. Per-filter windows are treated as seconds via _window_start, with the column default 3600 and the pydantic default 600. It does not mention the UI labeling windows as minutes, but that is a minor gap. Canary handling matches the reference: never deduplicated, can be snoozed, and the flow returns before creating a case. I found no false statement. The extra claim about a possible null case_id is plausible and does not contradict the reference.",
+    "score": 3
+  },
+  "graded_at": "2026-10-10T20:36:13+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-filter-overview__sobre-hooks__r1",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

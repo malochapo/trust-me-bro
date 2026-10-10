@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-hooks",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The candidate gets the order right: snooze, then dedup, then case creation. It reports the break on an expired snooze filter and the resulting masking of later filters. It gives the 45-minute default from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, applied only when the signal has no filters, and notes the docstring's one-hour claim is wrong. It treats per-filter windows as seconds, with the 3600 column default and the 600 pydantic default. Canary handling matches the reference. Its extra detail (no case_id check in the filter branch, no expiration check for dedup filters) does not contradict the reference. The one omission is that it does not point out the UI mislabels the window as minutes, which is minor.",
+    "score": 3
+  },
+  "graded_at": "2026-10-10T20:39:54+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-filter-overview__sobre-hooks__r2",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

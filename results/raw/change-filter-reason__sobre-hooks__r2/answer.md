@@ -1,0 +1,5 @@
+Signal filters now have an optional `reason` field, stored in the database, accepted and returned by the API, and shown in the web UI. The existing signal tests pass (32 passed, 1 skipped). I didn't add a test for `reason` itself, run the migration, or check the UI in a browser.
+
+- **Model and API:** `SignalFilter` has a new nullable `reason` column in `signal/models.py`. I added `reason` to `SignalFilterBase`, so create, update and read all carry it. The existing create and update service code copies it over without changes.
+- **Migration:** `database/revisions/tenant/versions/2025-09-02_a1c3e5f7b9d2.py` adds and drops `signal_filter.reason`, and follows the latest tenant revision (`ff08d822ef2c`).
+- **UI:** The Snoozes table in `TableInstanceSnoozes.vue` has a "Reason" column. The create-filter dialog has an optional "Reason" textarea, and `filter/store.js` has the matching default. The textarea is on the name and description step, which also handles editing a filter.
