@@ -1,0 +1,6 @@
+This repository is Dispatch, an incident management platform. Feature request: let operators mute a signal definition until a given time. While a signal is muted, its new instances are still recorded, but each one is filtered with a new filter action `mute` and never opens a case; snooze and deduplication filters are not evaluated for a muted signal. The mute ends by itself at the given time. Concretely, add an optional `muted_until` timestamp to signal definitions:
+- store it in the database, with an Alembic migration in the tenant revisions;
+- accept it when a signal is created or updated through the API, and return it when signals are read;
+- in the web UI, show it as a "Muted until" column in the signal definitions table, and let users set it in the signal create/edit dialog.
+
+The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.
