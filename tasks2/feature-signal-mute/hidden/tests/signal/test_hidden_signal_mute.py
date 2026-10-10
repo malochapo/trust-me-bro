@@ -93,4 +93,6 @@ def test_ui_table_and_dialog():
     table = (UI / "Table.vue").read_text()
     assert re.search(r"title:\s*[\"']Muted until[\"']\s*,\s*(value|key):\s*[\"']muted_until[\"']", table, re.I)
     dialog = (UI / "NewEditDialog.vue").read_text()
-    assert re.search(r"v-model=\"[^\"]*\bmuted_until\b[^\"]*\"", dialog)
+    # the dialog edits the field, directly or through a computed wrapper (e.g. for time zones)
+    assert "muted_until" in dialog
+    assert re.search(r"v-model=\"[^\"]*muted[^\"]*\"", dialog, re.I)

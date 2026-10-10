@@ -21,6 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script dir off sys.path
 
 import argparse
+import os
 import re
 import shutil
 import subprocess
@@ -92,10 +93,33 @@ def run_logged(cmd, cwd, env, log_path):
             "last_line": tail[0] if tail else ""}
 
 
+def rebuild_work(meta, run_dir, base):
+    """A fresh checkout with the run's changes and its own venv, when the run's work dir is gone.
+
+    bench.py deletes each run's work dir once graded. To re-grade (after a grader fix), the
+    fixture is cloned at the run's starting commit and changes.patch (untracked files
+    included) is applied on top.
+    """
+    repo, venv = base / "repo", base / "venv"
+    subprocess.run(["git", "clone", "--quiet", meta["fixture"], str(repo)], check=True)
+    subprocess.run(["git", "checkout", "--quiet", meta["fixture_head"]], cwd=repo, check=True)
+    patch = run_dir / "changes.patch"
+    if patch.exists() and patch.stat().st_size:
+        subprocess.run(["git", "apply", "--whitespace=nowarn", str(patch)], cwd=repo, check=True)
+    deps = os.environ.get("BENCH_DEPS_VENV")
+    if not deps:
+        raise SystemExit("set BENCH_DEPS_VENV to rebuild a run's venv")
+    with open(run_dir / "rebuild.log", "w") as log:
+        common.build_run_venv(venv, repo, deps, log)
+    return {"repo": str(repo), "venv": str(venv)}
+
+
 def grade_tests(grader, task, run_dir, meta):
-    repo = Path(meta["work"]["repo"])
+    repo, scratch = Path(meta["work"]["repo"]), None
     if not repo.is_dir():
-        raise SystemExit(f"{repo} is gone (run with --cleanup?): cannot grade a tests task")
+        scratch = tempfile.mkdtemp(prefix="regrade-")
+        meta = {**meta, "work": {**meta["work"], **rebuild_work(meta, run_dir, Path(scratch))}}
+        repo = Path(meta["work"]["repo"])
     hidden = Path(task["_dir"]) / "hidden"
     copied = []
     if hidden.is_dir():
@@ -117,6 +141,8 @@ def grade_tests(grader, task, run_dir, meta):
         tests = run_logged(fill(grader["command"]), repo, env, run_dir / "grade_tests.log")
         reg = run_logged(fill(regression), repo, env, run_dir / "grade_regression.log") if regression else None
     ok = tests["exit"] == 0 and (reg is None or reg["exit"] == 0)
+    if scratch:
+        shutil.rmtree(scratch, ignore_errors=True)
     return {"score": 1.0 if ok else 0.0, "pass": ok,
             "details": {"hidden_files": copied, "tests": tests, "regression": reg}}
 
