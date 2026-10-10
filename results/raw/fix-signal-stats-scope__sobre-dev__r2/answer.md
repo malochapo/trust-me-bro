@@ -1,0 +1,5 @@
+The snooze counts for `GET /{signal_id}/stats` now only include snooze filters attached to that signal. `GET /signals/stats` still counts filters from every signal.
+
+The change is in `get_signal_stats` in `src/dispatch/signal/service.py`. When a `signal_id` is given, the snooze-filter query is restricted to filters linked to that signal through the `assoc_signal_filters` table. The instance counts are untouched.
+
+I added `test_get_signal_stats_snoozes_scoped_to_signal` to `tests/signal/test_signal_service.py`. It puts one active filter on one signal and an active plus an expired filter on a second signal. All three use the same entity, and the test checks each signal's counts and the unscoped total. The new test fails without the fix and passes with it, and the signal service test file passes (15 passed, 1 skipped; the skip is not the new test).

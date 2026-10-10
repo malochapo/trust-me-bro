@@ -1,0 +1,3 @@
+Fixed. In `filter_snooze` (`src/dispatch/signal/service.py`), the loop did a `break` when it reached an expired snooze filter. That stopped it from checking any filters after it, so a still-valid snooze filter behind an expired one never applied. I changed it to `continue`, so expired filters are skipped and the rest are still checked.
+
+I added a regression test, `test_filter_actions_snooze_expired_and_active`, in `tests/signal/test_signal_service.py`. It puts an expired snooze filter (7 days old) and a valid one (30 days out) on the same signal and checks that the instance gets snoozed. It fails without the fix and passes with it. The four snooze tests in that file pass; I did not run the rest of the suite.

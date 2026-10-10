@@ -1,0 +1,79 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..9fa573d9 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -33,6 +33,7 @@ from .exceptions import (
+     SignalNotIdentifiedException,
+ )
+ from .models import (
++    assoc_signal_filters,
+     assoc_signal_instance_entities,
+     Signal,
+     SignalCreate,
+@@ -1019,6 +1020,15 @@ def get_signal_stats(
+         active_count.label("active_count"), expired_count.label("expired_count")
+     ).filter(cast(SignalFilter.expression, JSONB).op("@>")(entity_subquery))
+ 
++    if signal_id:
++        query = query.filter(
++            SignalFilter.id.in_(
++                select(assoc_signal_filters.c.signal_filter_id).where(
++                    assoc_signal_filters.c.signal_id == signal_id
++                )
++            )
++        )
++
+     snooze_result = db_session.execute(query).fetchone()
+ 
+     # Calculate the date threshold based on num_days
+diff --git a/tests/signal/test_signal_service.py b/tests/signal/test_signal_service.py
+index c253a7f3..54b6ed56 100644
+--- a/tests/signal/test_signal_service.py
++++ b/tests/signal/test_signal_service.py
+@@ -824,3 +824,46 @@ def test_canary_signals_not_deduplicated(session, signal, project):
+     # Check that the canary signal instance is not deduplicated (should have same case_id as before)
+     assert canary_signal_instance.case_id == initial_case_id
+     assert canary_signal_instance.filter_action != SignalFilterAction.deduplicate
++
++
++def test_get_signal_stats_snoozes_scoped_to_signal(session, entity, signal, project):
++    from datetime import datetime, timedelta, timezone
++    from dispatch.signal.service import get_signal_stats
++    from tests.factories import SignalFactory, SignalFilterFactory
++
++    other_signal = SignalFactory(project=project)
++    session.add(entity)
++    expression = [{"or": [{"model": "Entity", "field": "id", "op": "==", "value": entity.id}]}]
++    now = datetime.now(timezone.utc)
++
++    def make_filter(name, delta):
++        return SignalFilterFactory(
++            name=name,
++            description="test",
++            expression=expression,
++            action="snooze",
++            expiration=now + delta,
++            project=project,
++        )
++
++    signal.filters = [make_filter("active1", timedelta(days=1))]
++    other_signal.filters = [
++        make_filter("active2", timedelta(days=1)),
++        make_filter("expired1", -timedelta(days=1)),
++    ]
++    session.commit()
++
++    kwargs = dict(
++        db_session=session, entity_value=entity.value, entity_type_id=entity.entity_type_id
++    )
++    stats = get_signal_stats(signal_id=signal.id, **kwargs)
++    assert stats.num_snoozes_active == 1
++    assert stats.num_snoozes_expired == 0
++
++    stats = get_signal_stats(signal_id=other_signal.id, **kwargs)
++    assert stats.num_snoozes_active == 1
++    assert stats.num_snoozes_expired == 1
++
++    stats = get_signal_stats(**kwargs)
++    assert stats.num_snoozes_active == 2
++    assert stats.num_snoozes_expired == 1

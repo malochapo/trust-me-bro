@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-dev",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The order is correct: snooze, then dedup, then case creation. Snooze handling is right, including the `break` on an expired filter, which stops later filters from being evaluated. The 45-minute default from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES applies only when the signal has no filters, and the answer notes the docstring still says one hour. Per-filter windows are treated as seconds, and the answer gives the 3600 column default and the 600 Pydantic default. It does not mention the UI minutes-versus-seconds mismatch, which is a minor gap. Canary handling is correct. It adds extra detail, such as the null `case_id` behaviour and the empty-entity case, and none of it contradicts the reference.",
+    "score": 3
+  },
+  "graded_at": "2026-10-10T20:21:19+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-filter-overview__sobre-dev__r1",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

@@ -1,0 +1,44 @@
+{
+  "arm": "sobre-dev",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_snooze_filters.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 0,
+      "last_line": "36 passed, 1 skipped in 14.45s",
+      "seconds": 18.8
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_snooze_filters.py"
+      ],
+      "exit": 0,
+      "last_line": "3 passed in 4.54s",
+      "seconds": 9.0
+    }
+  },
+  "graded_at": "2026-10-10T20:32:37+00:00",
+  "kind": "tests",
+  "pass": true,
+  "rep": 2,
+  "run_id": "fix-snooze-expired-filter__sobre-dev__r2",
+  "score": 1.0,
+  "task_id": "fix-snooze-expired-filter",
+  "task_sha256": "0611428841d0040e21cd5988ba08a90d7bd9075a0077846529336305bf91091d"
+}

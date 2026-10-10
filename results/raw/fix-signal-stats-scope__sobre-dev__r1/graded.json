@@ -1,0 +1,44 @@
+{
+  "arm": "sobre-dev",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_stats_scope.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 0,
+      "last_line": "36 passed, 1 skipped in 15.83s",
+      "seconds": 20.8
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_stats_scope.py"
+      ],
+      "exit": 0,
+      "last_line": "3 passed in 4.89s",
+      "seconds": 9.6
+    }
+  },
+  "graded_at": "2026-10-10T20:20:05+00:00",
+  "kind": "tests",
+  "pass": true,
+  "rep": 1,
+  "run_id": "fix-signal-stats-scope__sobre-dev__r1",
+  "score": 1.0,
+  "task_id": "fix-signal-stats-scope",
+  "task_sha256": "7f65270f8e18cbf37b64b8fab1bba8019ae2e730ab48acc965c7a730878b14ca"
+}
