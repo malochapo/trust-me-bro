@@ -44,41 +44,41 @@
     },
     "sobre-dev": {
       "tool": "sobre",
-      "version": "dev build of malochapo/sobre-ai@d4e6151fd (branch sobre-8ff0b8)",
+      "version": "dev build of malochapo/sobre-ai@cbab75497 (branch sobre-8ff0b8)",
       "source": "local-build",
-      "commit": "d4e6151fd",
+      "commit": "cbab75497",
       "build": "cargo build --locked --bin sobre (debug profile)",
-      "sha256": "8710dbf080be2d13ee57a769451aa9de3b92f2f36a919f9b34733abcfe57453c",
+      "sha256": "053df89482adb5a2653c0447706f0d8b7e25c08b88ba5cc7dbbdd638ecb0447c",
       "binary": "sobre-dev",
       "note": "A debug build: same behaviour and tokens as a release build, slower hooks. Install with arms/sobre-dev/install.sh <path to the built sobre binary>."
     },
     "sobre-hooks": {
       "tool": "sobre",
-      "version": "dev build of malochapo/sobre-ai@d4e6151fd (branch sobre-8ff0b8)",
+      "version": "dev build of malochapo/sobre-ai@cbab75497 (branch sobre-8ff0b8)",
       "source": "local-build",
-      "commit": "d4e6151fd",
+      "commit": "cbab75497",
       "build": "cargo build --locked --bin sobre (debug profile)",
-      "sha256": "8710dbf080be2d13ee57a769451aa9de3b92f2f36a919f9b34733abcfe57453c",
+      "sha256": "053df89482adb5a2653c0447706f0d8b7e25c08b88ba5cc7dbbdd638ecb0447c",
       "binary": "sobre-dev",
       "note": "The sobre-dev binary, set up without its MCP server and skill (arms/sobre-hooks/setup.sh)."
     },
     "sobre-dev-06": {
       "tool": "sobre",
-      "version": "dev build of malochapo/sobre-ai@d4e6151fd (branch sobre-8ff0b8)",
+      "version": "dev build of malochapo/sobre-ai@cbab75497 (branch sobre-8ff0b8)",
       "source": "local-build",
-      "commit": "d4e6151fd",
+      "commit": "cbab75497",
       "build": "cargo build --locked --bin sobre (debug profile)",
-      "sha256": "8710dbf080be2d13ee57a769451aa9de3b92f2f36a919f9b34733abcfe57453c",
+      "sha256": "053df89482adb5a2653c0447706f0d8b7e25c08b88ba5cc7dbbdd638ecb0447c",
       "binary": "sobre-dev",
       "note": "The sobre-dev binary with compression_level = 0.6 (arms/sobre-dev-06/setup.sh)."
     },
     "sobre-dev-09": {
       "tool": "sobre",
-      "version": "dev build of malochapo/sobre-ai@d4e6151fd (branch sobre-8ff0b8)",
+      "version": "dev build of malochapo/sobre-ai@cbab75497 (branch sobre-8ff0b8)",
       "source": "local-build",
-      "commit": "d4e6151fd",
+      "commit": "cbab75497",
       "build": "cargo build --locked --bin sobre (debug profile)",
-      "sha256": "8710dbf080be2d13ee57a769451aa9de3b92f2f36a919f9b34733abcfe57453c",
+      "sha256": "053df89482adb5a2653c0447706f0d8b7e25c08b88ba5cc7dbbdd638ecb0447c",
       "binary": "sobre-dev",
       "note": "The sobre-dev binary with compression_level = 0.9 (arms/sobre-dev-09/setup.sh)."
     }

@@ -10,7 +10,7 @@ timeouts and errors). Each ok run is graded as soon as it ends, then its work di
 Any ok run still without graded.json is graded at the end.
 
 Runs are sequential by default. --jobs N runs N at a time, each on its own Postgres
-server: ports 5432 to 5432+N-1 (BENCH_DB_PORT for run.py and grade.py, see common.py).
+server: ports --first-port (5432) to --first-port+N-1 (BENCH_DB_PORT for run.py and grade.py, see common.py).
 Every server needs the same user and password (postgres / dispatch).
 
 Usage: python3 -I harness/bench.py --tasks 'tasks/*/task.json' --arms native,sobre --reps 3
@@ -81,6 +81,7 @@ def main(argv=None):
                    help="stop before a run once the computed cost of every run in --out reaches this")
     p.add_argument("--dry-run", action="store_true", help="print the plan and exit")
     p.add_argument("--jobs", type=int, default=1, help="runs at a time, one Postgres server each")
+    p.add_argument("--first-port", type=int, default=5432, help="the first of the --jobs Postgres ports")
     args = p.parse_args(argv)
 
     task_files = sorted({f for pattern in args.tasks.split(",") if pattern
@@ -102,7 +103,7 @@ def main(argv=None):
         for _, _, _, run_id in todo:
             print(run_id)
         return 0
-    ports = [5432 + i for i in range(max(1, args.jobs))]
+    ports = [args.first_port + i for i in range(max(1, args.jobs))]
     if todo and "--no-pg-check" not in passthrough:
         down = [port for port in ports if not common.postgres_ready(port=port)]
         if down:
