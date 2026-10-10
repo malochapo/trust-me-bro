@@ -1,0 +1,39 @@
+diff --git a/src/dispatch/config.py b/src/dispatch/config.py
+index 754ae727b..38570e561 100644
+--- a/src/dispatch/config.py
++++ b/src/dispatch/config.py
+@@ -90,6 +90,11 @@ ENV_TAG_LIST = config("ENV_TAGS", cast=CommaSeparatedStrings, default="")
+ ENV_TAGS = get_env_tags(ENV_TAG_LIST)
+ 
+ DISPATCH_UI_URL = config("DISPATCH_UI_URL", default="http://localhost:8080")
++
++# signals
++SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES = config(
++    "SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES", cast=int, default=45
++)
+ DISPATCH_ENCRYPTION_KEY = config("DISPATCH_ENCRYPTION_KEY", cast=Secret)
+ 
+ # authentication
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index 2ac5c55c7..31ec084ec 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -16,6 +16,7 @@ from dispatch.case.models import Case
+ from dispatch.case.priority import service as case_priority_service
+ from dispatch.case.type import service as case_type_service
+ from dispatch.case.type.models import CaseType
++from dispatch.config import SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES
+ from dispatch.database.service import apply_filter_specific_joins, apply_filters
+ from dispatch.entity.models import Entity
+ from dispatch.entity_type import service as entity_type_service
+@@ -807,7 +808,9 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+         return signal_instance
+ 
+     if not signal_instance.signal.filters:
+-        default_dedup_window = datetime.now(timezone.utc) - timedelta(hours=1)
++        default_dedup_window = datetime.now(timezone.utc) - timedelta(
++            minutes=SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES
++        )
+         instance = (
+             db_session.query(SignalInstance)
+             .filter(

@@ -1,0 +1,37 @@
+{
+  "id": "log-dedup-regression",
+  "family": "log-diagnosis",
+  "prompt": "This repository is Dispatch, an incident management platform; it is the code we run in production. On-call report: since some time on 2025-08-14, every instance of the signal \"GuardDuty: Unauthorized API call\" opens a new case instead of joining the case that is already open, although nobody touched that signal's deduplication filter (its window is set to 120 in the UI). Other signals look fine. The signal worker's logs from 2025-08-13 to 2025-08-15 are in {DATA_DIR}/signal-worker.log. Find the root cause.\n\nFinish your answer with these four lines, in this exact form:\nFILE: <path of the file with the faulty code>\nFUNCTION: <name of the function with the faulty code>\nCAUSE: <one sentence>\nINTRODUCED_BY: <hash of the commit that introduced it, at least 8 characters>\n",
+  "data": "build/data/log-dedup-regression",
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "file",
+        "any_of": [
+          "FILE:\\s*`?(src/)?dispatch/signal/service\\.py\\b"
+        ]
+      },
+      {
+        "id": "function",
+        "any_of": [
+          "FUNCTION:\\s*`?(filter_dedup|_window_start)\\b"
+        ]
+      },
+      {
+        "id": "cause",
+        "any_of": [
+          "CAUSE:[^\\n]*\\bseconds?\\b"
+        ]
+      },
+      {
+        "id": "commit",
+        "any_of": [
+          "INTRODUCED_BY:\\s*`?{plant:p4-dedup-window-seconds:short}"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Plant p4 makes filter_dedup read SignalFilter.window as seconds (the model's comment says seconds; the UI says minutes). The log shows the deploy of image main-<sha> at 2025-08-14T20:05Z; git log between the two deployed images holds 5 commits, one of them p4. The log is 1.3 MB with red herrings (a DB blip, Slack conversation errors)."
+}

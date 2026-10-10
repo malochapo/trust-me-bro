@@ -1,0 +1,37 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index 9db217df4..f9cd72b74 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -781,6 +781,11 @@ def filter_snooze(*, db_session: Session, signal_instance: SignalInstance) -> Si
+     return signal_instance
+ 
+ 
++def _window_start(seconds: int) -> datetime:
++    """Returns the start of a lookback window that ends now."""
++    return datetime.now(timezone.utc) - timedelta(seconds=seconds)
++
++
+ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> SignalInstance:
+     """
+     Apply deduplication filter actions to the signal instance.
+@@ -797,9 +802,7 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+         return signal_instance
+ 
+     if not signal_instance.signal.filters:
+-        default_dedup_window = datetime.now(timezone.utc) - timedelta(
+-            minutes=SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES
+-        )
++        default_dedup_window = _window_start(SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES * 60)
+         instance = (
+             db_session.query(SignalInstance)
+             .filter(
+@@ -839,7 +842,8 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+         # Now apply filters
+         query = apply_filters(query, f.expression)
+ 
+-        window = datetime.now(timezone.utc) - timedelta(minutes=f.window)
++        # SignalFilter.window is stored in seconds
++        window = _window_start(f.window)
+         query = query.filter(SignalInstance.created_at >= window)
+         query = query.join(SignalInstance.entities).filter(
+             Entity.id.in_([e.id for e in signal_instance.entities])

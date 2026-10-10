@@ -1,0 +1,37 @@
+{
+  "id": "qa-history-dedup-config",
+  "family": "history-qa",
+  "prompt": "This repository is Dispatch, an incident management platform. The grouping window that applies to signals without any filter used to be hard-coded. Find the commit that made it configurable.\n\nFinish your answer with these four lines, in this exact form:\nCOMMIT: <commit hash, at least 8 characters>\nAUTHOR: <author name>\nDATE: <YYYY-MM-DD>\nPREVIOUS_VALUE: <value and unit before that commit>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "commit",
+        "any_of": [
+          "COMMIT:\\s*`?{plant:p1-default-dedup-window:short}"
+        ]
+      },
+      {
+        "id": "author",
+        "any_of": [
+          "AUTHOR:\\s*`?Jordan Lee\\b"
+        ]
+      },
+      {
+        "id": "date",
+        "any_of": [
+          "DATE:\\s*`?2025-06-19\\b"
+        ]
+      },
+      {
+        "id": "previous",
+        "any_of": [
+          "PREVIOUS_VALUE:\\s*`?(1\\s*hour|one\\s+hour|60\\s*min)"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Answerable only from git history (plant p1, 110 commits before HEAD). Exercises git log/show/-S output."
+}

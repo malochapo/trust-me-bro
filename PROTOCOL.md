@@ -1,0 +1,75 @@
+# Protocol
+
+This is a draft for the pilot (phase 1). It will be frozen before phase 2, the first phase whose results are published as findings. After that, any change is logged in the changelog at the end of this file, with its reason.
+
+## Question
+
+With Claude Code and Sonnet 5.5, does each tool lower the cost of completing realistic tasks on a real code base, without lowering the share of tasks completed?
+
+## Arms
+
+`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`. Each one gets its vendor's documented default setup for Claude Code, at the version pinned in `arms/versions.json`. Headroom runs in proxy mode, not through `headroom wrap`, because `wrap` also adds the Serena MCP server, which would make it a different tool. Any tool that documents a one-time index or warm-up step gets it before the run starts, so every run starts warm.
+
+## Fixed run settings
+
+These are the same for every arm:
+- **Model and effort:** `claude-sonnet-5-5` at effort `medium`. Claude Code is pinned to one version.
+- **Limits:** at most 80 turns, an $8 budget cap and a 25-minute timeout per run.
+- **Isolation:** each run gets an empty home directory, its own `CLAUDE_CONFIG_DIR`, explicit settings and MCP configuration (`--setting-sources user --strict-mcp-config`), and an environment rebuilt from scratch. Permissions are bypassed.
+- **No web:** WebFetch and WebSearch are disabled. The agent's shell gets no proxy, so it cannot reach the internet. Only Claude Code itself reaches the API.
+- **Authentication:** a Claude subscription token (`CLAUDE_CODE_OAUTH_TOKEN`).
+- **Ordering:** the arms run in an interleaved order shuffled with a fixed seed, so drift over time (API load, caching, model serving) does not favor one arm.
+
+## Fixture
+
+Netflix Dispatch at `dd2837e8`, with 150 commits replayed and 7 commits planted among them (`fixture/plants.json`). The build is deterministic and checks that its final tree equals upstream plus the plants.
+
+## Tasks and grading
+
+The pilot has 10 tasks:
+- **Facts (6 tasks):** the answer ends with labeled lines, matched by regular expressions. Each task ships a reference answer that must pass and the answer that memory or upstream code gives, which must fail.
+- **Hidden tests (3 tasks):** these tests fail on the fixture and pass with the reference fix. The regression suite must pass too.
+- **Blind judge (1 task):** Claude Sonnet 5.5 scores 0–3 against a reference and a rubric. It never sees the arm, and names that would reveal the arm are masked in the answer.
+
+A run succeeds when its grader passes, or when the judge gives it 2 or more.
+
+## Outcomes
+
+- **Primary:**
+  1. Success rate.
+  2. Cost per run in USD: the run's tokens by class (input, output, cache read, cache write at 5 minutes and 1 hour, subagents included), multiplied by public API prices (`harness/prices.json`). Subscription runs have no bill, so this is an API-equivalent cost. It is the same formula for every arm.
+- **Secondary:** tokens by class, turns, wall time, failed tool calls.
+
+## Analysis
+
+- **Pairing:** comparisons are paired by task. Each task's value is the mean over its repetitions.
+- **Confidence intervals:** 95% intervals come from 10,000 bootstrap resamples over tasks, with a fixed seed.
+- **Success:** the difference in success rate against `native`, in percentage points. Non-inferiority is judged with a margin of −5 points. The pilot reports it but draws no conclusion from it.
+- **Cost:** the geometric mean of the per-task cost ratios against `native`.
+
+## Validity
+
+- **Run checks:** a run counts only if its `system/init` event shows the expected model and every MCP server of its arm connected, and if the arm's probe shows activity. Any other run is marked invalid, re-run, and never scored. Invalid runs are listed in the report.
+- **Leakage check (phase 0):** each fact task is put to the model with no repository and no tools. A task it answers correctly is dropped.
+- **Judge calibration (phase 2):** a person scores about 50 judged answers blind, and the report gives the agreement (Cohen's kappa).
+
+## Phases
+
+- **Phase 0:** harness smoke runs and the leakage check.
+- **Phase 1, the pilot:** 10 tasks × 5 arms × 2 repetitions = 100 runs. It checks the harness and estimates variance and cost, which set the number of tasks and repetitions for phase 2. It makes no claims.
+- **Phase 2:** 40 to 60 tasks × 5 arms × 3 or more repetitions, under this protocol frozen.
+- **Phase 3:** a subset of SWE-QA-Pro, as an external task set.
+
+## Known limits
+
+- **Narrow scope:** one model, one agent (Claude Code) and one code base (Python and Vue).
+- **Cost:** it is API-equivalent, not billed, and measured on a subscription whose limits can throttle runs.
+- **Moving targets:** the tools change quickly. Results hold for the pinned versions only.
+- **Conflict of interest:** the maintainer of sobre wrote the benchmark. Mitigations:
+  - this protocol is fixed before scored runs;
+  - every run is published, raw data included;
+  - each tool's authors may review their arm's setup and answer the results.
+
+## Changelog
+
+- 2026-10-10: first draft.

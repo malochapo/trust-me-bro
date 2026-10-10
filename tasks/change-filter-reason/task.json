@@ -1,0 +1,28 @@
+{
+  "id": "change-filter-reason",
+  "family": "cross-layer",
+  "prompt": "This repository is Dispatch, an incident management platform. Feature request: analysts want to record why a signal filter exists. Add an optional free-text `reason` to signal filters:\n- store it in the database, with an Alembic migration in the tenant revisions;\n- accept it when a filter is created or updated through the API, and return it when filters are read;\n- in the web UI, show it as a \"Reason\" column in the Snoozes table of the signal instance page (the table that lists snooze filters), and let users type it in the dialog that creates a signal filter.\n\nThe test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.\n",
+  "data": null,
+  "grader": {
+    "kind": "tests",
+    "command": [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/signal/test_hidden_filter_reason.py"
+    ],
+    "regression": [
+      "python",
+      "-m",
+      "pytest",
+      "-q",
+      "-p",
+      "no:cacheprovider",
+      "tests/signal"
+    ]
+  },
+  "notes": "Cross-layer change: model, Pydantic schemas, Alembic migration, Vue table and dialog. The hidden tests check the API models and service round trip, and statically check the migration and the two Vue files."
+}

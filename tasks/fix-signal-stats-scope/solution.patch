@@ -1,0 +1,27 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..9658da76 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -51,6 +51,7 @@ from .models import (
+     SignalStats,
+     SignalUpdate,
+     assoc_signal_entity_types,
++    assoc_signal_filters,
+ )
+ 
+ log = logging.getLogger(__name__)
+@@ -1018,6 +1019,14 @@ def get_signal_stats(
+     query = db_session.query(
+         active_count.label("active_count"), expired_count.label("expired_count")
+     ).filter(cast(SignalFilter.expression, JSONB).op("@>")(entity_subquery))
++    if signal_id:
++        query = query.filter(
++            SignalFilter.id.in_(
++                select(assoc_signal_filters.c.signal_filter_id).where(
++                    assoc_signal_filters.c.signal_id == signal_id
++                )
++            )
++        )
+ 
+     snooze_result = db_session.execute(query).fetchone()
+ 

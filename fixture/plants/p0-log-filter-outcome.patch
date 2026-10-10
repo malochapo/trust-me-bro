@@ -1,0 +1,31 @@
+diff --git a/src/dispatch/signal/flows.py b/src/dispatch/signal/flows.py
+index 141eec937..eb195c2ed 100644
+--- a/src/dispatch/signal/flows.py
++++ b/src/dispatch/signal/flows.py
+@@ -74,6 +74,13 @@ def signal_instance_create_flow(
+         db_session=db_session,
+         signal_instance=signal_instance,
+     ):
++        log.info(
++            "Signal instance %s (%s) filtered: action=%s case_id=%s",
++            signal_instance.id,
++            signal_instance.signal.name,
++            signal_instance.filter_action,
++            signal_instance.case_id,
++        )
+         # If a case and conversation exists and the signal was deduplicated,
+         # we need to update the corresponding signal message
+         if (
+@@ -177,6 +184,12 @@ def signal_instance_create_flow(
+     signal_instance.case = case
+ 
+     db_session.commit()
++    log.info(
++        "Signal instance %s (%s) created case %s",
++        signal_instance.id,
++        signal_instance.signal.name,
++        case.id,
++    )
+ 
+     # Ensure valid types for case_new_create_flow arguments
+     org_slug = None

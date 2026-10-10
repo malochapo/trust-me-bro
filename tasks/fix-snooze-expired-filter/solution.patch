@@ -1,0 +1,13 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..9f55feea 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -760,7 +760,7 @@ def filter_snooze(*, db_session: Session, signal_instance: SignalInstance) -> Si
+             continue
+ 
+         if f.expiration.replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+-            break
++            continue
+ 
+         query = db_session.query(SignalInstance).filter(
+             SignalInstance.signal_id == signal_instance.signal_id

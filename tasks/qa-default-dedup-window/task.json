@@ -1,0 +1,31 @@
+{
+  "id": "qa-default-dedup-window",
+  "family": "code-qa",
+  "prompt": "This repository is Dispatch, an incident management platform. When a signal definition has no filters at all, new instances of that signal can still be grouped into a recent case. How long is that grouping window, and how can an operator change it?\n\nFinish your answer with these three lines, in this exact form:\nVALUE: <number and unit>\nSETTING: <name of the setting>\nFILE: <path of the file that defines the setting>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "value",
+        "any_of": [
+          "VALUE:\\s*45\\s*(min|minutes)\\b"
+        ]
+      },
+      {
+        "id": "setting",
+        "any_of": [
+          "SETTING:\\s*`?SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES\\b"
+        ]
+      },
+      {
+        "id": "file",
+        "any_of": [
+          "FILE:\\s*`?(src/)?dispatch/config\\.py\\b"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Plant p1 made the window configurable (45 minutes) and left the docstring of filter_signal saying \"1-hour window\", which is what upstream and the model's memory say. Answering from memory gives 1 hour."
+}

@@ -1,0 +1,22 @@
+diff --git a/src/dispatch/static/dispatch/src/case/Table.vue b/src/dispatch/static/dispatch/src/case/Table.vue
+index c742eca3d..e0df22a04 100644
+--- a/src/dispatch/static/dispatch/src/case/Table.vue
++++ b/src/dispatch/static/dispatch/src/case/Table.vue
+@@ -62,7 +62,7 @@
+             @click:row="showCasePage"
+             @update:options="loadItems"
+             :footer-props="{
+-              'items-per-page-options': [10, 25, 50, 100],
++              'items-per-page-options': [10, 20, 40, 80],
+             }"
+           >
+             <template #item.case_severity.name="{ item, value }">
+@@ -182,7 +182,7 @@ const store = useStore()
+ const router = useRouter()
+ const route = useRoute()
+ 
+-const itemsPerPage = ref(25)
++const itemsPerPage = ref(40)
+ const showEditSheet = ref(false)
+ 
+ const caseManagement = computed(() => store.state.case_management)

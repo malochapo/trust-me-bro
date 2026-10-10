@@ -1,0 +1,36 @@
+{
+  "id": "qa-ui-entity-stats",
+  "family": "cross-layer",
+  "prompt": "This repository is Dispatch, an incident management platform. In the web UI, the signal instance views show, for each entity, how many signal instances alerted or were snoozed and how many snoozes are active or expired. Which backend endpoint does the UI call to get these counts, which backend function computes them, and are the counts limited to the signal being viewed?\n\nFinish your answer with these three lines, in this exact form:\nENDPOINT: <HTTP method> <path relative to the organization's API prefix>\nFUNCTION: <name of the function that computes the counts>\nSCOPED_TO_SIGNAL: <yes or no>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "endpoint",
+        "any_of": [
+          "ENDPOINT:\\s*`?GET\\s+\\S*/signals/stats\\b(?!/)"
+        ]
+      },
+      {
+        "id": "function",
+        "any_of": [
+          "FUNCTION:\\s*`?(\\S*\\.)?get_signal_stats\\b"
+        ]
+      },
+      {
+        "id": "scope",
+        "any_of": [
+          "SCOPED_TO_SIGNAL:\\s*`?no\\b"
+        ]
+      }
+    ],
+    "must_not": [
+      {
+        "id": "per-signal-endpoint",
+        "regex": "ENDPOINT:[^\\n]*\\{signal_id\\}"
+      }
+    ]
+  },
+  "notes": "Upstream code, nothing planted. The UI store (signal/instance/store.js) calls SignalApi.getStats, which hits GET /signals/stats without a signal id, although a per-signal endpoint /signals/{signal_id}/stats exists. Needs the frontend and the backend."
+}

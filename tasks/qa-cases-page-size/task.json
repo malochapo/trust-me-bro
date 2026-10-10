@@ -1,0 +1,31 @@
+{
+  "id": "qa-cases-page-size",
+  "family": "frontend-qa",
+  "prompt": "This repository is Dispatch, an incident management platform. In the web UI, how many cases does the Cases table show per page when a user first opens it? Which file sets that initial value, and what default does the Vuex store module for cases declare for the same table?\n\nFinish your answer with these three lines, in this exact form:\nDEFAULT: <number>\nFILE: <path of the file that sets the initial value>\nSTORE_DEFAULT: <number>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "default",
+        "any_of": [
+          "DEFAULT:\\s*`?40\\b"
+        ]
+      },
+      {
+        "id": "file",
+        "any_of": [
+          "FILE:\\s*`?(src/dispatch/static/dispatch/)?(src/)?case/Table\\.vue\\b"
+        ]
+      },
+      {
+        "id": "store",
+        "any_of": [
+          "STORE_DEFAULT:\\s*`?25\\b"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Plant p3 sets ref(40) in case/Table.vue; case/store.js still declares itemsPerPage: 25, which loadItems overwrites on first load. Upstream (and memory) say 25 everywhere."
+}

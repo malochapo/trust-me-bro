@@ -1,0 +1,14 @@
+diff --git a/tests/conftest.py b/tests/conftest.py
+index 74f7be04f..c25fadc75 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -127,6 +127,9 @@ def db():
+     )
+     Session.configure(bind=schema_engine)
+     yield
++    # release every pooled connection, or Postgres refuses to drop the database
++    Session.remove()
++    engine.dispose()
+     drop_database(str(config.SQLALCHEMY_DATABASE_URI))
+ 
+ 

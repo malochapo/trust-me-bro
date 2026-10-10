@@ -1,0 +1,8 @@
+sobre-bench
+Copyright 2026 the sobre-bench authors. Licensed under the Apache License, Version 2.0.
+
+The benchmark fixture is built from Netflix Dispatch (https://github.com/Netflix/dispatch),
+Copyright Netflix, Inc., licensed under the Apache License, Version 2.0. The patches under
+fixture/plants/ and the reference solutions under tasks/ modify Dispatch; they are
+derivative works and carry the same license. The people named as authors of the planted
+commits (Sam Ortega, Jordan Lee) are fictional.

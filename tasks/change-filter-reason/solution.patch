@@ -1,0 +1,101 @@
+diff --git a/src/dispatch/database/revisions/tenant/versions/2025-09-03_7c1e2a9b4d10.py b/src/dispatch/database/revisions/tenant/versions/2025-09-03_7c1e2a9b4d10.py
+new file mode 100644
+index 00000000..0a2985d0
+--- /dev/null
++++ b/src/dispatch/database/revisions/tenant/versions/2025-09-03_7c1e2a9b4d10.py
+@@ -0,0 +1,24 @@
++"""Adds a reason to signal filters.
++
++Revision ID: 7c1e2a9b4d10
++Revises: ff08d822ef2c
++Create Date: 2025-09-03 10:12:00.000000
++
++"""
++
++from alembic import op
++import sqlalchemy as sa
++
++# revision identifiers, used by Alembic.
++revision = "7c1e2a9b4d10"
++down_revision = "ff08d822ef2c"
++branch_labels = None
++depends_on = None
++
++
++def upgrade():
++    op.add_column("signal_filter", sa.Column("reason", sa.String(), nullable=True))
++
++
++def downgrade():
++    op.drop_column("signal_filter", "reason")
+diff --git a/src/dispatch/signal/models.py b/src/dispatch/signal/models.py
+index d583b957..42f8446a 100644
+--- a/src/dispatch/signal/models.py
++++ b/src/dispatch/signal/models.py
+@@ -203,6 +203,7 @@ class SignalFilter(Base, ProjectMixin, EvergreenMixin, TimeStampMixin):
+     mode = Column(String, default=SignalFilterMode.active, nullable=False)
+     action = Column(String, nullable=False)
+     expiration = Column(DateTime, nullable=True)
++    reason = Column(String, nullable=True)
+     window = Column(
+         Integer, default=(60 * 60)
+     )  # number of seconds for duplication lookback default to 1 hour
+@@ -281,6 +282,7 @@ class SignalFilterBase(DispatchBase):
+     description: str | None = Field(default=None)
+     window: int | None = 600
+     expiration: datetime | None = Field(default=None)
++    reason: str | None = Field(default=None)
+ 
+ 
+ class SignalFilterUpdate(SignalFilterBase):
+diff --git a/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue b/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue
+index ce7e308c..b448449b 100644
+--- a/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue
++++ b/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue
+@@ -131,6 +131,14 @@
+                     name="Description"
+                     :rules="[rules.required]"
+                   />
++                  <v-textarea
++                    v-model="reason"
++                    label="Reason"
++                    hint="Why this filter exists (optional)."
++                    clearable
++                    auto-grow
++                    name="Reason"
++                  />
+                 </v-card-text>
+                 <v-card-actions>
+                   <v-spacer />
+@@ -218,6 +226,7 @@ export default {
+     ...mapFields("signalFilter", [
+       "selected",
+       "selected.description",
++      "selected.reason",
+       "selected.expression",
+       "selected.expiration",
+       "selected.window",
+diff --git a/src/dispatch/static/dispatch/src/signal/filter/store.js b/src/dispatch/static/dispatch/src/signal/filter/store.js
+index bc18ea9f..f1940edd 100644
+--- a/src/dispatch/static/dispatch/src/signal/filter/store.js
++++ b/src/dispatch/static/dispatch/src/signal/filter/store.js
+@@ -5,6 +5,7 @@ const getDefaultSelectedState = () => {
+   return {
+     expression: null,
+     description: null,
++    reason: null,
+     name: null,
+     action: "snooze",
+     expiration: null,
+diff --git a/src/dispatch/static/dispatch/src/signal/instance/TableInstanceSnoozes.vue b/src/dispatch/static/dispatch/src/signal/instance/TableInstanceSnoozes.vue
+index 8043cfa2..272cd226 100644
+--- a/src/dispatch/static/dispatch/src/signal/instance/TableInstanceSnoozes.vue
++++ b/src/dispatch/static/dispatch/src/signal/instance/TableInstanceSnoozes.vue
+@@ -58,6 +58,7 @@ export default {
+         { title: "Status", value: "status", sortable: false },
+         { title: "Name", value: "name", sortable: true },
+         { title: "Description", value: "description", sortable: true },
++        { title: "Reason", value: "reason", sortable: false },
+         { title: "Applies to", value: "signals", sortable: false },
+         { title: "Expiration", value: "expiration", sortable: true },
+       ],

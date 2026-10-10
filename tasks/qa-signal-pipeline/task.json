@@ -1,0 +1,37 @@
+{
+  "id": "qa-signal-pipeline",
+  "family": "code-qa",
+  "prompt": "This repository is Dispatch, an incident management platform. Trace what happens to a signal instance sent to the API with POST /api/v1/{organization}/signals/instances, until it either opens a case or is filtered out. In particular: where are sensitive values removed from the instance's raw payload, which function does it, which keys does it remove by default, and does that happen while the API request is being handled?\n\nFinish your answer with these four lines, in this exact form:\nREDACTION_FUNCTION: <dotted module path>.<function>\nDEFAULT_KEYS: <comma-separated keys>\nBEFORE_ENTITY_EXTRACTION: <yes or no>\nDURING_API_REQUEST: <yes or no>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "function",
+        "any_of": [
+          "REDACTION_FUNCTION:\\s*`?(src\\.)?dispatch\\.signal\\.redaction\\.redact_raw\\b"
+        ]
+      },
+      {
+        "id": "keys",
+        "any_of": [
+          "DEFAULT_KEYS:(?=[^\\n]*\\bpassword\\b)(?=[^\\n]*\\bsecret\\b)(?=[^\\n]*\\bapi_key\\b)(?=[^\\n]*\\bsession_token\\b)(?=[^\\n]*\\bauthorization\\b)"
+        ]
+      },
+      {
+        "id": "order",
+        "any_of": [
+          "BEFORE_ENTITY_EXTRACTION:\\s*`?yes\\b"
+        ]
+      },
+      {
+        "id": "async",
+        "any_of": [
+          "DURING_API_REQUEST:\\s*`?no\\b"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Plant p2 adds dispatch/signal/redaction.py and a call at the top of signal_instance_create_flow. The API handler only stores the instance; the `dispatch signals process` CLI loop (cli.process_signals) runs the flow later. main_processing_loop in signal/flows.py is never called: a trap for answers that trust names."
+}
