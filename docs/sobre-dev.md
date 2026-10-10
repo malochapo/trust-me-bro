@@ -50,7 +50,7 @@ The change is [malochapo/sobre-ai#97](https://github.com/malochapo/sobre-ai/pull
 | `sobre-hooks` | $0.088 | 0.967 | 0.823–1.077 |
 | rtk 0.51.0 | $0.101 | 1.116 | 0.917–1.477 |
 
-Pilot 2 tells the same story with wider intervals: `sobre-dev` is at parity, and `sobre-hooks` (native under another name) lands 3% under it.
+Pilot 2 tells the same story with wider intervals: `sobre-dev` is at parity, and `sobre-hooks` (native under another name) lands 3% under native.
 
 ### Why compressing more would gain little here
 
