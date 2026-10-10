@@ -60,6 +60,19 @@ Source: README "Connect agents" and "What init writes"; `index build` is README'
   and by surface:tool, tokens before/after), and whether the session observer wrote
   `active_transcript.json`. Active = any ledger record or the observer ran.
 
+### sobre-dev and sobre-hooks — variants for sobre's own development
+
+Not vendor arms: they measure a local build of sobre against the same tasks.
+`sobre-dev/install.sh <built binary>` installs it as `<tools>/sobre-dev` and prints the
+sha256 recorded in `versions.json`.
+
+- `sobre-dev`: that build, set up exactly like the `sobre` arm.
+- `sobre-hooks`: that build after `sobre init claude`, with the MCP server entry and the
+  skill removed and no index built. The agent's prompt carries nothing from sobre; only
+  the hooks act. It measures what the hooks save on their own.
+
+Both bill to `BENCH_KEY_SOBRE` unless they have their own key, and use the `sobre` probe.
+
 ### rtk — `rtk init -g --auto-patch`
 
 Source: README "Quick Start" (`rtk init -g`, "Claude Code / Copilot (default)") and

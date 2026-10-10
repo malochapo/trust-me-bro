@@ -16,7 +16,10 @@ ARMS_DIR = BENCH_ROOT / "arms"
 DEFAULT_FIXTURE = BENCH_ROOT / "build" / "fixture.git"
 DEFAULT_PLANTS = BENCH_ROOT / "build" / "plants.json"
 DEFAULT_WORK = Path("/tmp/sobre-bench-work")
-ALL_ARMS = ["native", "sobre", "sobre-dev", "lean-ctx", "headroom", "rtk"]
+ALL_ARMS = ["native", "sobre", "sobre-dev", "sobre-hooks", "lean-ctx", "headroom", "rtk"]
+# Variants of an arm (a development build, or the same build set up differently) bill to
+# that arm's key unless they have their own.
+VARIANT_SUFFIXES = ("-dev", "-hooks")
 
 # The agent sees only these system directories, never the harness's own PATH
 # (which, inside another Claude Code session, holds that session's tooling).
@@ -77,9 +80,9 @@ def credentials(who):
     """
     env_name = lambda name: "BENCH_KEY_" + name.upper().replace("-", "").replace("_", "")
     key = os.environ.get(env_name(who))
-    if not key and who.endswith("-dev"):
-        # a development build of an arm bills to that arm's key unless it has its own
-        key = os.environ.get(env_name(who[: -len("-dev")]))
+    variant = next((s for s in VARIANT_SUFFIXES if who.endswith(s)), None)
+    if not key and variant:
+        key = os.environ.get(env_name(who[: -len(variant)]))
     if key:
         return {"ANTHROPIC_API_KEY": key}, "api_key"
     token = oauth_token()

@@ -28,6 +28,10 @@ class CredentialsTest(unittest.TestCase):
         with mock.patch.dict(os.environ, env, clear=True):
             self.assertEqual(common.credentials("sobre-dev"), ({"ANTHROPIC_API_KEY": "sk-ant-api03-d"}, "api_key"))
 
+    def test_hooks_variant_falls_back_to_its_arms_key(self):
+        with mock.patch.dict(os.environ, {"BENCH_KEY_SOBRE": "sk-ant-api03-s"}, clear=True):
+            self.assertEqual(common.credentials("sobre-hooks"), ({"ANTHROPIC_API_KEY": "sk-ant-api03-s"}, "api_key"))
+
     def test_nothing_set(self):
         with mock.patch.dict(os.environ, {}, clear=True):
             self.assertEqual(common.credentials("judge"), ({}, None))

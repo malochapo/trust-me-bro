@@ -86,3 +86,4 @@ A run succeeds when its grader passes, or when the judge gives it 2 or more. A r
   - `INSTANCE_WINDOW: 30` was refused because the rule wanted "30 days", although the requested format is a number of days;
   - `GET signals/stats` was refused for lacking the leading slash. Path rules now accept any correct way of writing the path: `FILE` in three tasks, `ENDPOINT`, and `REDACTION_FUNCTION`;
   - the rule meant to reject a per-signal endpoint also matched prose that cited that endpoint in order to rule it out. It now only applies to the `ENDPOINT:` line.
+- 2026-10-10, development arms for sobre (outside the comparison of released tools): `sobre-dev` (a local build, set up like `sobre`) and `sobre-hooks` (the same build with its hooks only, no MCP server or skill). They bill to the sobre key and are reported beside the other arms; they never replace the `sobre` arm's results.
