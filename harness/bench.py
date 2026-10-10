@@ -5,7 +5,9 @@ For each rep and each task (tasks shuffled per rep), every arm runs back to back
 random order drawn from a fixed seed, so drift over the hours of a bench (API latency,
 rate limits, cache state) does not favor one arm. Runs whose meta.json says ok,
 timeout or error are skipped; invalid runs are run again (--rerun-errors also re-runs
-timeouts and errors). Then every ok run without graded.json is graded.
+timeouts and errors). Each ok run is graded as soon as it ends, then its work dir
+(checkout, venv, home) is deleted unless --keep-work: a run takes a few hundred MB.
+Any ok run still without graded.json is graded at the end.
 
 Usage: python3 -I harness/bench.py --tasks 'tasks/*/task.json' --arms native,sobre --reps 3
 Extra run.py options go after "--", e.g. `-- --effort high --timeout-min 30`.
@@ -19,6 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script
 import argparse
 import glob
 import random
+import shutil
 import subprocess
 
 import common
@@ -61,6 +64,7 @@ def main(argv=None):
     p.add_argument("--judge-model", default="claude-sonnet-5-5")
     p.add_argument("--rerun-errors", action="store_true")
     p.add_argument("--no-grade", action="store_true")
+    p.add_argument("--keep-work", action="store_true", help="keep each run's work dir")
     p.add_argument("--dry-run", action="store_true", help="print the plan and exit")
     args = p.parse_args(argv)
 
@@ -86,16 +90,22 @@ def main(argv=None):
     if todo and "--no-pg-check" not in passthrough and not common.postgres_ready():
         raise SystemExit("Postgres is not reachable on localhost:5432 (pg_isready -h localhost)")
 
+    grade_opts = ["--claude-bin", args.claude_bin, "--judge-model", args.judge_model]
     for i, (task_file, arm, rep, run_id) in enumerate(todo, 1):
         print(f"[{i}/{len(todo)}] {run_id}", flush=True)
         force = ["--force"] if (out / run_id).exists() else []
         subprocess.run([sys.executable, "-I", str(HERE / "run.py"), "--task-file", task_file,
                         "--arm", arm, "--rep", str(rep), "--out", str(out), "--claude-bin", args.claude_bin,
                         *force, *passthrough])
+        meta = common.read_json(out / run_id / "meta.json") or {}
+        if meta.get("status") == "ok" and not args.no_grade:
+            subprocess.run([sys.executable, "-I", str(HERE / "grade.py"), str(out / run_id), *grade_opts])
+        work = (meta.get("work") or {}).get("dir")
+        if work and not args.keep_work:
+            shutil.rmtree(work, ignore_errors=True)
 
     if args.no_grade:
         return 0
-    grade_opts = ["--claude-bin", args.claude_bin, "--judge-model", args.judge_model]
     for task_file, arm, rep in plan:
         run_dir = out / run_id_for(common.load_task(task_file)["id"], arm, rep)
         meta = common.read_json(run_dir / "meta.json") or {}

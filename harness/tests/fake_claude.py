@@ -89,7 +89,7 @@ def stream(argv, scenario):
     servers, mcp_tools = mcp_servers(argv, scenario)
     emit({"type": "system", "subtype": "init", "session_id": SESSION, "uuid": "init-1",
           "cwd": os.getcwd(), "model": "claude-opus-5-5" if scenario == "wrong_model" else model,
-          "permissionMode": opt(argv, "--permission-mode", "default"), "apiKeySource": "none",
+          "permissionMode": opt(argv, "--permission-mode", "default"), "apiKeySource": "ANTHROPIC_API_KEY" if os.environ.get("ANTHROPIC_API_KEY") else "none",
           "claude_code_version": "2.1.296", "tools": TOOLS + mcp_tools, "mcp_servers": servers,
           "slash_commands": [], "output_style": "default", "skills": [], "plugins": []})
     if scenario == "sleep":

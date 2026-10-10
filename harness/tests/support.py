@@ -1,10 +1,17 @@
 """Builders shared by the harness tests: a tiny fixture repo, tasks, a stub claude, stub arms."""
 
 import json
+import os
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+# Hermetic: real credentials in the caller's environment must not change what the tests
+# see, nor reach a stub. Tests that need credentials set them explicitly.
+for _name in [n for n in os.environ if n.startswith("BENCH_KEY_")
+              or n in ("BENCH_CLAUDE_OAUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY")]:
+    del os.environ[_name]
 
 TESTS = Path(__file__).resolve().parent
 HARNESS = TESTS.parent
