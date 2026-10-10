@@ -1,0 +1,6 @@
+The suite is green: 351 passed, 4 skipped, with `tests/ai/test_ai_service.py` excluded as you said. Two bugs were behind the failures, and I didn't touch any tests.
+
+- **Entity extraction** (`src/dispatch/entity/service.py`): `find_entities` kept only the first JSONPath match (`jpath.find(...)[:1]`), so a path like `asset[*].id` returned one entity instead of two. I removed the `[:1]` slice, so every match is yielded again.
+- **Restricted case visibility** (`src/dispatch/database/service.py`): `restricted_case_filter` had a flattened condition, `open OR restricted OR email matches`. That let members see every restricted case. I restored the original grouping so a restricted case is visible only when the user is a participant: `open OR (restricted AND email matches)`. This matches `restricted_incident_filter`.
+
+To get pytest to start, I had to put `slack_sdk` and `slack_bolt` on `PYTHONPATH` from the local uv cache. The venv doesn't have them, and `tests/conftest.py` imports `slack_sdk`. I didn't install anything, so you'll need those packages in the venv (or the same `PYTHONPATH` setting) to run the suite yourself.

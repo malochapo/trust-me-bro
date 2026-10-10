@@ -1,0 +1,7 @@
+`deduplicate` is now `merge` throughout. `python -m pytest tests/signal` gives 32 passed, 1 skipped. I didn't run the new migration against a database, and I didn't run the rest of the test suite or build the web UI.
+
+- **Backend:** `SignalFilterAction.merge = "merge"` in `signal/models.py`, plus the uses in `signal/service.py` and `signal/flows.py`.
+- **Web UI:** the radio value and condition in `SignalFilterCreateDialog.vue`, and the colour and label keys in `TableInstanceTriggers.vue`. The visible labels read "Merge" in the create dialog and still "Duplicate" in the instance table. I didn't change what users see in the table.
+- **Tests:** `tests/factories.py` and `tests/signal/test_signal_service.py` use the new name. That includes test function names and comments.
+- **Migration:** `2025-09-02_a3c1d7e95b24.py`, revising `ff08d822ef2c`, which was the head. It updates `signal_filter.action` and `signal_instance.filter_action` from `deduplicate` to `merge`. The downgrade reverses it. Both columns are plain strings, so no enum type needed altering. I took the table names from existing migrations.
+- **Comments and docs:** the word "deduplicated" in a comment in `flows.py` and in test comments became "merged", so no `deduplicate` remains in `src/dispatch` outside the migrations. I also changed the enum value in `docs/scripts/openapi.yaml`. I left the `docs/docs/administration/settings/signal/filter.mdx` prose alone.

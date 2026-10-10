@@ -1,0 +1,248 @@
+# untracked files (their diffs follow the tracked changes):
+#   src/dispatch/database/revisions/tenant/versions/2025-09-02_a7c3e91d5b24.py
+diff --git a/src/dispatch/signal/models.py b/src/dispatch/signal/models.py
+index d583b957..55feccc9 100644
+--- a/src/dispatch/signal/models.py
++++ b/src/dispatch/signal/models.py
+@@ -1,7 +1,7 @@
+ import uuid
+-from datetime import datetime
++from datetime import datetime, timezone
+ from typing import Any
+-from pydantic import Field
++from pydantic import Field, field_validator
+ from sqlalchemy import (
+     JSON,
+     Boolean,
+@@ -112,6 +112,7 @@ class SignalFilterMode(DispatchEnum):
+ class SignalFilterAction(DispatchEnum):
+     deduplicate = "deduplicate"
+     snooze = "snooze"
++    mute = "mute"
+     none = "none"
+ 
+ 
+@@ -138,6 +139,7 @@ class Signal(Base, TimeStampMixin, ProjectMixin):
+     default = Column(Boolean, default=False)
+     lifecycle = Column(String)
+     runbook = Column(String)
++    muted_until = Column(DateTime, nullable=True)
+ 
+     # GenAI specific fields
+     genai_enabled = Column(Boolean, default=True)
+@@ -335,11 +337,20 @@ class SignalBase(DispatchBase):
+     variant: str | None = None
+     lifecycle: str | None = None
+     runbook: str | None = None
++    muted_until: datetime | None = None
+     genai_enabled: bool | None = True
+     genai_model: str | None = None
+     genai_system_message: str | None = None
+     genai_prompt: str | None = None
+ 
++    @field_validator("muted_until")
++    @classmethod
++    def muted_until_to_naive_utc(cls, v: datetime | None) -> datetime | None:
++        """The column is a naive UTC timestamp; convert aware values before storing."""
++        if v is not None and v.tzinfo is not None:
++            return v.astimezone(timezone.utc).replace(tzinfo=None)
++        return v
++
+ 
+ class SignalCreate(SignalBase):
+     filters: list[SignalFilterRead] | None = []
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..69be553b 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -882,6 +882,13 @@ def filter_signal(*, db_session: Session, signal_instance: SignalInstance) -> bo
+     """
+     filtered = False
+ 
++    muted_until = signal_instance.signal.muted_until
++    if muted_until and muted_until.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
++        # a muted signal skips snooze and deduplication filters entirely
++        signal_instance.filter_action = SignalFilterAction.mute
++        db_session.commit()
++        return True
++
+     signal_instance = filter_snooze(db_session=db_session, signal_instance=signal_instance)
+ 
+     # we only dedupe if we haven't been snoozed
+diff --git a/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue b/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
+index b91cd91b..058dbd5d 100644
+--- a/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
++++ b/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
+@@ -122,6 +122,9 @@
+                     readonly
+                   />
+                 </v-col>
++                <v-col cols="12">
++                  <expiration-input v-model="muted_until" label="Muted until" />
++                </v-col>
+                 <v-col cols="12">
+                   <v-text-field
+                     v-model="external_url"
+@@ -350,6 +353,7 @@ import { mapActions } from "vuex"
+ import CasePrioritySelect from "@/case/priority/CasePrioritySelect.vue"
+ import CaseTypeSelect from "@/case/type/CaseTypeSelect.vue"
+ import EntityTypeFilterCombobox from "@/entity_type/EntityTypeFilterCombobox.vue"
++import ExpirationInput from "@/signal/filter/ExpirationInput.vue"
+ import ServiceSelect from "@/service/ServiceSelect.vue"
+ import SignalEngagementCombobox from "@/signal/engagement/SignalEngagementCombobox.vue"
+ import SignalFilterCombobox from "@/signal/filter/SignalFilterCombobox.vue"
+@@ -368,6 +372,7 @@ export default {
+     CasePrioritySelect,
+     CaseTypeSelect,
+     EntityTypeFilterCombobox,
++    ExpirationInput,
+     ServiceSelect,
+     SignalEngagementCombobox,
+     SignalFilterCombobox,
+@@ -398,6 +403,7 @@ export default {
+       "selected.id",
+       "selected.lifecycle",
+       "selected.loading",
++      "selected.muted_until",
+       "selected.name",
+       "selected.oncall_service",
+       "selected.owner",
+diff --git a/src/dispatch/static/dispatch/src/signal/Table.vue b/src/dispatch/static/dispatch/src/signal/Table.vue
+index 3d922919..4bc760b4 100644
+--- a/src/dispatch/static/dispatch/src/signal/Table.vue
++++ b/src/dispatch/static/dispatch/src/signal/Table.vue
+@@ -72,6 +72,14 @@
+                 {{ item.case_priority.name }}
+               </v-chip>
+             </template>
++            <template #item.muted_until="{ value }">
++              <v-tooltip v-if="value" location="bottom">
++                <template #activator="{ props }">
++                  <span v-bind="props">{{ formatRelativeDate(value) }}</span>
++                </template>
++                <span>{{ formatDate(value) }}</span>
++              </v-tooltip>
++            </template>
+             <template #item.external_url="{ item }">
+               <v-btn
+                 v-if="item.external_url"
+@@ -112,10 +120,14 @@ import { mapFields } from "vuex-map-fields"
+ import { mapActions } from "vuex"
+ import NewEditDialog from "@/signal/NewEditDialog.vue"
+ import HistoryViewer from "./HistoryViewer.vue"
++import { formatRelativeDate, formatDate } from "@/filters"
+ 
+ export default {
+   name: "SignalTable",
+   components: { NewEditDialog, HistoryViewer },
++  setup() {
++    return { formatRelativeDate, formatDate }
++  },
+   props: {
+     name: {
+       type: String,
+@@ -134,6 +146,7 @@ export default {
+         { title: "Lifecycle", value: "lifecycle" },
+         { title: "Case Type", value: "case_type" },
+         { title: "Case Priority", value: "case_priority" },
++        { title: "Muted until", value: "muted_until", sortable: false },
+         { title: "External URL", value: "external_url", sortable: false },
+         { title: "", key: "data-table-actions", sortable: false, align: "end" },
+       ],
+diff --git a/src/dispatch/static/dispatch/src/signal/store.js b/src/dispatch/static/dispatch/src/signal/store.js
+index a2cec415..b9503b59 100644
+--- a/src/dispatch/static/dispatch/src/signal/store.js
++++ b/src/dispatch/static/dispatch/src/signal/store.js
+@@ -30,6 +30,7 @@ const getDefaultSelectedState = () => {
+     owner: null,
+     project: null,
+     runbook: null,
++    muted_until: null,
+     signal_definition: null,
+     source: null,
+     tags: [],
+diff --git a/tests/signal/test_signal_service.py b/tests/signal/test_signal_service.py
+index c253a7f3..677627ca 100644
+--- a/tests/signal/test_signal_service.py
++++ b/tests/signal/test_signal_service.py
+@@ -702,6 +702,50 @@ def test_filter_actions_snooze_expired(session, entity, signal, project):
+     assert not filter_signal(db_session=session, signal_instance=signal_instance_1)
+ 
+ 
++def test_filter_actions_mute(session, signal, project):
++    from datetime import datetime, timedelta, timezone
++    from dispatch.signal.models import SignalFilterAction
++    from dispatch.signal.service import filter_signal
++    from tests.factories import SignalInstanceFactory, SignalFilterFactory
++
++    signal_filter = SignalFilterFactory(
++        name="snooze-muted",
++        description="test",
++        expression=[],
++        action="snooze",
++        expiration=datetime.now(timezone.utc) + timedelta(minutes=5),
++        project=project,
++    )
++    signal.filters = [signal_filter]
++    signal.muted_until = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=5)
++
++    signal_instance = SignalInstanceFactory(
++        project=project, signal=signal, raw=json.dumps({"id": "foo"})
++    )
++    session.add(signal_instance)
++    session.commit()
++
++    assert filter_signal(db_session=session, signal_instance=signal_instance)
++    assert signal_instance.filter_action == SignalFilterAction.mute
++
++
++def test_filter_actions_mute_expired(session, signal, project):
++    from datetime import datetime, timedelta, timezone
++    from dispatch.signal.models import SignalFilterAction
++    from dispatch.signal.service import filter_signal
++    from tests.factories import SignalInstanceFactory
++
++    signal.muted_until = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(minutes=5)
++    signal_instance = SignalInstanceFactory(
++        project=project, signal=signal, raw=json.dumps({"id": "foo"})
++    )
++    session.add(signal_instance)
++    session.commit()
++
++    assert not filter_signal(db_session=session, signal_instance=signal_instance)
++    assert signal_instance.filter_action == SignalFilterAction.none
++
++
+ def test_filter_actions_deduplicate_canary_signals(session, signal, project):
+     """Test that canary signals are not considered in deduplication logic."""
+     from dispatch.signal.models import SignalFilterAction
+diff --git a/src/dispatch/database/revisions/tenant/versions/2025-09-02_a7c3e91d5b24.py b/src/dispatch/database/revisions/tenant/versions/2025-09-02_a7c3e91d5b24.py
+new file mode 100644
+index 00000000..7c9e2c5b
+--- /dev/null
++++ b/src/dispatch/database/revisions/tenant/versions/2025-09-02_a7c3e91d5b24.py
+@@ -0,0 +1,24 @@
++"""Adds muted_until to signal
++
++Revision ID: a7c3e91d5b24
++Revises: ff08d822ef2c
++Create Date: 2025-09-02 10:00:00.000000
++
++"""
++
++from alembic import op
++import sqlalchemy as sa
++
++# revision identifiers, used by Alembic.
++revision = "a7c3e91d5b24"
++down_revision = "ff08d822ef2c"
++branch_labels = None
++depends_on = None
++
++
++def upgrade():
++    op.add_column("signal", sa.Column("muted_until", sa.DateTime(), nullable=True))
++
++
++def downgrade():
++    op.drop_column("signal", "muted_until")

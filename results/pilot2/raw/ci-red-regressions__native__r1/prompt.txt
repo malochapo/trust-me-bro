@@ -1,0 +1,3 @@
+This repository is Dispatch, an incident management platform. CI has been red on main since this week's merges: tests fail in several packages. Get the whole test suite green again by fixing the code. The existing tests are correct; do not change them. Each failure comes from a real bug, so fix the cause rather than the symptom.
+
+The test suite needs PostgreSQL, which is running locally; run it with `python -m pytest` (tests/ai/test_ai_service.py needs network access you do not have: ignore it).

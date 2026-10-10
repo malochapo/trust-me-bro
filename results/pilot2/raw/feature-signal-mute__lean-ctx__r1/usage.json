@@ -1,0 +1,46 @@
+{
+  "by_model": {
+    "claude-sonnet-5-5": {
+      "cache_read": 922933,
+      "cache_write_1h": 0,
+      "cache_write_5m": 71367,
+      "client_cost_usd": 0.3731108,
+      "cost_usd": 0.4654041,
+      "input": 40,
+      "output": 10232,
+      "price_key": "claude-sonnet-5-5"
+    }
+  },
+  "client_total_cost_usd": 0.3731108,
+  "cost_usd": 0.465404,
+  "duration_api_ms": 72320,
+  "duration_ms": 98694,
+  "flags": [],
+  "is_error": false,
+  "num_turns": 36,
+  "prices": {
+    "as_of": "2026-10-10, to verify against the public pricing page",
+    "source": "to verify against the public pricing page (https://www.anthropic.com/pricing, https://platform.claude.com/docs/en/about-claude/pricing)"
+  },
+  "result_subtype": "success",
+  "source": "modelUsage",
+  "tokens": {
+    "cache_read": 922933,
+    "cache_write_1h": 0,
+    "cache_write_5m": 71367,
+    "input": 40,
+    "output": 10232
+  },
+  "tool_calls": {
+    "Write": 1,
+    "mcp__lean-ctx__ctx_compose": 1,
+    "mcp__lean-ctx__ctx_patch": 7,
+    "mcp__lean-ctx__ctx_read": 14,
+    "mcp__lean-ctx__ctx_search": 7,
+    "mcp__lean-ctx__ctx_shell": 5
+  },
+  "tool_calls_total": 35,
+  "tool_result_chars": 87231,
+  "tool_result_errors": 2,
+  "tool_results": 35
+}

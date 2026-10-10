@@ -1,0 +1,44 @@
+{
+  "arm": "sobre-dev",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_signal_mute.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 0,
+      "last_line": "40 passed, 1 skipped in 13.88s",
+      "seconds": 18.8
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_signal_mute.py"
+      ],
+      "exit": 0,
+      "last_line": "6 passed in 5.18s",
+      "seconds": 9.8
+    }
+  },
+  "graded_at": "2026-10-10T20:17:53+00:00",
+  "kind": "tests",
+  "pass": true,
+  "rep": 1,
+  "run_id": "feature-signal-mute__sobre-dev__r1",
+  "score": 1.0,
+  "task_id": "feature-signal-mute",
+  "task_sha256": "e5b92346490ab25409a9e1999692e284fe290f7a224f88cd251593b245de4dc4"
+}

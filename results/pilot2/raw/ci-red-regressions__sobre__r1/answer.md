@@ -1,0 +1,6 @@
+The suite is green again: 351 passed, 4 skipped, with `tests/ai/test_ai_service.py` ignored as you said. Two bugs were behind the failures, and I didn't touch any tests.
+
+- **Restricted case filter** (`src/dispatch/database/service.py`): commit `42699ebc` "flattened" the `or_` and dropped the `and_` around the restricted-visibility check. That made every restricted case visible to anyone, and also any case where the user's email matched. I restored the `and_`, so a member sees open cases plus restricted cases they participate in. This fixes `test_restricted_case_filter_with_test_data`.
+- **Entity extraction** (`src/dispatch/entity/service.py`): commit `beb60cc4` added `[:1]` to the JSONPath results, so only the first match was kept. Entity extraction needs every match, so I removed the slice. This fixes `test_find_entities_with_field_only`.
+
+I haven't changed the `min` to `max` swap in `get_participant_role_time_seconds` (`src/dispatch/case_cost/service.py`, commit `20f33137`). No test fails on it and its commit message says the change was intentional, but it changes cost calculations, so you may want to confirm it's what you meant.

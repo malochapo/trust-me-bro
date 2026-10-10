@@ -1,0 +1,4 @@
+--- setup.sh exit 0
+--- stdout
+{"ANTHROPIC_BASE_URL": "http://127.0.0.1:46191", "ENABLE_TOOL_SEARCH": "true"}
+--- stderr

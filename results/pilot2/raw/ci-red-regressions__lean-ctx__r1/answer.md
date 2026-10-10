@@ -1,0 +1,6 @@
+The suite is green again: 351 passed, 4 skipped, with `tests/ai/test_ai_service.py` excluded as you said. Two bugs were behind the failures, and I didn't touch any tests.
+
+1. **Entity extraction** (`src/dispatch/entity/service.py`): commit `beb60cc4` ("stop at the first JSONPath match") had added `[:1]` to `jpath.find(...)`. That dropped every match after the first, so a field that legitimately matches several values only produced one entity. I removed the truncation. `test_find_entities_with_field_only` failed on this.
+2. **Restricted case visibility** (`src/dispatch/database/service.py`, `restricted_case_filter`): the filter was effectively "open OR restricted OR you're a participant", so non-admins saw every restricted case. It now means "open, or restricted and you are a participant". That matches `restricted_incident_filter`. `test_restricted_case_filter_with_test_data` failed on this.
+
+The second one was a permissions leak, not just a test failure, so it's worth a look if you want to check whether restricted cases were exposed in production.
