@@ -49,6 +49,11 @@ def needs_run(run_dir, rerun_errors):
     return status == "invalid" or (rerun_errors and status in ("timeout", "error"))
 
 
+def spent_usd(out):
+    """Computed cost of every run under out, judge calls excluded."""
+    return sum((common.read_json(u, {}) or {}).get("cost_usd") or 0 for u in Path(out).glob("*/usage.json"))
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     passthrough = argv[argv.index("--") + 1:] if "--" in argv else []
@@ -65,6 +70,8 @@ def main(argv=None):
     p.add_argument("--rerun-errors", action="store_true")
     p.add_argument("--no-grade", action="store_true")
     p.add_argument("--keep-work", action="store_true", help="keep each run's work dir")
+    p.add_argument("--stop-at-usd", type=float, default=None,
+                   help="stop before a run once the computed cost of every run in --out reaches this")
     p.add_argument("--dry-run", action="store_true", help="print the plan and exit")
     args = p.parse_args(argv)
 
@@ -92,7 +99,11 @@ def main(argv=None):
 
     grade_opts = ["--claude-bin", args.claude_bin, "--judge-model", args.judge_model]
     for i, (task_file, arm, rep, run_id) in enumerate(todo, 1):
-        print(f"[{i}/{len(todo)}] {run_id}", flush=True)
+        spent = spent_usd(out)
+        if args.stop_at_usd is not None and spent >= args.stop_at_usd:
+            print(f"stopping: ${spent:.2f} spent, limit ${args.stop_at_usd:.2f}", flush=True)
+            break
+        print(f"[{i}/{len(todo)}] {run_id} (${spent:.2f} spent so far)", flush=True)
         force = ["--force"] if (out / run_id).exists() else []
         subprocess.run([sys.executable, "-I", str(HERE / "run.py"), "--task-file", task_file,
                         "--arm", arm, "--rep", str(rep), "--out", str(out), "--claude-bin", args.claude_bin,
