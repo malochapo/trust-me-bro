@@ -40,6 +40,18 @@ The change is [malochapo/sobre-ai#97](https://github.com/malochapo/sobre-ai/pull
 
 `sobre-dev` costs what native costs. `sobre-hooks` is the same build with its MCP server and skill removed. Its prompt is the size of native's (16,525 tokens on the first request, the same median), and its hook compressed nothing. On these tasks it is therefore native under another name, which makes it an A/A test. Its 1.029, with an interval that spans 1, shows how far two identical setups can drift on 10 tasks × 2 repetitions. Differences of a few percent, like the 2% the remaining prefix should cost, are below what this design can resolve.
 
+### Pilot 2: 6 harder tasks × 2 repetitions, all runs successful
+
+| Arm | Mean cost per run | Cost vs native | 95% CI |
+| --- | --- | --- | --- |
+| native | $0.091 | 1 | |
+| sobre 0.1.0-rc.1 | $0.107 | 1.086 | 0.952–1.266 |
+| `sobre-dev` | $0.093 | 1.005 | 0.908–1.106 |
+| `sobre-hooks` | $0.088 | 0.967 | 0.823–1.077 |
+| rtk 0.51.0 | $0.101 | 1.116 | 0.917–1.477 |
+
+Pilot 2 tells the same story with wider intervals: `sobre-dev` is at parity, and `sobre-hooks` (native under another name) lands 3% under it.
+
 ### Why compressing more would gain little here
 
 The agent already keeps its outputs small. Sonnet 5.5 pipes long outputs into `head`, `tail` or `cut`, counts matches with `grep -c`, and reads files by line range. In native runs, tool results make up about 21% of the cost in pilot 1 and 24% in pilot 2. The rest is the model's own output and the system prompt re-read on every call. More than half of those results are source code, which must reach the model as it is. Logs, git history and test output make up 5% to 12% of the cost. Folding runs of repeated log lines would have saved 0% of native's cost in pilot 1 and 1.4% in pilot 2.
