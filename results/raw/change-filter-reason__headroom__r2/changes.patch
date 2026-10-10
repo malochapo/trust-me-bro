@@ -1,0 +1,103 @@
+# untracked files (their diffs follow the tracked changes):
+#   src/dispatch/database/revisions/tenant/versions/2025-09-02_a7c3e91d5b24.py
+diff --git a/src/dispatch/signal/models.py b/src/dispatch/signal/models.py
+index d583b957..5d955470 100644
+--- a/src/dispatch/signal/models.py
++++ b/src/dispatch/signal/models.py
+@@ -199,6 +199,7 @@ class SignalFilter(Base, ProjectMixin, EvergreenMixin, TimeStampMixin):
+     id = Column(Integer, primary_key=True)
+     name = Column(String)
+     description = Column(String)
++    reason = Column(String, nullable=True)
+     expression = Column(JSON, nullable=False, default=[])
+     mode = Column(String, default=SignalFilterMode.active, nullable=False)
+     action = Column(String, nullable=False)
+@@ -279,6 +280,7 @@ class SignalFilterBase(DispatchBase):
+     name: NameStr
+     action: SignalFilterAction = SignalFilterAction.snooze
+     description: str | None = Field(default=None)
++    reason: str | None = Field(default=None)
+     window: int | None = 600
+     expiration: datetime | None = Field(default=None)
+ 
+diff --git a/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue b/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue
+index ce7e308c..b448449b 100644
+--- a/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue
++++ b/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue
+@@ -131,6 +131,14 @@
+                     name="Description"
+                     :rules="[rules.required]"
+                   />
++                  <v-textarea
++                    v-model="reason"
++                    label="Reason"
++                    hint="Why this filter exists (optional)."
++                    clearable
++                    auto-grow
++                    name="Reason"
++                  />
+                 </v-card-text>
+                 <v-card-actions>
+                   <v-spacer />
+@@ -218,6 +226,7 @@ export default {
+     ...mapFields("signalFilter", [
+       "selected",
+       "selected.description",
++      "selected.reason",
+       "selected.expression",
+       "selected.expiration",
+       "selected.window",
+diff --git a/src/dispatch/static/dispatch/src/signal/filter/store.js b/src/dispatch/static/dispatch/src/signal/filter/store.js
+index bc18ea9f..f1940edd 100644
+--- a/src/dispatch/static/dispatch/src/signal/filter/store.js
++++ b/src/dispatch/static/dispatch/src/signal/filter/store.js
+@@ -5,6 +5,7 @@ const getDefaultSelectedState = () => {
+   return {
+     expression: null,
+     description: null,
++    reason: null,
+     name: null,
+     action: "snooze",
+     expiration: null,
+diff --git a/src/dispatch/static/dispatch/src/signal/instance/TableInstanceSnoozes.vue b/src/dispatch/static/dispatch/src/signal/instance/TableInstanceSnoozes.vue
+index 8043cfa2..272cd226 100644
+--- a/src/dispatch/static/dispatch/src/signal/instance/TableInstanceSnoozes.vue
++++ b/src/dispatch/static/dispatch/src/signal/instance/TableInstanceSnoozes.vue
+@@ -58,6 +58,7 @@ export default {
+         { title: "Status", value: "status", sortable: false },
+         { title: "Name", value: "name", sortable: true },
+         { title: "Description", value: "description", sortable: true },
++        { title: "Reason", value: "reason", sortable: false },
+         { title: "Applies to", value: "signals", sortable: false },
+         { title: "Expiration", value: "expiration", sortable: true },
+       ],
+diff --git a/src/dispatch/database/revisions/tenant/versions/2025-09-02_a7c3e91d5b24.py b/src/dispatch/database/revisions/tenant/versions/2025-09-02_a7c3e91d5b24.py
+new file mode 100644
+index 00000000..3aff32f6
+--- /dev/null
++++ b/src/dispatch/database/revisions/tenant/versions/2025-09-02_a7c3e91d5b24.py
+@@ -0,0 +1,24 @@
++"""Add reason to signal filter.
++
++Revision ID: a7c3e91d5b24
++Revises: ff08d822ef2c
++Create Date: 2025-09-02 10:00:00.000000
++
++"""
++
++from alembic import op
++import sqlalchemy as sa
++
++# revision identifiers, used by Alembic.
++revision = "a7c3e91d5b24"
++down_revision = "ff08d822ef2c"
++branch_labels = None
++depends_on = None
++
++
++def upgrade():
++    op.add_column("signal_filter", sa.Column("reason", sa.String(), nullable=True))
++
++
++def downgrade():
++    op.drop_column("signal_filter", "reason")

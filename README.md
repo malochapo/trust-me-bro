@@ -16,7 +16,8 @@ sobre's maintainer wrote this benchmark. To keep that from tilting it, the proto
 
 ## Status
 
-The pilot (phase 1) has not run yet. No result exists.
+- **Pilot 1 is done** ([docs/pilot-1.md](docs/pilot-1.md)): 100 runs, all successful. Its tasks were too easy to separate the arms on success. On cost, against Claude Code alone: rtk 1.06, Headroom 1.12, sobre 1.13, lean-ctx 1.59.
+- **Pilot 2 is in preparation** ([docs/pilot-2.md](docs/pilot-2.md)), with longer and harder tasks.
 
 ## Why another benchmark
 

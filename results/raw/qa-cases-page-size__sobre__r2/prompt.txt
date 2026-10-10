@@ -1,0 +1,6 @@
+This repository is Dispatch, an incident management platform. In the web UI, how many cases does the Cases table show per page when a user first opens it? Which file sets that initial value, and what default does the Vuex store module for cases declare for the same table?
+
+Finish your answer with these three lines, in this exact form:
+DEFAULT: <number>
+FILE: <path of the file that sets the initial value>
+STORE_DEFAULT: <number>

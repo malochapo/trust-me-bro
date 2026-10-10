@@ -1,0 +1,13 @@
+{
+  "active": true,
+  "cep_sessions": 1,
+  "commands": {
+    "ctx_read": 6,
+    "ctx_search": 2
+  },
+  "observer_seen": true,
+  "radar_events": 11,
+  "tokens_input": 19904,
+  "tokens_output": 4640,
+  "total_commands": 8
+}

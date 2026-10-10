@@ -1,0 +1,77 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..9fa573d9 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -33,6 +33,7 @@ from .exceptions import (
+     SignalNotIdentifiedException,
+ )
+ from .models import (
++    assoc_signal_filters,
+     assoc_signal_instance_entities,
+     Signal,
+     SignalCreate,
+@@ -1019,6 +1020,15 @@ def get_signal_stats(
+         active_count.label("active_count"), expired_count.label("expired_count")
+     ).filter(cast(SignalFilter.expression, JSONB).op("@>")(entity_subquery))
+ 
++    if signal_id:
++        query = query.filter(
++            SignalFilter.id.in_(
++                select(assoc_signal_filters.c.signal_filter_id).where(
++                    assoc_signal_filters.c.signal_id == signal_id
++                )
++            )
++        )
++
+     snooze_result = db_session.execute(query).fetchone()
+ 
+     # Calculate the date threshold based on num_days
+diff --git a/tests/signal/test_signal_stats_service.py b/tests/signal/test_signal_stats_service.py
+index 34b4261d..f7701016 100644
+--- a/tests/signal/test_signal_stats_service.py
++++ b/tests/signal/test_signal_stats_service.py
+@@ -236,3 +236,44 @@ def test_get_signal_stats_with_signal_id_filter(session, entity, entity_type):
+         + signal_data_signal2.num_signal_instances_snoozed
+         == 2
+     )
++
++
++def test_get_signal_stats_snoozes_scoped_to_signal(session, entity, entity_type):
++    """Snooze counts must only include filters attached to the requested signal."""
++    from dispatch.signal.service import get_signal_stats
++    from dispatch.signal.models import SignalFilterAction
++    from tests.factories import SignalFactory, SignalFilterFactory
++
++    entity.entity_type = entity_type
++    signal1 = SignalFactory()
++    signal2 = SignalFactory()
++    expression = [{"or": [{"model": "Entity", "field": "id", "op": "==", "value": entity.id}]}]
++
++    active = SignalFilterFactory(
++        action=SignalFilterAction.snooze,
++        expiration=datetime.now(timezone.utc) + timedelta(days=1),
++        expression=expression,
++    )
++    expired = SignalFilterFactory(
++        action=SignalFilterAction.snooze,
++        expiration=datetime.now(timezone.utc) - timedelta(days=1),
++        expression=expression,
++    )
++    signal1.filters.append(active)
++    signal2.filters.append(expired)
++    session.commit()
++
++    def stats(signal_id):
++        return get_signal_stats(
++            db_session=session,
++            entity_value=entity.value,
++            entity_type_id=entity_type.id,
++            signal_id=signal_id,
++        )
++
++    s1 = stats(signal1.id)
++    assert (s1.num_snoozes_active, s1.num_snoozes_expired) == (1, 0)
++    s2 = stats(signal2.id)
++    assert (s2.num_snoozes_active, s2.num_snoozes_expired) == (0, 1)
++    all_signals = stats(None)
++    assert (all_signals.num_snoozes_active, all_signals.num_snoozes_expired) == (1, 1)

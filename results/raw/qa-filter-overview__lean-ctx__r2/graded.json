@@ -1,0 +1,16 @@
+{
+  "arm": "lean-ctx",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The order is right: snooze, then dedup, then case creation. The answer covers the `break` on an expired snooze filter, the skip of snooze filters with no expiration, and the empty-expression case that snoozes every instance. It gives the 45-minute default from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, which applies only when the signal has no filters, and notes the docstring's stale \"1 hour\". It treats per-filter windows as seconds, with defaults of 3600 for the column and 600 for the schema. Canary handling matches the reference: never deduplicated or used as a target, can be snoozed, and never opens a case. It does not spell out that a UI window of 120 means 120 seconds, but the seconds unit is clear. I found no false statements.",
+    "score": 3
+  },
+  "graded_at": "2026-10-10T18:52:20+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-filter-overview__lean-ctx__r2",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

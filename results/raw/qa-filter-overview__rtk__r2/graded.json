@@ -1,0 +1,16 @@
+{
+  "arm": "rtk",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The answer matches the reference on every rubric point. The order is snooze, then dedup, then case creation. Snooze handling covers skipping filters with no expiration, the `break` on an expired filter that disables later filters, and expression-based versus empty-expression snoozing. The default dedup window is 45 minutes from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, it applies only when the signal has no filters, and the answer notes the stale \"1-hour\" docstring. Per-filter windows are treated as seconds, with the 3600 column default and the 600 Pydantic default. Canary instances are never deduplicated or used as dedup targets, can still be snoozed, and return before any case is created. The extra details it adds don't contradict the reference. It does not spell out the UI minutes-versus-seconds mismatch, which is a minor gap.",
+    "score": 3
+  },
+  "graded_at": "2026-10-10T18:50:53+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-filter-overview__rtk__r2",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

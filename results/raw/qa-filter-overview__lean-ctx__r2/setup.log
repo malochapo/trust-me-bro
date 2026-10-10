@@ -1,0 +1,16 @@
+--- setup.sh exit 0
+--- stdout
+{}
+--- stderr
+Installed Claude Code hooks at /tmp/sobre-bench-work/run-6d82f84bc055/home/.claude/hooks
+Added lean-ctx MCP server to /tmp/sobre-bench-work/run-6d82f84bc055/home/.claude/.claude.json
+  [32m✓[0m Claude Code: denied native Grep/Glob (Replace mode; Read kept for edit gate + auto memory)
+  [32m✓[0m Claude Code: auto-approved 59 lean-ctx MCP tools in permissions.allow
+  ✓ Claude Code rules up-to-date
+  ✓ SKILL.md installed for claude
+  Skipping project files: not inside a git repository.
+  Run this command from your project root to create CLAUDE.md / AGENTS.md.
+
+Run 'lean-ctx gain' after using some commands to see your savings.
+indexes (graph + BM25) done (search may still be warming)
+  BM25: indexed 8734 chunks, 0.9 MB persisted

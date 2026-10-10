@@ -1,0 +1,36 @@
+{
+  "arm": "sobre",
+  "details": {
+    "must": [
+      {
+        "id": "commit",
+        "matched": true,
+        "pattern": "COMMIT:\\s*`?{plant:p1-default-dedup-window:short}"
+      },
+      {
+        "id": "author",
+        "matched": true,
+        "pattern": "AUTHOR:\\s*`?Jordan Lee\\b"
+      },
+      {
+        "id": "date",
+        "matched": true,
+        "pattern": "DATE:\\s*`?2025-06-19\\b"
+      },
+      {
+        "id": "previous",
+        "matched": true,
+        "pattern": "PREVIOUS_VALUE:\\s*`?(1\\s*hour|one\\s+hour|60\\s*min)"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-10T18:53:57+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-history-dedup-config__sobre__r2",
+  "score": 1.0,
+  "task_id": "qa-history-dedup-config",
+  "task_sha256": "0256f338bf789094d1d9cbd8117981ab046aca4964e16d2445d46e229338862f"
+}

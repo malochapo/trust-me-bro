@@ -1,0 +1,6 @@
+This repository is Dispatch, an incident management platform. When a signal definition has no filters at all, new instances of that signal can still be grouped into a recent case. How long is that grouping window, and how can an operator change it?
+
+Finish your answer with these three lines, in this exact form:
+VALUE: <number and unit>
+SETTING: <name of the setting>
+FILE: <path of the file that defines the setting>

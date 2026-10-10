@@ -1,0 +1,62 @@
+This is what the code does today. It comes from `signal/flows.py`, `signal/service.py`, `signal/models.py` and `database/service.py`. I read the code only and did not run anything.
+
+## Entry point and order of checks
+
+The scheduler path is `process_organization_signals` → `process_signal_batch` → `signal_flows.signal_instance_create_flow`. The scheduler's `signal_flows.create_signal_instance` only builds and stores the instance through `signal_service.create_instance`, so it does not decide anything. `signal_instance_create_flow` then runs these steps in order:
+
+1. It reloads the instance and redacts `raw` with `redact_raw`.
+2. It extracts entities from the payload. This uses the signal's entity types plus all entity types scoped `all`, via `entity_service.find_entities`. Both filters below depend on these entities.
+3. It calls `signal_service.filter_signal`. If that returns True, the flow logs, optionally updates the Slack signal message, and returns. No case is created and no workflows run.
+4. If the instance is `canary`, it returns.
+5. If `signal.create_case` is false, it returns.
+6. Otherwise it builds `CaseCreate`, calls `case_service.create`, sets `signal_instance.case`, and runs `case_flows.case_new_create_flow`. It then runs `engage_signal_identity` if the signal has engagements and entities were found, and finally runs each of the signal's workflows.
+
+Inside `filter_signal`, `filter_snooze` always runs first. `filter_dedup` runs only if `filter_action` is still unset. If neither set an action, `filter_action` becomes `SignalFilterAction.none` and the function returns False. In every case it commits.
+
+## Snooze: `filter_snooze`
+
+- It iterates `signal.filters` and considers only filters whose mode is `active` and whose action is `snooze`.
+- A filter with no `expiration` is skipped with a warning. This means a snooze filter without an expiry never snoozes anything.
+- If `expiration` (treated as UTC) is at or before now, the code runs `break`, not `continue`. The first expired snooze filter in the list therefore stops evaluation of every later filter, including ones that haven't expired.
+- If the filter has an `expression`, the code builds a query over `SignalInstance` rows for the same `signal_id`. It applies `apply_filter_specific_joins` and `apply_filters` (the filter spec uses model, field, op and value, with and/or support). For `SignalInstance` those joins reach `Entity` and `EntityType` through `SignalInstance.entities`. It then restricts the query to the current instance's id. If the instance matches, `filter_action` is set to `snooze`.
+- If the expression is empty, every instance of that signal is snoozed.
+- There is no time window on snooze, only the expiration timestamp. A snoozed instance gets no `case_id`.
+
+## Deduplication: `filter_dedup`
+
+**Canary:** if the instance is `canary`, the function returns immediately without deduplicating.
+
+**No filters on the signal at all** (`signal.filters` is empty). The default rule applies:
+- It looks for another instance of the same signal, created within the last `SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES * 60` seconds, that already has a `case_id`.
+- The config default is **45 minutes**, read from the env var `SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES` (`config.py:95`).
+- Canary instances are excluded, and entities are ignored.
+- The match is the most recent such instance (ordered by `created_at` descending).
+- If one is found, the instance takes its `case_id` and `filter_action` becomes `deduplicate`.
+- The `filter_signal` docstring says a 1-hour window. The code uses 45 minutes unless the env var overrides it.
+
+**Signal has filters.** The default rule is skipped entirely, even if none of those filters are dedup filters. Snooze-only filters therefore leave the signal with no deduplication at all. For each `active` filter with action `deduplicate`:
+- It queries non-canary instances of the same signal and joins entities and entity types.
+- It applies the filter's `expression`.
+- It restricts to instances created within `f.window` seconds. The model default is `60*60` (1 hour, at `models.py:206`). The pydantic `SignalFilterBase` defaults `window` to `600` (10 minutes), so filters created through the API schema get 10 minutes unless a value is supplied.
+- It requires a shared entity: `Entity.id` must be in the current instance's entity ids. Dedup filters therefore only match on shared entities, so an instance with no entities never matches.
+- It excludes the instance itself and orders by `created_at` ascending.
+- The first dedup filter with any match wins. The instance takes the `case_id` of the earliest match and `filter_action` becomes `deduplicate`.
+- The earliest match's `case_id` is not checked for being non-null, unlike the default path, so a matching instance with no case would copy `case_id=None`.
+- The filters' `mode` is checked but not their `expiration`.
+
+## Canary signals
+
+- `filter_snooze` does not check `canary`, so a canary instance can be snoozed.
+- `filter_dedup` returns early for a canary instance, and canary instances are excluded as dedup targets in both paths.
+- If a canary is not snoozed, `signal_instance_create_flow` stores it and returns before case creation. The code comment says "limited support for canary signals". Its `filter_action` ends up `none`, with no case and no workflows.
+
+## Units summary
+
+| Setting | Unit | Default as applied |
+|---|---|---|
+| Default dedup window (`SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES`) | minutes, converted to seconds by `*60` in `filter_dedup` | 45 |
+| `SignalFilter.window` | seconds | DB column: 3600. API schema: 600 |
+| `SignalFilter.expiration` | UTC datetime | none, and snooze is skipped when it is unset |
+| `_should_update_signal_message` | 5-second gap between updates for a deduplicated case, using a 60-second TTL cache | n/a |
+
+The last row only affects Slack message updates for deduplicated instances, not the dedup decision.

@@ -1,0 +1,44 @@
+{
+  "arm": "headroom",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_filter_reason.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 0,
+      "last_line": "37 passed, 1 skipped in 13.73s",
+      "seconds": 18.5
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_filter_reason.py"
+      ],
+      "exit": 0,
+      "last_line": "5 passed in 4.04s",
+      "seconds": 8.7
+    }
+  },
+  "graded_at": "2026-10-10T19:08:06+00:00",
+  "kind": "tests",
+  "pass": true,
+  "rep": 2,
+  "run_id": "change-filter-reason__headroom__r2",
+  "score": 1.0,
+  "task_id": "change-filter-reason",
+  "task_sha256": "c5ba9ecaef307d1e065616cf0ca1ffebbad2eb7a14ad1869c1ba262152d6d187"
+}

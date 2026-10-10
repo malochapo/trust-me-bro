@@ -1,0 +1,171 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "/tmp/sobre-bench-work/run-a48f2e6132e8/bin/lean-ctx hook observe",
+            "type": "command"
+          }
+        ],
+        "matcher": ".*"
+      },
+      {
+        "hooks": [
+          {
+            "command": "/tmp/sobre-bench-work/run-a48f2e6132e8/bin/lean-ctx hook read-dedup",
+            "type": "command"
+          }
+        ],
+        "matcher": "Read"
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "command": "/tmp/sobre-bench-work/run-a48f2e6132e8/bin/lean-ctx hook observe",
+            "type": "command"
+          }
+        ],
+        "matcher": ".*"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "/tmp/sobre-bench-work/run-a48f2e6132e8/bin/lean-ctx hook rewrite",
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash|bash"
+      },
+      {
+        "hooks": [
+          {
+            "command": "/tmp/sobre-bench-work/run-a48f2e6132e8/bin/lean-ctx hook redirect",
+            "type": "command"
+          }
+        ],
+        "matcher": "Read|read|ReadFile|read_file|View|view|Grep|grep|Search|search|ListFiles|list_files|ListDirectory|list_directory|Glob|glob"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "command": "/tmp/sobre-bench-work/run-a48f2e6132e8/bin/lean-ctx hook observe",
+            "type": "command"
+          }
+        ],
+        "matcher": ".*"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "/tmp/sobre-bench-work/run-a48f2e6132e8/bin/lean-ctx hook observe",
+            "type": "command"
+          }
+        ],
+        "matcher": ".*"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "/tmp/sobre-bench-work/run-a48f2e6132e8/bin/lean-ctx hook observe",
+            "type": "command"
+          }
+        ],
+        "matcher": ".*"
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "/tmp/sobre-bench-work/run-a48f2e6132e8/bin/lean-ctx hook observe",
+            "type": "command"
+          }
+        ],
+        "matcher": ".*"
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "mcp__lean-ctx__ctx_read",
+      "mcp__lean-ctx__ctx_shell",
+      "mcp__lean-ctx__shell",
+      "mcp__lean-ctx__ctx_search",
+      "mcp__lean-ctx__ctx_glob",
+      "mcp__lean-ctx__ctx_tree",
+      "mcp__lean-ctx__ctx_compose",
+      "mcp__lean-ctx__ctx_call",
+      "mcp__lean-ctx__ctx_patch",
+      "mcp__lean-ctx__ctx_optimize",
+      "mcp__lean-ctx__ctx_overview",
+      "mcp__lean-ctx__ctx_preload",
+      "mcp__lean-ctx__ctx_compress",
+      "mcp__lean-ctx__ctx_compare",
+      "mcp__lean-ctx__ctx_metrics",
+      "mcp__lean-ctx__ctx_session",
+      "mcp__lean-ctx__ctx_knowledge",
+      "mcp__lean-ctx__ctx_analyze",
+      "mcp__lean-ctx__ctx_benchmark",
+      "mcp__lean-ctx__ctx_cache",
+      "mcp__lean-ctx__ctx_discover",
+      "mcp__lean-ctx__ctx_delta",
+      "mcp__lean-ctx__ctx_edit",
+      "mcp__lean-ctx__ctx_dedup",
+      "mcp__lean-ctx__ctx_fill",
+      "mcp__lean-ctx__ctx_intent",
+      "mcp__lean-ctx__ctx_response",
+      "mcp__lean-ctx__ctx_context",
+      "mcp__lean-ctx__ctx_graph",
+      "mcp__lean-ctx__ctx_outline",
+      "mcp__lean-ctx__ctx_callgraph",
+      "mcp__lean-ctx__ctx_refactor",
+      "mcp__lean-ctx__ctx_routes",
+      "mcp__lean-ctx__ctx_cost",
+      "mcp__lean-ctx__ctx_heatmap",
+      "mcp__lean-ctx__ctx_gain",
+      "mcp__lean-ctx__ctx_expand",
+      "mcp__lean-ctx__ctx_impact",
+      "mcp__lean-ctx__ctx_architecture",
+      "mcp__lean-ctx__ctx_review",
+      "mcp__lean-ctx__ctx_pack",
+      "mcp__lean-ctx__ctx_index",
+      "mcp__lean-ctx__ctx_artifacts",
+      "mcp__lean-ctx__ctx_smells",
+      "mcp__lean-ctx__ctx_quality",
+      "mcp__lean-ctx__ctx_proof",
+      "mcp__lean-ctx__ctx_verify",
+      "mcp__lean-ctx__ctx_execute",
+      "mcp__lean-ctx__ctx_feedback",
+      "mcp__lean-ctx__ctx_control",
+      "mcp__lean-ctx__ctx_plan",
+      "mcp__lean-ctx__ctx_compile",
+      "mcp__lean-ctx__ctx_discover_tools",
+      "mcp__lean-ctx__ctx_provider",
+      "mcp__lean-ctx__ctx_radar",
+      "mcp__lean-ctx__ctx_retrieve",
+      "mcp__lean-ctx__ctx_compress_memory",
+      "mcp__lean-ctx__ctx_load_tools",
+      "mcp__lean-ctx__ctx"
+    ],
+    "deny": [
+      "Grep",
+      "Glob"
+    ]
+  },
+  "statusLine": {
+    "command": "/tmp/sobre-bench-work/run-a48f2e6132e8/bin/lean-ctx statusline",
+    "padding": 0,
+    "type": "command"
+  }
+}
