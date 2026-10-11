@@ -18,6 +18,7 @@ DEFAULT_PLANTS = BENCH_ROOT / "build" / "plants.json"
 DEFAULT_WORK = Path("/tmp/sobre-bench-work")
 ALL_ARMS = ["native", "native-told", "sobre", "sobre-dev", "sobre-dev-06", "sobre-dev-09", "sobre-dev-09b", "sobre-hooks",
             "sobre-keyonly", "sobre-rc2", "sobre-rc2-mcp", "sobre-rc2-mcp-told", "sobre-rc2-dense", "sobre-rc2-dense-told",
+            "sobre-rc3-dense", "sobre-rc3-dense-told",
             "lean-ctx", "headroom", "rtk"]
 # The released tools' arms. A variant of one (a development build, or the same build set up
 # differently) is named "<arm>-<variant>" and bills to that arm's key unless it has its own.

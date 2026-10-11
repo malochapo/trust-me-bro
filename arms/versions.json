@@ -150,6 +150,26 @@
     "native-told": {
       "tool": null,
       "version": null
+    },
+    "sobre-rc3-dense": {
+      "tool": "sobre",
+      "version": "0.1.0-rc.3 (build with local embeddings)",
+      "source": "github-release",
+      "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.3/sobre-dense-x86_64-unknown-linux-gnu.tar.gz",
+      "sha256": "a8284d6e36a8444d37fd3fc7f4e2259b28e186c35a9054c45b3c8fe79392e01b",
+      "binary": "sobre-rc3-dense",
+      "archive_binary": "sobre",
+      "version_output": "sobre 0.1.0-rc.3"
+    },
+    "sobre-rc3-dense-told": {
+      "tool": "sobre",
+      "version": "0.1.0-rc.3 (build with local embeddings)",
+      "source": "github-release",
+      "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.3/sobre-dense-x86_64-unknown-linux-gnu.tar.gz",
+      "sha256": "a8284d6e36a8444d37fd3fc7f4e2259b28e186c35a9054c45b3c8fe79392e01b",
+      "binary": "sobre-rc3-dense",
+      "archive_binary": "sobre",
+      "version_output": "sobre 0.1.0-rc.3"
     }
   }
 }

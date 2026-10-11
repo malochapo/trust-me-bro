@@ -32,6 +32,7 @@ A context tool can therefore move cost mainly by changing the agent's path: fewe
 | A, long sessions | `long-incident-then-dedup` | Three messages of `mt-reminders-incident`, `/compact`, three of `mt-dedup-snooze-regressions`, then one recap that needs facts from both halves |
 | A | `long-security-then-redaction` | The same with `mt-security-review` and `mt-redaction-entities` |
 | B, the next day | `xs-reminders-next-day` | Day 1 diagnoses the reminder bug from the logs. Day 2, a new session, fixes it and gives day 1's facts (file, function, commit, image tag, first missed Monday) |
+| B2, the next day after saving | `xs-reminders-saved`, `xs-dedup-saved` | The part B tasks with one more message at the end of day 1: the user asks the agent to save what was found for tomorrow. Both arms then save on purpose, and day 2 measures how well each mechanism brings it back |
 | B | `xs-dedup-next-day` | Day 1 lists the snooze and deduplication commits. Day 2, a new session, finds which one broke deduplication windows, fixes it, and gives day 1's facts |
 | C, search | `ss-signal-post-redraw`, `ss-latecomer-briefing`, `ss-call-invite-choice`, `ss-thread-case-bring-in`, `ss-oncall-turn-tally` | Questions worded by behaviour, not by the code's words, each needing a file, a function and a fact from reading the code |
 | D, logs | `mt-logs-case-cost` | A new log diagnosis conversation: a case cost bug (`q2-case-cost-cutoff`), 6.9 MB of three logs in other formats than pilot 2's |
@@ -53,7 +54,8 @@ A context tool can therefore move cost mainly by changing the agent's path: fewe
 | `sobre-rc2` | sobre rc.2 as `sobre init claude` sets it up: the hooks only | A, D |
 | `sobre-rc2-mcp` | rc.2 with `--mcp`: hooks, MCP server, skill, and a prebuilt index | A, B, C |
 | `sobre-rc2-mcp-told` | `sobre-rc2-mcp`, with a user CLAUDE.md that says when to use `sobre_search` (semantic) and `sobre_session` | B |
-| `sobre-rc2-dense-told` | the rc.2 build with local embeddings, `--mcp`, model provisioned, index prebuilt, and a CLAUDE.md that also asks for `mode="hybrid"` | C, after the fixes below |
+| `sobre-rc3-dense` | sobre 0.1.0-rc.3, the build with local embeddings: `--mcp`, model provisioned, index prebuilt. From rc.3, semantic search ranks by hybrid by default | C |
+| `sobre-rc3-dense-told` | `sobre-rc3-dense` with the CLAUDE.md of `sobre-rc2-mcp-told` | C |
 
 The `-told` arms do not compare sobre with Claude Code. They measure what the tools are worth once an agent uses them, which in pilots 1 to 3 never happened. If they win, the next question is how an agent finds the tools on its own.
 
@@ -65,7 +67,8 @@ Haiku 5.5 and Sonnet 5.5 at effort `medium`, with the run limits of pilot 3.
 | --- | --- | --- | --- | --- |
 | A | native, sobre-rc2, sobre-rc2-mcp | 3 | 18 | $9 + $1 |
 | B | native, native-told, sobre-rc2-mcp, sobre-rc2-mcp-told | 3 | 24 | $5 + $1 |
-| C | native, sobre-rc2-mcp, sobre-rc2-mcp-told (then the dense arm) | 3 | 45 (+15) | $4 + $1 |
+| C | native, sobre-rc2-mcp, sobre-rc2-mcp-told, then sobre-rc3-dense and sobre-rc3-dense-told | 3 | 75 | $6 + $1 |
+| B2 | native, sobre-rc2-mcp-told | 3 | 12 | $3 + $0.3 |
 | D | native, sobre-rc2 | 6 (new task), 4 (pilot 3's) | 20 | $6 + $0.5 |
 
 That is about $28, with the rest of the month's $55 kept for re-runs. Estimates use pilot 3's corrected costs.
@@ -81,5 +84,5 @@ One run per new arm on Haiku (`results/pilot4/smoke/`), before the pilot:
   - `sobre_search action=semantic` uses BM25 unless the agent passes `mode`, even in the build with embeddings and with the model installed. So the dense build without a told CLAUDE.md is the BM25 arm, and is not run.
   - In one session, a first hybrid search used the embeddings (coverage 100%), and the next one answered "dense index not built" and fell back to BM25.
 
-  The dense arm waits for both to be fixed.
+  Both are fixed in sobre 0.1.0-rc.3 (malochapo/sobre-ai#103), which the dense arms run.
 - **Provisioning in a clean environment:** sobre's model download needs the network proxy, which the harness's clean environment does not pass. The model and ONNX Runtime are provisioned once with network access, into `$BENCH_TOOLS/cache/sobre-dense-home`, and linked into each run. sobre's message for a failed download blamed the model ("must ship onnx/model.onnx"), not the network.

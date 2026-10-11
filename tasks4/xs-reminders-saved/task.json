@@ -1,0 +1,77 @@
+{
+  "id": "xs-reminders-saved",
+  "family": "cross-session",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform; it is the code we run in production. Since mid-August, assignees no longer get the weekly Monday reminders to close their long-running triage and stable cases, while the daily triage reminders still arrive. Nobody changed the reminder settings. The scheduler's and the API's logs from 2025-07-28 to 2025-08-20 are in {DATA_DIR}/scheduler.log and {DATA_DIR}/api.log. Find the root cause, and the deploy that shipped it to production. Do not change any code yet.\n",
+  "followups": [
+    "Thanks, that is all for today. Before we stop, save what we found so that you can pick it up tomorrow in a new session.\n",
+    {
+      "new_session": true,
+      "prompt": "Yesterday you found out why assignees stopped getting the weekly Monday reminders to close their long-running triage and stable cases, from the scheduler's and the API's logs in {DATA_DIR}. Please fix it now, and add a regression test that would have caught it. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`. When you are done, end your reply with these lines, in this exact form:\nFILE: <path of the file with the weekday bug>\nFUNCTION: <name of the function with the weekday bug>\nINTRODUCED_BY: <hash of the commit that introduced the weekday bug, at least 8 characters>\nDEPLOYED_IMAGE: <image tag of the deploy that shipped it>\nFIRST_MISSED: <date of the first Monday whose weekly reminders were not sent, YYYY-MM-DD>\n"
+    }
+  ],
+  "data": "build/pilot2/data/log-reminders-stopped",
+  "grader": {
+    "kind": "all",
+    "graders": [
+      {
+        "kind": "tests",
+        "command": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/case/test_hidden_mt_case_reminders.py"
+        ],
+        "regression": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/case"
+        ]
+      },
+      {
+        "kind": "facts",
+        "must": [
+          {
+            "id": "file",
+            "any_of": [
+              "^\\s*FILE:\\s*`?\\S*case/scheduled\\.py\\b"
+            ]
+          },
+          {
+            "id": "function",
+            "any_of": [
+              "^\\s*FUNCTION:\\s*`?(\\S*\\.)?_is_reminder_day\\b"
+            ]
+          },
+          {
+            "id": "commit",
+            "any_of": [
+              "^\\s*INTRODUCED_BY:\\s*`?{plant:q4-reminder-day:short}"
+            ]
+          },
+          {
+            "id": "image",
+            "any_of": [
+              "^\\s*DEPLOYED_IMAGE:[^\\n]*main-{plant:17b016b61a604caa0f0a090ec5ec018ca0c13dbf:short}"
+            ]
+          },
+          {
+            "id": "first-missed",
+            "any_of": [
+              "^\\s*FIRST_MISSED:\\s*`?2025-08-18\\b"
+            ]
+          }
+        ],
+        "must_not": []
+      }
+    ]
+  },
+  "notes": "Pilot 4 part B, fair variant of tasks4/xs-reminders-next-day: day 1 ends with the user asking the agent to save what was found for tomorrow, so both arms save on purpose and day 2 measures how well each mechanism (Claude Code's memory, sobre's session tools) brings it back. Pilot 4 part B. Day 1 is message 1 of tasks3/mt-reminders-incident (diagnose, change nothing). Day 2 starts a new session in the same repository and home: fix it, and give the facts found on day 1. An agent that kept nothing must diagnose again from the logs. The hidden test is mt-reminders-incident's without its TypeError case, which day 2 does not ask for."
+}
