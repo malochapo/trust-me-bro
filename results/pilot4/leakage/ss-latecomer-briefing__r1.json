@@ -1,0 +1,132 @@
+{
+  "answer": "I can't answer this reliably. I have no tools in this session and can't see the Dispatch repository, and nothing about its code is in my training knowledge. Any file path, function name, or age threshold I gave you would be invented, and you'd likely act on it.\n\nWhat I can say is what to look for. The decision is probably made in the code that generates catch-up or summary briefings for latecomers. Look for a function that checks for a previously generated briefing for the same incident and compares its timestamp to a freshness window. The window is likely a constant such as `MAX_AGE`, `TTL`, or `CACHE_WINDOW`, and may be expressed in seconds or minutes. A separate helper, perhaps named something like `find_recent_summary` or `get_cached_briefing`, would do the lookup.\n\nA search along these lines should find it quickly:\n\n- `grep -rniE \"catch.?up|briefing|late.?join\" --include=*.py --include=*.ts --include=*.go .`\n- `grep -rniE \"max_age|ttl|stale|fresh|reuse|cache\" ` limited to the files that turn up\n\nIf you run those, or paste the relevant function, I can confirm which function decides, what the age limit is, and which function does the lookup.\n\nFILE: unknown, I could not inspect the repository\nFUNCTION: unknown\nMAX_AGE: unknown\nLOOKUP: unknown",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 4728,
+    "duration_ms": 5148,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1300,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1992,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.009537499999999999,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 450,
+        "provider": "firstParty",
+        "thinkingTokens": 0,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't answer this reliably. I have no tools in this session and can't see the Dispatch repository, and nothing about its code is in my training knowledge. Any file path, function name, or age threshold I gave you would be invented, and you'd likely act on it.\n\nWhat I can say is what to look for. The decision is probably made in the code that generates catch-up or summary briefings for latecomers. Look for a function that checks for a previously generated briefing for the same incident and compares its timestamp to a freshness window. The window is likely a constant such as `MAX_AGE`, `TTL`, or `CACHE_WINDOW`, and may be expressed in seconds or minutes. A separate helper, perhaps named something like `find_recent_summary` or `get_cached_briefing`, would do the lookup.\n\nA search along these lines should find it quickly:\n\n- `grep -rniE \"catch.?up|briefing|late.?join\" --include=*.py --include=*.ts --include=*.go .`\n- `grep -rniE \"max_age|ttl|stale|fresh|reuse|cache\" ` limited to the files that turn up\n\nIf you run those, or paste the relevant function, I can confirm which function decides, what the age limit is, and which function does the lookup.\n\nFILE: unknown, I could not inspect the repository\nFUNCTION: unknown\nMAX_AGE: unknown\nLOOKUP: unknown",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "30a7ee67-a5df-45e9-ade5-ceb858d51a8b",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 429,
+    "total_cost_usd": 0.009537499999999999,
+    "ttft_ms": 5106,
+    "ttft_stream_ms": 1299,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1992
+      },
+      "cache_creation_input_tokens": 1992,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1992
+          },
+          "cache_creation_input_tokens": 1992,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 450,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 450,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "bbffe158-98b0-4f02-92bc-fe680f316547"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "max_age",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "lookup",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.0
+  }
+}

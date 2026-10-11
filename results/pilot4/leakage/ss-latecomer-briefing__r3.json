@@ -1,0 +1,132 @@
+{
+  "answer": "I can't answer this from knowledge. Dispatch isn't a codebase I know, and I can't see the repository or run any tools. Any function name, file path, or age limit I gave would be a guess, so I won't present one as fact.\n\nTo find the answers yourself, search for the code that builds the late-joiner briefing, which may be called \"catch-up\", \"summary\", or \"recap\". The deciding function is probably the one that checks for an existing briefing before calling the model. The age limit is probably a constant or config value, such as a TTL or max-age, compared against the stored briefing's creation time. The lookup is probably a query helper that fetches the latest briefing for the incident.\n\nIf you paste the relevant code or give me file access, I can answer precisely.\n\nFILE: unknown (cannot determine without repository access)\nFUNCTION: unknown\nMAX_AGE: unknown\nLOOKUP: unknown",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 3648,
+    "duration_ms": 4080,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1273,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1986,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.008602499999999999,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 358,
+        "provider": "firstParty",
+        "thinkingTokens": 70,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't answer this from knowledge. Dispatch isn't a codebase I know, and I can't see the repository or run any tools. Any function name, file path, or age limit I gave would be a guess, so I won't present one as fact.\n\nTo find the answers yourself, search for the code that builds the late-joiner briefing, which may be called \"catch-up\", \"summary\", or \"recap\". The deciding function is probably the one that checks for an existing briefing before calling the model. The age limit is probably a constant or config value, such as a TTL or max-age, compared against the stored briefing's creation time. The lookup is probably a query helper that fetches the latest briefing for the incident.\n\nIf you paste the relevant code or give me file access, I can answer precisely.\n\nFILE: unknown (cannot determine without repository access)\nFUNCTION: unknown\nMAX_AGE: unknown\nLOOKUP: unknown",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "83340586-8c03-471a-b1a8-64e0c682ced6",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 449,
+    "total_cost_usd": 0.008602499999999999,
+    "ttft_ms": 1821,
+    "ttft_stream_ms": 1273,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1986
+      },
+      "cache_creation_input_tokens": 1986,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1986
+          },
+          "cache_creation_input_tokens": 1986,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 358,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 358,
+      "output_tokens_details": {
+        "thinking_tokens": 70
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "8863e07d-18b2-4e85-b729-3a857faeea17"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "max_age",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "lookup",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.0
+  }
+}

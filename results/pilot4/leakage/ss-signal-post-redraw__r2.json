@@ -1,0 +1,127 @@
+{
+  "answer": "I can't see the repository and have no tools, and I don't recall a Dispatch function that throttles redrawing the alert post in a case thread. I would rather not invent a function name or interval and present it as fact.\n\nFrom memory of Dispatch's layout, duplicate signal instances are folded into an existing case in the signal flow code under `src/dispatch/signal/`, and the Slack message rendering lives in the Slack plugin under `src/dispatch/plugins/dispatch_slack/`. The throttle is probably a small helper near one of those that compares a \"last posted\" timestamp for the case against the current time. I can't confirm which file or function it is, or what the gap is.\n\nTo find it, search for the code that posts the signal-alert message into the case thread, then look for a timestamp comparison with a `timedelta` or a seconds/minutes constant nearby. Searching for terms like `signal`, `thread`, `repost`, `bump`, `last_`, and `timedelta` should turn it up quickly. The line under MIN_GAP is the value to check.\n\nFILE: unknown (not verified; likely under src/dispatch/signal/ or src/dispatch/plugins/dispatch_slack/)\nFUNCTION: unknown (not verified)\nMIN_GAP: unknown (not verified)",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 7431,
+    "duration_ms": 7794,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1305,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1941,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.01277,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 786,
+        "provider": "firstParty",
+        "thinkingTokens": 367,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't see the repository and have no tools, and I don't recall a Dispatch function that throttles redrawing the alert post in a case thread. I would rather not invent a function name or interval and present it as fact.\n\nFrom memory of Dispatch's layout, duplicate signal instances are folded into an existing case in the signal flow code under `src/dispatch/signal/`, and the Slack message rendering lives in the Slack plugin under `src/dispatch/plugins/dispatch_slack/`. The throttle is probably a small helper near one of those that compares a \"last posted\" timestamp for the case against the current time. I can't confirm which file or function it is, or what the gap is.\n\nTo find it, search for the code that posts the signal-alert message into the case thread, then look for a timestamp comparison with a `timedelta` or a seconds/minutes constant nearby. Searching for terms like `signal`, `thread`, `repost`, `bump`, `last_`, and `timedelta` should turn it up quickly. The line under MIN_GAP is the value to check.\n\nFILE: unknown (not verified; likely under src/dispatch/signal/ or src/dispatch/plugins/dispatch_slack/)\nFUNCTION: unknown (not verified)\nMIN_GAP: unknown (not verified)",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "565fe64b-673e-4171-b067-f0a199f6e7fa",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 371,
+    "total_cost_usd": 0.01277,
+    "ttft_ms": 4620,
+    "ttft_stream_ms": 1304,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1941
+      },
+      "cache_creation_input_tokens": 1941,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1941
+          },
+          "cache_creation_input_tokens": 1941,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 786,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 786,
+      "output_tokens_details": {
+        "thinking_tokens": 367
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "82f95363-6429-4831-9c91-5491fb8a9f5e"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "min_gap",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.0
+  }
+}

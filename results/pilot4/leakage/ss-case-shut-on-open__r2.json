@@ -1,0 +1,127 @@
+{
+  "answer": "In Dispatch, when a case type has auto-close enabled, the new-case creation flow calls `case_auto_close_flow` right after the case is created. That function marks the case as closed. As far as I remember, it also sets the resolution text to something like \"Auto closed via case type auto close configuration.\" and records the resolution reason `CaseResolutionReason.user_acknowledged`.\n\nI can't see the repository, so this is from memory of the Dispatch source. Check the path and the enum value against your copy.\n\nFILE: src/dispatch/case/flows.py\nFUNCTION: case_auto_close_flow\nREASON: CaseResolutionReason.user_acknowledged (User Acknowledged)",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 4958,
+    "duration_ms": 5297,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1222,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1880,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.0105475,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 579,
+        "provider": "firstParty",
+        "thinkingTokens": 352,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "In Dispatch, when a case type has auto-close enabled, the new-case creation flow calls `case_auto_close_flow` right after the case is created. That function marks the case as closed. As far as I remember, it also sets the resolution text to something like \"Auto closed via case type auto close configuration.\" and records the resolution reason `CaseResolutionReason.user_acknowledged`.\n\nI can't see the repository, so this is from memory of the Dispatch source. Check the path and the enum value against your copy.\n\nFILE: src/dispatch/case/flows.py\nFUNCTION: case_auto_close_flow\nREASON: CaseResolutionReason.user_acknowledged (User Acknowledged)",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "5beaa90b-3706-41a6-9cee-1816a910ef85",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 347,
+    "total_cost_usd": 0.0105475,
+    "ttft_ms": 3865,
+    "ttft_stream_ms": 1221,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1880
+      },
+      "cache_creation_input_tokens": 1880,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1880
+          },
+          "cache_creation_input_tokens": 1880,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 579,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 579,
+      "output_tokens_details": {
+        "thinking_tokens": 352
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "16e26fa9-0ac1-4f93-8fae-449dff50b95c"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": true,
+          "pattern": "^\\s*FILE:\\s*`?\\S*case/flows\\.py\\b"
+        },
+        {
+          "id": "function",
+          "matched": true,
+          "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?case_auto_close_flow\\b"
+        },
+        {
+          "id": "reason",
+          "matched": true,
+          "pattern": "^\\s*REASON:\\s*`?[\\\"']?(\\S*\\.)?user[ _]acknowledged\\b"
+        }
+      ],
+      "must_not": []
+    },
+    "pass": true,
+    "score": 1.0
+  }
+}

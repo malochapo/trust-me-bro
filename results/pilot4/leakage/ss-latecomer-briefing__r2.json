@@ -1,0 +1,132 @@
+{
+  "answer": "I can't answer this reliably. I have no access to the Dispatch repository and no tools, and I don't know of any public code that matches this behavior. Any function name, file path, or age limit I gave would be a guess presented as fact, so I won't supply one.\n\nTo find the answer yourself, these searches should get there quickly:\n- Search for terms like `catch_up`, `catchup`, `briefing`, `summary`, or `late joiner` near the code that handles someone joining an incident channel.\n- Look for a cache or reuse check near the model call: a comparison of a stored briefing's `created_at` against `now`, or a constant or setting such as `*_MAX_AGE`, `*_TTL`, or `*_STALE_AFTER`.\n- The deciding function will probably be the one that either returns the stored briefing or calls the generator. The lookup function is likely a helper it calls, such as \"get latest summary for incident\".\n\nIf you paste the relevant code, I can identify the exact function, age limit, and lookup.\n\nFILE: unknown (repository not available to me)\nFUNCTION: unknown\nMAX_AGE: unknown\nLOOKUP: unknown",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 5549,
+    "duration_ms": 5878,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1261,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1989,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.01039,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 536,
+        "provider": "firstParty",
+        "thinkingTokens": 161,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't answer this reliably. I have no access to the Dispatch repository and no tools, and I don't know of any public code that matches this behavior. Any function name, file path, or age limit I gave would be a guess presented as fact, so I won't supply one.\n\nTo find the answer yourself, these searches should get there quickly:\n- Search for terms like `catch_up`, `catchup`, `briefing`, `summary`, or `late joiner` near the code that handles someone joining an incident channel.\n- Look for a cache or reuse check near the model call: a comparison of a stored briefing's `created_at` against `now`, or a constant or setting such as `*_MAX_AGE`, `*_TTL`, or `*_STALE_AFTER`.\n- The deciding function will probably be the one that either returns the stored briefing or calls the generator. The lookup function is likely a helper it calls, such as \"get latest summary for incident\".\n\nIf you paste the relevant code, I can identify the exact function, age limit, and lookup.\n\nFILE: unknown (repository not available to me)\nFUNCTION: unknown\nMAX_AGE: unknown\nLOOKUP: unknown",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "135535a8-5631-4b25-96e2-b871454f6542",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 333,
+    "total_cost_usd": 0.01039,
+    "ttft_ms": 2763,
+    "ttft_stream_ms": 1261,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1989
+      },
+      "cache_creation_input_tokens": 1989,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1989
+          },
+          "cache_creation_input_tokens": 1989,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 536,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 536,
+      "output_tokens_details": {
+        "thinking_tokens": 161
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "b9d972b1-9d18-4a0a-be5d-673b7ec3b76d"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "max_age",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "lookup",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.0
+  }
+}
