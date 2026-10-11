@@ -170,6 +170,14 @@
       "binary": "sobre-rc3-dense",
       "archive_binary": "sobre",
       "version_output": "sobre 0.1.0-rc.3"
+    },
+    "sobre-dev-fold2": {
+      "tool": "sobre",
+      "version": "dev build of malochapo/sobre-ai@0f7426b7d (branch sobre-8ff0b8, PR #106)",
+      "source": "local-build",
+      "binary": "sobre-dev-fold2",
+      "sha256": "82035214625eda622d4345908d1cafcf329d15282859982ebc44a4deb0b07eb1",
+      "version_output": "sobre 0.1.0"
     }
   }
 }
