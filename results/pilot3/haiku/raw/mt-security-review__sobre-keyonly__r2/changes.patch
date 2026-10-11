@@ -1,0 +1,63 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/incident/test_incident_route_permissions.py
+diff --git a/src/dispatch/database/service.py b/src/dispatch/database/service.py
+index e927a561..32e34f85 100644
+--- a/src/dispatch/database/service.py
++++ b/src/dispatch/database/service.py
+@@ -833,8 +833,10 @@ def restricted_case_filter(query: orm.Query, current_user: DispatchUser, role: U
+         .filter(
+             or_(
+                 Case.visibility == Visibility.open,
+-                Case.visibility == Visibility.restricted,
+-                IndividualContact.email == current_user.email,
++                and_(
++                    Case.visibility == Visibility.restricted,
++                    IndividualContact.email == current_user.email,
++                ),
+             )
+         )
+     )
+diff --git a/src/dispatch/incident/views.py b/src/dispatch/incident/views.py
+index a4ca2d4c..b901f1f3 100644
+--- a/src/dispatch/incident/views.py
++++ b/src/dispatch/incident/views.py
+@@ -503,6 +503,7 @@ def export_timeline_event(
+ @router.delete(
+     "/{incident_id}/event/{event_uuid}",
+     summary="Deletes a custom event.",
++    dependencies=[Depends(PermissionsDependency([IncidentEventPermission]))],
+ )
+ def delete_custom_event(
+     db_session: DbSession,
+diff --git a/tests/incident/test_incident_route_permissions.py b/tests/incident/test_incident_route_permissions.py
+new file mode 100644
+index 00000000..2a44fa12
+--- /dev/null
++++ b/tests/incident/test_incident_route_permissions.py
+@@ -0,0 +1,26 @@
++from fastapi.routing import APIRoute
++
++from dispatch.auth.permissions import IncidentEventPermission, PermissionsDependency
++from dispatch.incident.views import router
++
++
++def _get_route(path: str, method: str) -> APIRoute:
++    for route in router.routes:
++        if isinstance(route, APIRoute) and route.path == path and method in route.methods:
++            return route
++    raise AssertionError(f"No {method} route defined for {path}")
++
++
++def test_delete_custom_event_requires_incident_event_permission():
++    """Regression guard: the delete custom event route must keep its IncidentEventPermission check."""
++    route = _get_route("/{incident_id}/event/{event_uuid}", "DELETE")
++
++    permission_dependencies = [
++        dependency.dependency
++        for dependency in route.dependencies
++        if isinstance(dependency.dependency, PermissionsDependency)
++    ]
++    assert any(
++        IncidentEventPermission in dependency.permissions_classes
++        for dependency in permission_dependencies
++    ), "delete_custom_event is missing its IncidentEventPermission check"

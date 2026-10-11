@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-keyonly",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The order is correct: snooze, then dedup, then case creation. The snooze description matches the reference. It covers the skip for a missing expiration, the `break` at an expired filter that disables later filters, and that an empty expression snoozes every instance. The 45-minute default from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES is right. It applies only when the signal has no filters, and the answer notes the docstring's \"1 hour\" is stale. Per-filter windows are treated as seconds, with a 3600 model default and a 600 schema default. Canary handling is correct: never deduplicated, can be snoozed, and no case is opened. The answer does not point out that the UI's minute labels make a window of 120 last 120 seconds. That is a minor gap. The extra observations are plausible and do not contradict the code.",
+    "score": 3
+  },
+  "graded_at": "2026-10-11T02:27:18+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-filter-overview__sobre-keyonly__r2",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

@@ -1,0 +1,36 @@
+{
+  "arm": "sobre-keyonly",
+  "details": {
+    "must": [
+      {
+        "id": "file",
+        "matched": true,
+        "pattern": "^\\s*FILE:\\s*`?\\S*case/scheduled\\.py\\b"
+      },
+      {
+        "id": "function",
+        "matched": true,
+        "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?_is_reminder_day\\b"
+      },
+      {
+        "id": "cause",
+        "matched": true,
+        "pattern": "^\\s*CAUSE:[^\\n]*(calendar\\.MONDAY|isoweekday|\\b0\\b[^\\n]*\\b1\\b|\\b1\\b[^\\n]*\\b0\\b)"
+      },
+      {
+        "id": "commit",
+        "matched": true,
+        "pattern": "^\\s*INTRODUCED_BY:\\s*`?{plant:q4-reminder-day:short}"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-11T02:44:36+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 2,
+  "run_id": "log-reminders-stopped__sobre-keyonly__r2",
+  "score": 1.0,
+  "task_id": "log-reminders-stopped",
+  "task_sha256": "7d77a943412ec0241afe88e2a07f0df4b65b46274e0552a962ed5f0d0847d3e5"
+}

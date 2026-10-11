@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-keyonly",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The candidate gets the order right: entities, then filter_snooze, then filter_dedup only if no action is set, then the canary check, then case creation. It covers the snooze rules: only active snooze filters count, a missing expiration is skipped with a warning, an expired filter hits `break` and ends the loop, and a filter with no expression snoozes everything. It gives the 45-minute default from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, applied only when the signal has no filters at all, and notes that the docstring still says 1 hour. Per-filter windows are treated as seconds, with defaults of 600 for the schema and 3600 for the column. Dedup candidates are matched on expression, a shared entity and the window, and the earliest one wins. Canary handling is correct: never deduplicated, can be snoozed, and returns without a case. The extra details, such as the signal-message update and the null case_id path, do not contradict the reference. It does not say outright that the UI labels the windows as minutes, but it states that the windows are in seconds.",
+    "score": 3
+  },
+  "graded_at": "2026-10-11T02:25:28+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-filter-overview__sobre-keyonly__r1",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

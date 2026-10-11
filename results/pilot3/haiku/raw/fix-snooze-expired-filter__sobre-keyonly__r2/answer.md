@@ -1,0 +1,5 @@
+A user with an expired snooze filter and a later, still-valid one was no longer snoozed, so new Okta "Impossible travel" instances kept opening cases. The fix is a one-word change in `filter_snooze` (`src/dispatch/signal/service.py:763`): an expired filter now `continue`s instead of `break`ing out of the loop, so later valid filters are still checked.
+
+The regression test `test_filter_actions_snooze_expired_then_active` in `tests/signal/test_signal_service.py` puts an expired filter first and a valid one second. It fails with the old `break` and passes with the fix. The signal service and signal stats test files pass: 21 passed, 1 skipped.
+
+I didn't run the full test suite. Filter order follows the `signal.filters` relationship order, which the test relies on; I did not add an explicit `order_by` for it. I have not committed anything.

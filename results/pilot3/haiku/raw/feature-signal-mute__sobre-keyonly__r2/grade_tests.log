@@ -1,0 +1,3 @@
+$ python -m pytest -q -p no:cacheprovider tests/signal/test_hidden_signal_mute.py
+......                                                                   [100%]
+6 passed in 4.84s

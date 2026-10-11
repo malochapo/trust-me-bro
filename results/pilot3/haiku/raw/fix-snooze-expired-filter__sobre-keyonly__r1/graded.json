@@ -1,0 +1,44 @@
+{
+  "arm": "sobre-keyonly",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_snooze_filters.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 0,
+      "last_line": "36 passed, 1 skipped in 12.28s",
+      "seconds": 16.6
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_snooze_filters.py"
+      ],
+      "exit": 0,
+      "last_line": "3 passed in 4.58s",
+      "seconds": 8.9
+    }
+  },
+  "graded_at": "2026-10-11T02:28:57+00:00",
+  "kind": "tests",
+  "pass": true,
+  "rep": 1,
+  "run_id": "fix-snooze-expired-filter__sobre-keyonly__r1",
+  "score": 1.0,
+  "task_id": "fix-snooze-expired-filter",
+  "task_sha256": "0611428841d0040e21cd5988ba08a90d7bd9075a0077846529336305bf91091d"
+}

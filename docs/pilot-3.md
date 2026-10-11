@@ -18,6 +18,7 @@ This pilot measures sobre against Claude Code alone. The other tools are not rer
   - `sobre-dev-06`: the same build at 0.6;
   - `sobre-dev-09`: the same build at 0.9.
   - `sobre-dev-09b`: build `935756b6b` at 0.9. It replaced `sobre-dev-09` after the first runs showed 0.9 cutting a diff short (below).
+  - On Haiku only, two controls added at the end. `sobre-hooks` is the build with its hooks only, no MCP server or skill. `sobre-keyonly` is Claude Code alone, set up exactly as `native` but billed to the sobre API key, which every sobre arm uses.
 - **What the build changes:** sobre's post-run hook now folds output by its shape whatever command printed it, so it also works on the chained lines agents write. Each level adds a rule:
   - at every level, runs of one log statement keep their first and last line;
   - from 0.4, consecutive search results of one file print its path once;
@@ -34,7 +35,7 @@ This pilot measures sobre against Claude Code alone. The other tools are not rer
 
 ## Results
 
-All 448 runs counted are valid; the invalid ones were re-run (see Validity below). On Sonnet every run succeeded. On Haiku every run succeeded except two at 0.6.
+488 runs are counted: 280 on Haiku and 208 on Sonnet, all valid. The invalid runs were re-run (see Validity below). On Sonnet every run succeeded. On Haiku every run succeeded except two at 0.6 and one hooks-only run.
 
 ### Cost against Claude Code alone
 
@@ -46,6 +47,8 @@ Geometric mean of per-task cost ratios, with 95% bootstrap intervals over tasks.
 | sobre 0.6 | 1.05 (0.96–1.17) | 1.00 (0.95–1.05) |
 | sobre 0.9, first build (cut diffs) | 1.07 (1.01–1.15) | 0.98 (0.91–1.05) |
 | sobre 0.9, fixed build | 1.05 (0.99–1.13) | 0.99 (0.95–1.04) |
+| control: hooks only (0.3, no MCP server, no skill) | 1.11 (1.02–1.21) | |
+| control: Claude Code alone on the sobre key | 1.03 (0.96–1.12) | |
 
 By task set (point estimates; intervals in `results/pilot3/<model>/report.md` and the per-set reports):
 
@@ -86,7 +89,11 @@ At 0.3 that is 16% less on average. An exact permutation test on the six against
 
 ## What pilot 3 taught
 
-1. **On these tasks sobre costs what Claude Code alone costs, at every level.** On Sonnet, every level lands between 0.98 and 1.03 over the 20 tasks. On Haiku, sobre is 5% to 10% dearer, with the default level's interval above 1. The hook removes under 1% of a run's cost, so these gaps come from what the agent does, not from what sobre compresses.
+1. **On these tasks sobre costs what Claude Code alone costs, at every level.** On Sonnet, every level lands between 0.98 and 1.03 over the 20 tasks. On Haiku, the sobre arms land between 1.05 and 1.11. But the two controls set the scale:
+   - Claude Code alone, billed to the sobre key, already lands at 1.03, and at 1.08 to 1.10 on two of the three task sets.
+   - The hooks-only arm (1.11) gives the model the same prompt as `native` to within 2 tokens, and compressed something in 6 of its 40 runs.
+
+   So on Haiku, a gap of 5% to 10% is within what two identical setups show, and the MCP server and the skill do not explain it. The hook removes under 1% of a run's cost, so the gaps come from the paths the agent takes, not from what sobre compresses.
 2. **`compression_level` does not order the results.** 0.6 and 0.9 compress four to six times more often than 0.3, and remove about twice the tokens, but neither is consistently cheaper. The differences between levels are smaller than the noise between repetitions.
 3. **A smaller model does not leave more to compress.** Haiku makes about twice as many tool calls as Sonnet, but filters its output the same way (`| head`, `grep -c`, line ranges). The bet that a small model leaves more on the table for a context tool did not hold here.
 4. **Conversations amplify everything, including the noise.** A four-message conversation costs about ten times a one-message task. Its cost depends on the path the agent takes in the first messages. Two repetitions are not enough to separate a 10% effect.
@@ -99,4 +106,12 @@ At 0.3 that is 16% less on average. An exact permutation test on the six against
   - runs on two Postgres servers whose `template1` was SQL_ASCII (24 runs: 15 of the main matrix and 9 exploratory `native` runs on Haiku);
   - three runs killed, and one grading killed, by another run's agent before runs were isolated (PROTOCOL.md changelog).
 - Before the 9 exploratory runs were re-run, `native` on Haiku showed 4 failures, all on the faulty servers. They made sobre look 10 points more successful on Haiku. That gap disappeared once the runs were re-run.
-- **Spend:** $45.27 computed for pilot 3, $63 for the three pilots.
+- **Spend:** $47.07 computed for pilot 3, and $63.62 for the three pilots. Add about $1.50 for the judge and the leakage checks.
+
+## For the next phase
+
+- **Keep an A/A control in every phase.** On Haiku, two identical setups differed by up to 10% on a task set. A cost claim below that is not a claim.
+- **Run more repetitions on conversations,** or more conversations. A 16% saving on one conversation needed six repetitions per arm to reach p = 0.06.
+- **Test the log effect directly.** Use more log-diagnosis conversations, on more than one log format, at six or more repetitions. It is the one place where sobre's compression changed what the agent did and what it cost.
+- **Use one API key for every arm, or check the keys against each other.** Per-arm keys keep the Console bills apart, but the control above shows a key-level difference cannot yet be ruled out.
+
