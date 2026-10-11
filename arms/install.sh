@@ -25,8 +25,10 @@ has_version() { # has_version <binary path> <version>
 }
 
 install_release() { # <arm> <expected --version text>: a GitHub release binary, sha256-checked
-  local arm=$1 expected=$2 name version url sha tarball tmp found
+  local arm=$1 expected=$2 name version url sha tarball tmp found inside
   name=$(field "$arm" binary); version=$(field "$arm" version)
+  # the binary's name in the archive, when it is installed under another name
+  inside=$(field "$arm" archive_binary); [ -n "$inside" ] || inside=$name
   url=$(field "$arm" url); sha=$(field "$arm" sha256)
   if has_version "$BIN/$name" "$expected" && [ "$(sha256sum < "$BIN/$name")" = "$(cat "$BIN/.$name.sha256" 2>/dev/null)" ]; then
     echo "[$arm] $name $version already installed"; return 0
@@ -40,8 +42,8 @@ install_release() { # <arm> <expected --version text>: a GitHub release binary, 
   echo "$sha  $tarball" | sha256sum -c --quiet - || { echo "[$arm] checksum mismatch for $tarball" >&2; return 1; }
   tmp=$(mktemp -d)
   tar -xzf "$tarball" -C "$tmp"
-  found=$(find "$tmp" -type f -name "$name" -perm -u+x | head -n1)
-  [ -n "$found" ] || { echo "[$arm] no $name binary in $tarball" >&2; rm -rf "$tmp"; return 1; }
+  found=$(find "$tmp" -type f -name "$inside" -perm -u+x | head -n1)
+  [ -n "$found" ] || { echo "[$arm] no $inside binary in $tarball" >&2; rm -rf "$tmp"; return 1; }
   install -m 0755 "$found" "$BIN/$name"
   sha256sum < "$BIN/$name" > "$BIN/.$name.sha256"
   rm -rf "$tmp"

@@ -1,0 +1,14 @@
+{
+  "active": true,
+  "by_event": {
+    "sobre.compression": 3
+  },
+  "compressions_by_surface_tool": {
+    "mcp:sobre_search": 1,
+    "mcp:sobre_session": 2
+  },
+  "observer_seen": true,
+  "tokens_original": 826,
+  "tokens_sent": 826,
+  "usage_records": 3
+}

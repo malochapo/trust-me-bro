@@ -96,6 +96,60 @@
       "tool": null,
       "version": null,
       "note": "Claude Code alone, billed to the sobre key: a control for the key (arms/sobre-keyonly/setup.sh)."
+    },
+    "sobre-rc2": {
+      "tool": "sobre",
+      "version": "0.1.0-rc.2",
+      "source": "github-release",
+      "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.2/sobre-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "36e4f0dcfd38aec629d7f58019549850311d6d391d03e008164356283a4de3e2",
+      "binary": "sobre-rc2",
+      "archive_binary": "sobre",
+      "version_output": "sobre 0.1.0-rc.2"
+    },
+    "sobre-rc2-mcp": {
+      "tool": "sobre",
+      "version": "0.1.0-rc.2",
+      "source": "github-release",
+      "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.2/sobre-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "36e4f0dcfd38aec629d7f58019549850311d6d391d03e008164356283a4de3e2",
+      "binary": "sobre-rc2",
+      "archive_binary": "sobre",
+      "version_output": "sobre 0.1.0-rc.2"
+    },
+    "sobre-rc2-mcp-told": {
+      "tool": "sobre",
+      "version": "0.1.0-rc.2",
+      "source": "github-release",
+      "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.2/sobre-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "36e4f0dcfd38aec629d7f58019549850311d6d391d03e008164356283a4de3e2",
+      "binary": "sobre-rc2",
+      "archive_binary": "sobre",
+      "version_output": "sobre 0.1.0-rc.2"
+    },
+    "sobre-rc2-dense": {
+      "tool": "sobre",
+      "version": "0.1.0-rc.2 (build with local embeddings)",
+      "source": "github-release",
+      "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.2/sobre-dense-x86_64-unknown-linux-gnu.tar.gz",
+      "sha256": "7b5c353caad692a60a0619fd38974894e74722ae144e0b93cdfac7ca0379a04f",
+      "binary": "sobre-rc2-dense",
+      "archive_binary": "sobre",
+      "version_output": "sobre 0.1.0-rc.2"
+    },
+    "sobre-rc2-dense-told": {
+      "tool": "sobre",
+      "version": "0.1.0-rc.2 (build with local embeddings)",
+      "source": "github-release",
+      "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.2/sobre-dense-x86_64-unknown-linux-gnu.tar.gz",
+      "sha256": "7b5c353caad692a60a0619fd38974894e74722ae144e0b93cdfac7ca0379a04f",
+      "binary": "sobre-rc2-dense",
+      "archive_binary": "sobre",
+      "version_output": "sobre 0.1.0-rc.2"
+    },
+    "native-told": {
+      "tool": null,
+      "version": null
     }
   }
 }
