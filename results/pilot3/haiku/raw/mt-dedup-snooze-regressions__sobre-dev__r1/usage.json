@@ -1,12 +1,12 @@
 {
   "by_model": {
     "claude-haiku-5-5": {
-      "cache_read": 3835918,
+      "cache_read": 1374025,
       "cache_write_1h": 0,
-      "cache_write_5m": 148306,
-      "client_cost_usd": 0.085023,
-      "cost_usd": 0.08502313,
-      "input": 202,
+      "cache_write_5m": 45656,
+      "client_cost_usd": 0.028837,
+      "cost_usd": 0.02883655,
+      "input": 68,
       "long_prompt_shares": {
         "cache_read": 0.0,
         "cache_write_1h": 0.0,
@@ -14,14 +14,14 @@
         "input": 0.0,
         "output": 0.0
       },
-      "output": 56211,
+      "output": 18765,
       "price_key": "claude-haiku-5-5"
     }
   },
-  "client_total_cost_usd": 0.085023,
+  "client_total_cost_usd": 0.028837,
   "conversation_turns": 4,
-  "cost_usd": 0.085023,
-  "duration_api_ms": 286174,
+  "cost_usd": 0.028837,
+  "duration_api_ms": 95457,
   "duration_ms": 416328,
   "flags": [],
   "is_error": false,
@@ -33,11 +33,11 @@
   "result_subtype": "success",
   "source": "modelUsage",
   "tokens": {
-    "cache_read": 3835918,
+    "cache_read": 1374025,
     "cache_write_1h": 0,
-    "cache_write_5m": 148306,
-    "input": 202,
-    "output": 56211
+    "cache_write_5m": 45656,
+    "input": 68,
+    "output": 18765
   },
   "tool_calls": {
     "Bash": 24,

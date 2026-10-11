@@ -140,9 +140,26 @@ def stream(argv, scenario):
                                    "cacheCreationInputTokens": 200, "webSearchRequests": 0,
                                    "costUSD": 0.0001, "contextWindow": 200000, "maxOutputTokens": 64000}},
               "permission_denials": []}
+    # Like Claude Code, a resumed session reports running totals: this turn's usage plus the
+    # turns before it.
+    turn = resumed_turn(argv)
+    for usage in result["modelUsage"].values():
+        for key in ("inputTokens", "outputTokens", "cacheReadInputTokens", "cacheCreationInputTokens", "costUSD"):
+            usage[key] *= turn
+    result["total_cost_usd"] *= turn
+    result["duration_api_ms"] *= turn
     if scenario == "api_error":
         result.update(is_error=True, result="API Error: 401 authentication_failed")
     emit(result)
+
+
+def resumed_turn(argv):
+    """1 for a new session; with --resume, one more than the session's last turn."""
+    counter = Path(os.environ.get("CLAUDE_CONFIG_DIR") or ".") / "fake-claude-turns"
+    turn = int(counter.read_text()) + 1 if "--resume" in argv and counter.exists() else 1
+    if os.environ.get("CLAUDE_CONFIG_DIR"):
+        counter.write_text(str(turn))
+    return turn
 
 
 def judge(argv, scenario="ok"):

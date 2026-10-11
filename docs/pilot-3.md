@@ -43,23 +43,25 @@ Geometric mean of per-task cost ratios, with 95% bootstrap intervals over tasks.
 
 | Arm | Haiku, all 20 tasks | Sonnet, all 20 tasks |
 | --- | --- | --- |
-| sobre 0.3 (default) | 1.10 (1.02–1.19) | 1.03 (0.98–1.08) |
+| sobre 0.3 (default) | 1.10 (1.02–1.19) | 1.03 (0.98–1.09) |
 | sobre 0.6 | 1.05 (0.96–1.17) | 1.00 (0.95–1.05) |
-| sobre 0.9, first build (cut diffs) | 1.07 (1.01–1.15) | 0.98 (0.91–1.05) |
-| sobre 0.9, fixed build | 1.05 (0.99–1.13) | 0.99 (0.95–1.04) |
-| control: hooks only (0.3, no MCP server, no skill) | 1.11 (1.02–1.21) | |
+| sobre 0.9, first build (cut diffs) | 1.07 (1.00–1.14) | 0.98 (0.91–1.05) |
+| sobre 0.9, fixed build | 1.05 (0.99–1.12) | 1.00 (0.95–1.04) |
+| control: hooks only (0.3, no MCP server, no skill) | 1.11 (1.02–1.22) | |
 | control: Claude Code alone on the sobre key | 1.03 (0.96–1.12) | |
 
 By task set (point estimates; intervals in `results/pilot3/<model>/report.md` and the per-set reports):
 
 | Arm | Haiku: pilot 1 tasks | pilot 2 tasks | conversations | Sonnet: pilot 1 tasks | pilot 2 tasks | conversations |
 | --- | --- | --- | --- | --- | --- | --- |
-| 0.3 | 1.14 | 1.04 | 1.09 | 1.06 | 0.97 | 1.03 |
-| 0.6 | 0.99 | 1.01 | 1.30 | 1.01 | 1.01 | 0.94 |
-| 0.9, first build | 1.05 | 1.07 | 1.15 | 1.04 | 0.94 | 0.90 |
-| 0.9, fixed | 0.99 | 1.12 | 1.14 | 1.03 | 0.95 | 0.97 |
+| 0.3 | 1.14 | 1.04 | 1.09 | 1.06 | 0.97 | 1.05 |
+| 0.6 | 0.99 | 1.01 | 1.29 | 1.01 | 1.01 | 0.94 |
+| 0.9, first build | 1.05 | 1.07 | 1.13 | 1.04 | 0.94 | 0.90 |
+| 0.9, fixed | 0.99 | 1.12 | 1.11 | 1.03 | 0.95 | 0.98 |
+| control: hooks only | 1.10 | 1.15 | 1.07 | | | |
+| control: Claude Code alone on the sobre key | 0.98 | 1.10 | 1.07 | | | |
 
-Mean cost per run for `native`: $0.021 on Haiku and $0.25 on Sonnet. A Sonnet conversation costs $0.74 on average, against $0.05 to $0.08 for a one-message task.
+Mean cost per run for `native`: $0.012 on Haiku and $0.11 on Sonnet. A Sonnet conversation costs $0.24 on average, against $0.05 to $0.08 for a one-message task.
 
 ### What the hook actually removed
 
@@ -67,25 +69,27 @@ sobre's probe counts the tokens the hook took out of each run. They are far too 
 
 | Arm | Runs where the hook compressed | Tokens removed per run | Worth, as a share of the run's cost |
 | --- | --- | --- | --- |
-| 0.3, Haiku / Sonnet | 3 of 40 / 5 of 40 | about 300 / 150 | 0.4% / 0.3% |
-| 0.6, Haiku / Sonnet | 22 / 19 | about 560 / 300 | 0.7% / 0.6% |
-| 0.9, Haiku / Sonnet | 24 / 17 | about 690 / 360 | 0.8% / 0.7% |
+| 0.3, Haiku / Sonnet | 4 of 40 / 9 of 44 | about 350 / 400 | 0.6% / 1.3% |
+| 0.6, Haiku / Sonnet | 25 of 40 / 19 of 40 | about 650 / 300 | 1.1% / 1.1% |
+| 0.9, Haiku / Sonnet | 28 of 40 / 17 of 40 | about 820 / 360 | 1.5% / 1.3% |
+
+A removed token is worth one cache write plus, roughly, the reads of the requests that follow it.
 
 No agent read the full output sobre kept, and no agent called a sobre MCP tool.
 
 ### One task where sobre helped: the log diagnosis conversation
 
-`mt-reminders-incident` has the agent diagnose a bug from 9.7 MB of scheduler and API logs, fix it, fix a second bug found in the same logs, and write a recap. On Sonnet, every sobre level was cheaper than `native` on average. Of the 36 pairs of a 0.3 run and a `native` run, the sobre run was the cheaper in 28:
+`mt-reminders-incident` has the agent diagnose a bug from 9.7 MB of scheduler and API logs, fix it, fix a second bug found in the same logs, and write a recap. On Sonnet, every sobre level was cheaper than `native` on average. Of the 36 pairs of a 0.3 run and a `native` run, the sobre run was the cheaper in 27:
 
 | Arm | Runs | Mean cost | Turns | Output tokens |
 | --- | --- | --- | --- | --- |
-| native | 6 | $0.99 | 24.5 | 32.7k |
-| sobre 0.3 | 6 | $0.84 | 22.7 | 27.4k |
-| sobre 0.6 | 2 | $0.78 | 21.5 | 25.3k |
-| sobre 0.9, first build | 2 | $0.66 | 18.0 | 21.4k |
-| sobre 0.9, fixed | 2 | $0.81 | 22.0 | 27.2k |
+| native | 6 | $0.315 | 24.5 | 10.8k |
+| sobre 0.3 | 6 | $0.276 | 22.7 | 9.4k |
+| sobre 0.6 | 2 | $0.248 | 21.5 | 8.5k |
+| sobre 0.9, first build | 2 | $0.218 | 18.0 | 7.5k |
+| sobre 0.9, fixed | 2 | $0.267 | 22.0 | 9.4k |
 
-At 0.3 that is 16% less on average. An exact permutation test on the six against six gives a one-sided p of 0.06: suggestive, not established. The hook removed only 400 to 1,400 tokens per run there, worth under a cent; the saving comes from the runs being shorter, with fewer turns and less reasoning. A plausible mechanism is that a folded log shows its shape (the first and last line of a run of one statement and how many it holds), which shortens the diagnosis. On Haiku the same task showed no such gap.
+At 0.3 that is 12% less on average. An exact permutation test on the six against six gives a one-sided p of 0.09: suggestive, not established. The hook removed only 400 to 1,400 tokens per run there, worth under a cent; the saving comes from the runs being shorter, with fewer turns and less reasoning. A plausible mechanism is that a folded log shows its shape (the first and last line of a run of one statement and how many it holds), which shortens the diagnosis. On Haiku the same task showed no such gap.
 
 ## What pilot 3 taught
 
@@ -96,8 +100,8 @@ At 0.3 that is 16% less on average. An exact permutation test on the six against
    So on Haiku, a gap of 5% to 10% is within what two identical setups show, and the MCP server and the skill do not explain it. The hook removes under 1% of a run's cost, so the gaps come from the paths the agent takes, not from what sobre compresses.
 2. **`compression_level` does not order the results.** 0.6 and 0.9 compress four to six times more often than 0.3, and remove about twice the tokens, but neither is consistently cheaper. The differences between levels are smaller than the noise between repetitions.
 3. **A smaller model does not leave more to compress.** Haiku makes about twice as many tool calls as Sonnet, but filters its output the same way (`| head`, `grep -c`, line ranges). The bet that a small model leaves more on the table for a context tool did not hold here.
-4. **Conversations amplify everything, including the noise.** A four-message conversation costs about ten times a one-message task. Its cost depends on the path the agent takes in the first messages. Two repetitions are not enough to separate a 10% effect.
-5. **Haiku has a cost cliff at 100K tokens of prompt.** Two Haiku runs out of 240 crossed it; one of them, a conversation at 0.6, cost $0.33 against about $0.10 for its neighbours, which alone makes the 0.6 conversation ratio 1.30. A tool that keeps long sessions under the threshold could save a lot on Haiku. None of the arms here tries to.
+4. **Conversations amplify everything, including the noise.** A four-message conversation costs three to four times a one-message task. Its cost depends on the path the agent takes in the first messages. Two repetitions are not enough to separate a 10% effect.
+5. **Haiku has a cost cliff at 100K tokens of prompt.** Two Haiku runs out of 280 crossed it; one of them, the log conversation at 0.6, cost $0.125 against $0.03 to $0.05 for the other runs of that conversation, which alone makes the 0.6 conversation ratio 1.29. A tool that keeps long sessions under the threshold could save a lot on Haiku. None of the arms here tries to.
 6. **The 0.9 rule that cut long output short hit a diff once**, and the agent ran the command again. The fixed build keeps diffs, blame, search results and listings whole; it measured the same as the first build within noise.
 
 ## Validity
@@ -106,12 +110,13 @@ At 0.3 that is 16% less on average. An exact permutation test on the six against
   - runs on two Postgres servers whose `template1` was SQL_ASCII (24 runs: 15 of the main matrix and 9 exploratory `native` runs on Haiku);
   - three runs killed, and one grading killed, by another run's agent before runs were isolated (PROTOCOL.md changelog).
 - Before the 9 exploratory runs were re-run, `native` on Haiku showed 4 failures, all on the faulty servers. They made sobre look 10 points more successful on Haiku. That gap disappeared once the runs were re-run.
-- **Spend:** $47.07 computed for pilot 3, and $63.62 for the three pilots. Add about $1.50 for the judge and the leakage checks.
+- **Spend:** $23.90 computed for pilot 3 ($3.68 on Haiku, $20.22 on Sonnet), and $40.44 for the three pilots. Add about $1.50 for the judge and the leakage checks.
+- **Conversation costs were first overcounted.** Each turn of a resumed session reports the session's running totals, and the harness first added them up: a four-message conversation counted its first turn four times. The figures here are corrected (PROTOCOL.md changelog). The ratios over the 20 tasks moved by 0.01 at most; the conversations' own costs fell by about two thirds.
 
 ## For the next phase
 
 - **Keep an A/A control in every phase.** On Haiku, two identical setups differed by up to 10% on a task set. A cost claim below that is not a claim.
-- **Run more repetitions on conversations,** or more conversations. A 16% saving on one conversation needed six repetitions per arm to reach p = 0.06.
+- **Run more repetitions on conversations,** or more conversations. A 12% saving on one conversation, at six repetitions per arm, reached only p = 0.09.
 - **Test the log effect directly.** Use more log-diagnosis conversations, on more than one log format, at six or more repetitions. It is the one place where sobre's compression changed what the agent did and what it cost.
 - **Use one API key for every arm, or check the keys against each other.** Per-arm keys keep the Console bills apart, but the control above shows a key-level difference cannot yet be ruled out.
 

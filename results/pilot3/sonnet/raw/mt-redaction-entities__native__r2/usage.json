@@ -1,20 +1,20 @@
 {
   "by_model": {
     "claude-sonnet-5-5": {
-      "cache_read": 1213401,
+      "cache_read": 485270,
       "cache_write_1h": 0,
-      "cache_write_5m": 90881,
-      "client_cost_usd": 0.513801,
-      "cost_usd": 0.5138005999999999,
-      "input": 94,
-      "output": 16507,
+      "cache_write_5m": 28332,
+      "client_cost_usd": 0.180245,
+      "cost_usd": 0.180245,
+      "input": 34,
+      "output": 6082,
       "price_key": "claude-sonnet-5-5"
     }
   },
-  "client_total_cost_usd": 0.513801,
+  "client_total_cost_usd": 0.180245,
   "conversation_turns": 4,
-  "cost_usd": 0.513801,
-  "duration_api_ms": 161145,
+  "cost_usd": 0.180245,
+  "duration_api_ms": 58727,
   "duration_ms": 105320,
   "flags": [],
   "is_error": false,
@@ -26,11 +26,11 @@
   "result_subtype": "success",
   "source": "modelUsage",
   "tokens": {
-    "cache_read": 1213401,
+    "cache_read": 485270,
     "cache_write_1h": 0,
-    "cache_write_5m": 90881,
-    "input": 94,
-    "output": 16507
+    "cache_write_5m": 28332,
+    "input": 34,
+    "output": 6082
   },
   "tool_calls": {
     "Bash": 13

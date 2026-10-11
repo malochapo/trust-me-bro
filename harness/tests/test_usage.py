@@ -56,8 +56,9 @@ class UsageTest(unittest.TestCase):
         self.assertEqual((u["num_turns"], u["duration_ms"]), (3, 12345))
         self.assertEqual(u["flags"], [])
 
-    def test_turns_are_summed_and_long_prompts_priced(self):
-        """Two resumed turns, each with its result event; one Haiku request over 100K tokens."""
+    def test_resumed_turns_report_running_totals_and_long_prompts_are_priced(self):
+        """Two resumed turns, each with its result event; one Haiku request over 100K tokens.
+        The second result event's modelUsage and total_cost_usd include the first turn's."""
         def assistant(msg_id, inp, read, write):
             return {"type": "assistant", "message": {
                 "id": msg_id, "model": "claude-haiku-5-5", "content": [],
@@ -72,7 +73,7 @@ class UsageTest(unittest.TestCase):
                         "cacheCreationInputTokens": write, "costUSD": cost}}}
 
         events = [assistant("m1", 10, 50_000, 1_000), result(10, 100, 50_000, 1_000, 0.01),
-                  assistant("m2", 10, 120_000, 1_000), result(10, 100, 120_000, 1_000, 0.02)]
+                  assistant("m2", 10, 120_000, 1_000), result(20, 200, 170_000, 2_000, 0.03)]
         path = Path(self.tmp) / "stream.jsonl"
         path.write_text("".join(json.dumps(e) + "\n" for e in events))
         u = usage.compute(path)
@@ -89,6 +90,22 @@ class UsageTest(unittest.TestCase):
                     + 50_000 * 0.01 + 120_000 * 0.05  # cache read
                     + 1_000 * 0.125 + 1_000 * 0.625) / 1e6
         self.assertAlmostEqual(haiku["cost_usd"], expected, places=12)
+
+    def test_a_count_that_starts_again_adds_to_the_one_before(self):
+        def result(out, cost, api_ms):
+            return {"type": "result", "subtype": "success", "num_turns": 2, "duration_ms": 5,
+                    "duration_api_ms": api_ms, "total_cost_usd": cost, "modelUsage": {"claude-sonnet-5-5": {
+                        "inputTokens": api_ms, "outputTokens": out, "cacheReadInputTokens": 0,
+                        "cacheCreationInputTokens": 0, "costUSD": cost}}}
+
+        # Running totals 100, 300, then a session that started again at 50, then 80.
+        events = [result(100, 0.001, 10), result(300, 0.003, 30), result(50, 0.0005, 5), result(80, 0.0008, 8)]
+        u = usage.compute(write_stream(self.tmp, events))
+        self.assertEqual(u["by_model"]["claude-sonnet-5-5"]["output"], 380)
+        self.assertEqual(u["by_model"]["claude-sonnet-5-5"]["input"], 38)
+        self.assertAlmostEqual(u["client_total_cost_usd"], 0.0038)
+        self.assertEqual(u["duration_api_ms"], 38)
+        self.assertEqual((u["num_turns"], u["duration_ms"]), (8, 20))
 
     def test_tool_stats(self):
         u = usage.compute(fake_stream(self.tmp))
