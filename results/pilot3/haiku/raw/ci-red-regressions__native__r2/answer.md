@@ -1,0 +1,7 @@
+The suite is green: 351 passed, 4 skipped, with `tests/ai/test_ai_service.py` excluded as you asked. Two real bugs were behind the two failures, and I fixed both in source without touching any tests.
+
+1. **Entity JSONPath matches truncated** (`src/dispatch/entity/service.py`, around line 289): commit beb60cc4 ("stop at the first JSONPath match") added `[:1]` to `jpath.find(...)`. That drops every match after the first, so `asset[*].id` returned 1 entity instead of 2. I reverted the line to the original `jpath.find(signal_instance.raw)`. The commit's premise was wrong, since a JSONPath with a wildcard legitimately yields several matches. If you want the performance gain back, it needs a different approach that keeps all matches.
+
+2. **Restricted cases visible to everyone** (`src/dispatch/database/service.py`, `restricted_case_filter`, around line 836): refactor 42699ebc ("flatten the restricted case filter") removed the `and_(...)` around the restricted branch. That made every restricted case visible to a member, not only those where they are a participant. I restored the `and_(Case.visibility == Visibility.restricted, IndividualContact.email == current_user.email)` condition, which matches the incident filter's logic.
+
+Both changes are uncommitted in the working tree. I haven't committed or pushed; say if you want a commit made.

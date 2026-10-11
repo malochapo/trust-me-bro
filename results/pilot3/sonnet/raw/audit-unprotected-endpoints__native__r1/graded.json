@@ -1,0 +1,58 @@
+{
+  "arm": "native",
+  "details": {
+    "must": [
+      {
+        "id": "create_case",
+        "matched": true,
+        "pattern": "^\\s*UNPROTECTED:[^\\n]*\\bcase\\.create_case\\b(?!_)"
+      },
+      {
+        "id": "create_case_channel",
+        "matched": true,
+        "pattern": "^\\s*UNPROTECTED:[^\\n]*\\bcase\\.create_case_channel\\b"
+      },
+      {
+        "id": "create_case_resources",
+        "matched": true,
+        "pattern": "^\\s*UNPROTECTED:[^\\n]*\\bcase\\.create_case_resources\\b"
+      },
+      {
+        "id": "create_incident",
+        "matched": true,
+        "pattern": "^\\s*UNPROTECTED:[^\\n]*\\bincident\\.create_incident\\b(?!_)"
+      },
+      {
+        "id": "incident_delete_custom_event",
+        "matched": true,
+        "pattern": "^\\s*UNPROTECTED:[^\\n]*\\bincident\\.delete_custom_event\\b"
+      }
+    ],
+    "must_not": [
+      {
+        "id": "case_delete_custom_event",
+        "matched": false
+      },
+      {
+        "id": "incident_create_resources",
+        "matched": false
+      },
+      {
+        "id": "protected_case",
+        "matched": false
+      },
+      {
+        "id": "protected_incident",
+        "matched": false
+      }
+    ]
+  },
+  "graded_at": "2026-10-11T00:17:58+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 1,
+  "run_id": "audit-unprotected-endpoints__native__r1",
+  "score": 1.0,
+  "task_id": "audit-unprotected-endpoints",
+  "task_sha256": "684b5f2f6bc4c1c6db9fafc69f0f25174e0b052dbbe7869be739a6af12a6b45e"
+}

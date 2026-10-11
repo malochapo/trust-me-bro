@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-dev-06",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The answer gives the correct order: snooze, then dedup, then case creation. It describes snooze matching correctly. It notes the break at the first expired snooze filter, which disables later filters. It gives the 45-minute default from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, applied only when the signal has no filters, and notes the docstring's 1-hour claim is wrong. It treats per-filter windows as seconds and flags the UI minutes mismatch, the Pydantic default of 600 and the column default of 3600. Its canary handling matches the reference: canaries can be snoozed, are never deduplicated or used as targets, and never open a case. It also adds plausible extra detail, such as dedup with a null case_id, and I found nothing that contradicts the reference.",
+    "score": 3
+  },
+  "graded_at": "2026-10-10T22:34:12+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-filter-overview__sobre-dev-06__r1",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

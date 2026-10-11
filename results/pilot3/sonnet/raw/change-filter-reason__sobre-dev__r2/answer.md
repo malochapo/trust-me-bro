@@ -1,0 +1,6 @@
+Signal filters now have an optional free-text `reason`, but I haven't run the migration or tried the UI. `python -m pytest tests/signal` passes (32 passed, 1 skipped), though the existing tests don't exercise `reason`.
+
+- **Database:** `SignalFilter` has a new nullable `reason` column in `signal/models.py`. The migration is `database/revisions/tenant/versions/2025-09-02_a1c3e5b7d9f2.py`, chained after `ff08d822ef2c`, which I took to be the latest tenant revision (it has the newest date). I didn't check for a single Alembic head.
+- **API:** `reason` is on the shared filter schema, so create, update and read all accept and return it. The existing create and update code in `signal/service.py` carries the field through, so I didn't change it.
+- **Snoozes table:** `TableInstanceSnoozes.vue` has a new "Reason" column, placed before "Applies to". It isn't sortable.
+- **Create dialog:** `SignalFilterCreateDialog.vue` has an optional "Reason" textarea on the final Save step. I also added `reason: null` to the default state in the filter `store.js`.

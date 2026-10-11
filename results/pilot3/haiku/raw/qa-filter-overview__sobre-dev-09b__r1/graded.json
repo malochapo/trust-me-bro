@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-dev-09b",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The candidate matches the reference on every rubric point. Order is snooze, then dedup, then case creation. filter_snooze skips filters with no expiration and breaks the loop at the first expired snooze filter, which disables later ones. An empty expression snoozes every instance. The default dedup window is SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES at 45 minutes and applies only when the signal has no filters; the answer also calls the docstring's \"1-hour\" stale. Per-filter windows are treated as seconds via _window_start, with column default 3600 and schema default 600. Canaries are never deduplicated or used as targets, can be snoozed, and never open a case. The extra detail about dedup possibly copying a null case_id is plausible and doesn't contradict the reference. The answer does not point out the UI-minutes mismatch, which is a minor gap.",
+    "score": 3
+  },
+  "graded_at": "2026-10-11T00:44:45+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-filter-overview__sobre-dev-09b__r1",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

@@ -1,0 +1,6 @@
+This repository is Dispatch, an incident management platform. Feature request: analysts want to record why a signal filter exists. Add an optional free-text `reason` to signal filters:
+- store it in the database, with an Alembic migration in the tenant revisions;
+- accept it when a filter is created or updated through the API, and return it when filters are read;
+- in the web UI, show it as a "Reason" column in the Snoozes table of the signal instance page (the table that lists snooze filters), and let users type it in the dialog that creates a signal filter.
+
+The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.

@@ -1,0 +1,3 @@
+Fixed. In `filter_snooze` (`src/dispatch/signal/service.py`), an expired snooze filter hit a `break`, which ended the loop. Any active filter listed after it was never checked. It now uses `continue`, so expired filters are skipped and the rest are still evaluated.
+
+I added a regression test, `test_filter_actions_snooze_expired_and_active` in `tests/signal/test_signal_service.py`. It puts an expired filter ahead of an active one for the same entity and expects the instance to be snoozed. It fails without the fix and passes with it. The four snooze tests in that file pass. I ran only the snooze tests, not the full suite.

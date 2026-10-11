@@ -1,0 +1,44 @@
+{
+  "arm": "native",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_merge_rename.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 1,
+      "last_line": "51 errors in 0.57s",
+      "seconds": 4.9
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_merge_rename.py"
+      ],
+      "exit": 1,
+      "last_line": "18 errors in 0.41s",
+      "seconds": 4.5
+    }
+  },
+  "graded_at": "2026-10-10T22:17:23+00:00",
+  "kind": "tests",
+  "pass": false,
+  "rep": 1,
+  "run_id": "refactor-merge-action__native__r1",
+  "score": 0.0,
+  "task_id": "refactor-merge-action",
+  "task_sha256": "a7c1474c019ff669b418c31d3ec1dd8e849318bb18ff5da17e4f108994ab05c2"
+}

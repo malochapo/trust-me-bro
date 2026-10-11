@@ -1,0 +1,6 @@
+Signal filters now have an optional `reason` field, stored in the database, accepted and returned by the API, and shown in the UI. I ran `python -m pytest tests/signal`: 32 passed, 1 skipped. I didn't run the new migration or open the UI, so both are untested.
+
+- **Database:** `SignalFilter.reason` is a nullable string column. The migration is `database/revisions/tenant/versions/2025-09-02_a3c1d7e5b9f2.py`, chained after the current head `ff08d822ef2c`, and it adds and drops the column.
+- **API:** I added `reason` to the shared filter schema in `signal/models.py`. Create, update and read all use that schema, and the service code passes fields straight through, so no service changes were needed.
+- **Snoozes table:** `TableInstanceSnoozes.vue` has a new sortable "Reason" column after Description. Sorting by it relies on the existing server-side sort accepting the new field, which I didn't check.
+- **Create dialog:** the save step of `SignalFilterCreateDialog.vue` has a new optional "Reason" textarea, wired through the filter store.

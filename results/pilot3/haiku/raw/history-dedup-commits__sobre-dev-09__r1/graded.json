@@ -1,0 +1,45 @@
+{
+  "arm": "sobre-dev-09",
+  "details": {
+    "must": [
+      {
+        "id": "canary",
+        "matched": true,
+        "pattern": "^\\s*COMMITS:[^\\n]*{plant:e46fa023b7b8899f4a5f24336ce84699618ed196:short}"
+      },
+      {
+        "id": "default-window",
+        "matched": true,
+        "pattern": "^\\s*COMMITS:[^\\n]*{plant:p1-default-dedup-window:short}"
+      },
+      {
+        "id": "snooze-refactor",
+        "matched": true,
+        "pattern": "^\\s*COMMITS:[^\\n]*{plant:p5-snooze-refactor:short}"
+      },
+      {
+        "id": "window-seconds",
+        "matched": true,
+        "pattern": "^\\s*COMMITS:[^\\n]*{plant:p4-dedup-window-seconds:short}"
+      }
+    ],
+    "must_not": [
+      {
+        "id": "redaction",
+        "matched": false
+      },
+      {
+        "id": "log-outcome",
+        "matched": false
+      }
+    ]
+  },
+  "graded_at": "2026-10-10T23:10:51+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 1,
+  "run_id": "history-dedup-commits__sobre-dev-09__r1",
+  "score": 1.0,
+  "task_id": "history-dedup-commits",
+  "task_sha256": "97a358ee98eed4824f372b8096096e5bd551e7c9343fed9b280e7f43f85342d8"
+}

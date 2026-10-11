@@ -1,0 +1,421 @@
+$ python -m pytest -q -p no:cacheprovider tests/signal/test_hidden_stats_scope.py
+EEE                                                                      [100%]
+==================================== ERRORS ====================================
+___ ERROR at setup of test_per_signal_stats_count_only_that_signals_snoozes ____
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 748, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.InvalidParameterValue: new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)
+HINT:  Use the same encoding as in the template database, or use template0 as template.
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 341, in from_call
+    result: Optional[TResult] = func()
+                                ^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 262, in <lambda>
+    lambda: ihook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 157, in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 497, in setup
+    raise exc
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 494, in setup
+    col.setup()
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/python.py", line 1795, in setup
+    self._request._fillfixtures()
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 566, in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 585, in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 607, in _get_active_fixturedef
+    self._compute_fixture_value(fixturedef)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 693, in _compute_fixture_value
+    fixturedef.execute(request=subrequest)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 1069, in execute
+    result = ihook.pytest_fixture_setup(fixturedef=self, request=request)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 1123, in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 895, in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+  File "/tmp/sobre-bench-work/run-69be89f73e03/repo/tests/conftest.py", line 121, in db
+    init_database(engine)
+  File "/tmp/sobre-bench-work/run-69be89f73e03/repo/src/dispatch/database/manage.py", line 58, in init_database
+    create_database(str(config.SQLALCHEMY_DATABASE_URI))
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy_utils/functions/database.py", line 567, in create_database
+    conn.execute(sa.text(text))
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1414, in execute
+    return meth(
+           ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 486, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2326, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 748, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.DataError: (psycopg2.errors.InvalidParameterValue) new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)
+HINT:  Use the same encoding as in the template database, or use template0 as template.
+
+[SQL: CREATE DATABASE "dispatch-test" ENCODING 'utf8' TEMPLATE template1]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+_______ ERROR at setup of test_per_signal_stats_split_active_and_expired _______
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 748, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.InvalidParameterValue: new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)
+HINT:  Use the same encoding as in the template database, or use template0 as template.
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 341, in from_call
+    result: Optional[TResult] = func()
+                                ^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 262, in <lambda>
+    lambda: ihook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 157, in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 497, in setup
+    raise exc
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 494, in setup
+    col.setup()
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/python.py", line 1795, in setup
+    self._request._fillfixtures()
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 566, in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 585, in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 607, in _get_active_fixturedef
+    self._compute_fixture_value(fixturedef)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 693, in _compute_fixture_value
+    fixturedef.execute(request=subrequest)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 1059, in execute
+    raise val.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 1123, in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 895, in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+  File "/tmp/sobre-bench-work/run-69be89f73e03/repo/tests/conftest.py", line 121, in db
+    init_database(engine)
+  File "/tmp/sobre-bench-work/run-69be89f73e03/repo/src/dispatch/database/manage.py", line 58, in init_database
+    create_database(str(config.SQLALCHEMY_DATABASE_URI))
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy_utils/functions/database.py", line 567, in create_database
+    conn.execute(sa.text(text))
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1414, in execute
+    return meth(
+           ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 486, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2326, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 748, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.DataError: (psycopg2.errors.InvalidParameterValue) new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)
+HINT:  Use the same encoding as in the template database, or use template0 as template.
+
+[SQL: CREATE DATABASE "dispatch-test" ENCODING 'utf8' TEMPLATE template1]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+_________ ERROR at setup of test_global_stats_still_count_every_signal _________
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 748, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.InvalidParameterValue: new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)
+HINT:  Use the same encoding as in the template database, or use template0 as template.
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 341, in from_call
+    result: Optional[TResult] = func()
+                                ^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 262, in <lambda>
+    lambda: ihook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 157, in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 497, in setup
+    raise exc
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 494, in setup
+    col.setup()
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/python.py", line 1795, in setup
+    self._request._fillfixtures()
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 566, in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 585, in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 607, in _get_active_fixturedef
+    self._compute_fixture_value(fixturedef)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 693, in _compute_fixture_value
+    fixturedef.execute(request=subrequest)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 1059, in execute
+    raise val.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 1123, in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/fixtures.py", line 895, in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+  File "/tmp/sobre-bench-work/run-69be89f73e03/repo/tests/conftest.py", line 121, in db
+    init_database(engine)
+  File "/tmp/sobre-bench-work/run-69be89f73e03/repo/src/dispatch/database/manage.py", line 58, in init_database
+    create_database(str(config.SQLALCHEMY_DATABASE_URI))
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy_utils/functions/database.py", line 567, in create_database
+    conn.execute(sa.text(text))
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1414, in execute
+    return meth(
+           ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/sql/elements.py", line 486, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1638, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1983, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2326, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1964, in _exec_single_context
+    self.dialect.do_execute(
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 748, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.DataError: (psycopg2.errors.InvalidParameterValue) new encoding (UTF8) is incompatible with the encoding of the template database (SQL_ASCII)
+HINT:  Use the same encoding as in the template database, or use template0 as template.
+
+[SQL: CREATE DATABASE "dispatch-test" ENCODING 'utf8' TEMPLATE template1]
+(Background on this error at: https://sqlalche.me/e/20/9h9h)
+=========================== short test summary info ============================
+ERROR tests/signal/test_hidden_stats_scope.py::test_per_signal_stats_count_only_that_signals_snoozes
+ERROR tests/signal/test_hidden_stats_scope.py::test_per_signal_stats_split_active_and_expired
+ERROR tests/signal/test_hidden_stats_scope.py::test_global_stats_still_count_every_signal
+3 errors in 0.40s

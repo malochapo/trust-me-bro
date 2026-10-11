@@ -1,0 +1,14 @@
+{
+  "active": true,
+  "by_event": {
+    "sobre.compression": 4
+  },
+  "compressions_by_surface_tool": {
+    "hook:grep": 3,
+    "hook:sed": 1
+  },
+  "observer_seen": true,
+  "tokens_original": 5308,
+  "tokens_sent": 3493,
+  "usage_records": 4
+}

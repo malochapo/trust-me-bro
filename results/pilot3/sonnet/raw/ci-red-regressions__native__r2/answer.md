@@ -1,0 +1,4 @@
+The suite is green again: 351 passed, 4 skipped, with `tests/ai/test_ai_service.py` ignored as you said. I didn't change any tests. There were two real bugs:
+
+1. **Restricted case visibility** (`src/dispatch/database/service.py`, `restricted_case_filter`): the filter let members see every restricted case. Its `or_` listed `Case.visibility == restricted` as a standalone clause instead of pairing it with the participant-email check. A member now sees open cases plus restricted cases they take part in. This matches `restricted_incident_filter`.
+2. **Entity extraction** (`src/dispatch/entity/service.py`, `find_entities`): commit `beb60cc4` ("stop at the first JSONPath match") cut the matches to the first one with `[:1]`. A path like `asset[*].id` is meant to yield one entity per match, so it was dropping all but one. I removed the truncation.

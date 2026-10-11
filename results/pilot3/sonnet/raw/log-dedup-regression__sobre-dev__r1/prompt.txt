@@ -1,0 +1,7 @@
+This repository is Dispatch, an incident management platform; it is the code we run in production. On-call report: since some time on 2025-08-14, every instance of the signal "GuardDuty: Unauthorized API call" opens a new case instead of joining the case that is already open, although nobody touched that signal's deduplication filter (its window is set to 120 in the UI). Other signals look fine. The signal worker's logs from 2025-08-13 to 2025-08-15 are in /tmp/sobre-bench-work/run-3bccf8ca8c4a/data/signal-worker.log. Find the root cause.
+
+Finish your answer with these four lines, in this exact form:
+FILE: <path of the file with the faulty code>
+FUNCTION: <name of the function with the faulty code>
+CAUSE: <one sentence>
+INTRODUCED_BY: <hash of the commit that introduced it, at least 8 characters>

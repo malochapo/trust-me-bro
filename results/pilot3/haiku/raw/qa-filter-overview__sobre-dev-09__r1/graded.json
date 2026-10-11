@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-dev-09",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The answer matches the reference on every rubric point.\n\n- **Order:** snooze, then dedup, then case creation.\n- **Snooze:** it covers filter matching, the skip when there is no expiration, and the `break` on an expired filter, which stops evaluation of later snooze filters. An expression is applied to the signal's instances, and a filter with no expression snoozes everything.\n- **Default window:** 45 minutes from `SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES`, applied only when the signal has no filters. It notes the docstring's one-hour claim is wrong.\n- **Per-filter windows:** treated as seconds, with the Pydantic default of 600 and the column default of 3600. It does not mention that the UI labels windows as minutes, which is a minor gap.\n- **Canary:** never deduplicated and never a dedup source. It can still be snoozed, and the flow returns before case creation when it is not filtered.\n\nThe candidate adds a claim that branch B does not require the matched instance to have a case. It hedges this and flags it as untested. It does not contradict the reference, which says only that branch B finds earlier non-canary instances. I found no false statement.",
+    "score": 3
+  },
+  "graded_at": "2026-10-10T22:46:47+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-filter-overview__sobre-dev-09__r1",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

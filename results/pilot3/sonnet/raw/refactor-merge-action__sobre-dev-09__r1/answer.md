@@ -1,0 +1,8 @@
+`deduplicate` is now `merge` throughout, and the signal tests pass (32 passed, 1 skipped). I didn't run the Alembic migration against a database.
+
+- **Backend:** `SignalFilterAction.merge = "merge"` replaces the old member in `signal/models.py`. The references in `signal/service.py` and `signal/flows.py` now use it, and so does the test factory.
+- **Web UI:** In `SignalFilterCreateDialog.vue` the radio now reads "Merge" with value `merge`. `TableInstanceTriggers.vue` keys its colour and label maps on `merge`. The label there still reads "Duplicate", as before.
+- **Migration:** `2025-09-02_a3c1d5e7b9f2.py` follows `ff08d822ef2c`. It rewrites `signal_filter.action` and `signal_instance.filter_action` from `deduplicate` to `merge`, and the downgrade reverses that. The table names are my assumption from the model class names (`SignalFilter`, `SignalInstance`); I didn't check them against the schema.
+- **Tests:** `tests/signal/test_signal_service.py` now uses `merge` in the action values, enum references and test names. I also updated comments and docstrings that said "deduplicated".
+
+`grep -i deduplicate` finds nothing in `src/dispatch` outside the migrations. Some comments and help text still say "deduplication"/"Deduplication" (for example in `signal/service.py`, `signal/instance/store.js` and `signal/NewEditDialog.vue`). That word isn't the string you asked to remove, so I left it alone.

@@ -1,0 +1,9 @@
+`deduplicate` is now `merge` everywhere in `src/dispatch` outside the migrations. I ran `tests/signal` (32 passed, 1 skipped), but I haven't run the new migration against a database. I also haven't run the full test suite, so the `tests/factories.py` edit is only covered by whatever the signal tests use.
+
+- **Backend:** `SignalFilterAction.merge = "merge"` in `signal/models.py`, and the uses in `signal/service.py` and `signal/flows.py`. One comment in `flows.py` that said "deduplicated" now says "merged".
+- **Web UI:** the radio option in `SignalFilterCreateDialog.vue` is now `Merge` with value `merge`. The colour and label maps in `TableInstanceTriggers.vue` are keyed on `merge`. I left that label's text as "Duplicate", since you asked for no behaviour change.
+- **Migration:** `src/dispatch/database/revisions/tenant/versions/2025-09-02_a1c3e5f7b9d2.py` follows `ff08d822ef2c`, the previous head. It sets `signal_filter.action` and `signal_instance.filter_action` from `deduplicate` to `merge`, and the downgrade reverses it. Both columns are plain strings, so these updates are all it needs.
+- **Tests:** `tests/signal/test_signal_service.py` and `tests/factories.py` use `merge`, including some test names and comments.
+- **Docs (not asked for):** I also changed the enum value in `docs/scripts/openapi.yaml`. `docs/docs/administration/settings/signal/filter.mdx` still says "deduplicate" and "Deduplication Filter"; I left it alone because it's outside `src/dispatch`.
+
+The table names `signal_filter` and `signal_instance` come from the repo's naming function and from older migrations that already reference `signal_instance`. I couldn't import the models to check them, because that needs environment config that isn't set here.

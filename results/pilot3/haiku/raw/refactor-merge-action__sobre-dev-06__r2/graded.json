@@ -1,0 +1,44 @@
+{
+  "arm": "sobre-dev-06",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_merge_rename.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 0,
+      "last_line": "49 passed, 2 skipped in 19.76s",
+      "seconds": 25.3
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_merge_rename.py"
+      ],
+      "exit": 0,
+      "last_line": "17 passed, 1 skipped in 13.84s",
+      "seconds": 19.6
+    }
+  },
+  "graded_at": "2026-10-10T23:40:03+00:00",
+  "kind": "tests",
+  "pass": true,
+  "rep": 2,
+  "run_id": "refactor-merge-action__sobre-dev-06__r2",
+  "score": 1.0,
+  "task_id": "refactor-merge-action",
+  "task_sha256": "a7c1474c019ff669b418c31d3ec1dd8e849318bb18ff5da17e4f108994ab05c2"
+}

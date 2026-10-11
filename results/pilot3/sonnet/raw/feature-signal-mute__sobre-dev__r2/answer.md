@@ -1,0 +1,7 @@
+Signal definitions now have an optional `muted_until` timestamp. While it's in the future, every new instance of that signal is recorded with filter action `mute` and never opens a case. The signal tests pass (34 passed, 1 skipped), including two new mute tests; I didn't build or open the web UI, so the UI changes are untested.
+
+- **Filtering:** `filter_signal` in `signal/service.py` checks the mute first and skips the snooze and deduplication filters when it applies. Once `muted_until` passes, filtering goes back to normal on its own. A stored time with no timezone is read as UTC.
+- **Storage and API:** `muted_until` is a new `DateTime` column on `signal`, added by the migration `2025-09-02_a7c3e91d5b24.py` (revises `ff08d822ef2c`). It's accepted on signal create and update and returned when signals are read. I didn't run the migration itself; the tests build the schema from the models.
+- **Web UI:** the signal definitions table has a "Muted until" column that shows the time formatted. The create/edit dialog has a date-time picker for it (`DateTimePickerMenu`), and the store defaults it to `null`. There's no explicit button to unmute: the picker only emits `null` if its own clear control does.
+
+The new tests, `test_filter_actions_mute` and `test_filter_actions_mute_expired`, are in `tests/signal/test_signal_service.py`. The first checks that a muted signal is muted even when a snooze filter is also present. The second checks that an expired mute is ignored.

@@ -1,0 +1,16 @@
+{
+  "arm": "native",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "Order is correct: filter_snooze, then filter_dedup, then case creation. Snooze matching is right, including the skip when there is no expiration, the break on an expired filter, and the no-expression case that snoozes everything. The 45-minute default comes from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES and applies only when the signal has no filters; the answer notes the docstring still says one hour. Per-filter windows are treated as seconds, with the 3600 column default and the 600 schema default. Dedup filters match on the expression plus at least one shared entity, and the earliest instance supplies the case. Canary handling is correct: never deduplicated, can be snoozed, and returns before case creation. The answer does not spell out the UI minutes-versus-seconds mismatch, but that is a minor gap. Its extra claims are not contradicted by the reference.",
+    "score": 3
+  },
+  "graded_at": "2026-10-10T22:13:38+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-filter-overview__native__r1",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

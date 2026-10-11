@@ -1,0 +1,109 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..189fab3f 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -33,6 +33,7 @@ from .exceptions import (
+     SignalNotIdentifiedException,
+ )
+ from .models import (
++    assoc_signal_filters,
+     assoc_signal_instance_entities,
+     Signal,
+     SignalCreate,
+@@ -1019,6 +1020,13 @@ def get_signal_stats(
+         active_count.label("active_count"), expired_count.label("expired_count")
+     ).filter(cast(SignalFilter.expression, JSONB).op("@>")(entity_subquery))
+ 
++    if signal_id:
++        # only count snooze filters attached to the requested signal
++        signal_filter_ids = select(assoc_signal_filters.c.signal_filter_id).where(
++            assoc_signal_filters.c.signal_id == signal_id
++        )
++        query = query.filter(SignalFilter.id.in_(signal_filter_ids))
++
+     snooze_result = db_session.execute(query).fetchone()
+ 
+     # Calculate the date threshold based on num_days
+diff --git a/tests/signal/test_signal_stats_service.py b/tests/signal/test_signal_stats_service.py
+index 34b4261d..0f1eda01 100644
+--- a/tests/signal/test_signal_stats_service.py
++++ b/tests/signal/test_signal_stats_service.py
+@@ -236,3 +236,78 @@ def test_get_signal_stats_with_signal_id_filter(session, entity, entity_type):
+         + signal_data_signal2.num_signal_instances_snoozed
+         == 2
+     )
++
++
++def test_get_signal_stats_snooze_counts_scoped_to_signal_id(session, entity, entity_type):
++    """Snooze filter counts should only include filters attached to the requested signal."""
++    from dispatch.signal.service import get_signal_stats
++    from dispatch.signal.models import Signal, SignalFilter, SignalFilterAction
++
++    entity.entity_type = entity_type
++    expression = [
++        {"or": [{"model": "Entity", "field": "id", "op": "==", "value": entity.id}]}
++    ]
++
++    signal1 = Signal(name="Test Signal 1", variant="test-signal-1", project_id=1)
++    signal2 = Signal(name="Test Signal 2", variant="test-signal-2", project_id=1)
++    session.add_all([signal1, signal2])
++    session.flush()
++
++    # signal1 has one active and one expired snooze filter
++    active_filter = SignalFilter(
++        name="Active Snooze 1",
++        action=SignalFilterAction.snooze,
++        expression=expression,
++        expiration=datetime.now(timezone.utc) + timedelta(days=1),
++        project_id=1,
++    )
++    expired_filter = SignalFilter(
++        name="Expired Snooze 1",
++        action=SignalFilterAction.snooze,
++        expression=expression,
++        expiration=datetime.now(timezone.utc) - timedelta(days=1),
++        project_id=1,
++    )
++    # signal2 has one active snooze filter for the same entity
++    other_active_filter = SignalFilter(
++        name="Active Snooze 2",
++        action=SignalFilterAction.snooze,
++        expression=expression,
++        expiration=datetime.now(timezone.utc) + timedelta(days=1),
++        project_id=1,
++    )
++    signal1.filters.extend([active_filter, expired_filter])
++    signal2.filters.append(other_active_filter)
++    session.commit()
++
++    # Without a signal_id, every signal's snooze filters are counted
++    signal_data_all = get_signal_stats(
++        db_session=session,
++        entity_value=entity.value,
++        entity_type_id=entity_type.id,
++        num_days=None,
++    )
++    assert signal_data_all.num_snoozes_active == 2
++    assert signal_data_all.num_snoozes_expired == 1
++
++    # With signal1's id, only signal1's snooze filters are counted
++    signal_data_signal1 = get_signal_stats(
++        db_session=session,
++        entity_value=entity.value,
++        entity_type_id=entity_type.id,
++        signal_id=signal1.id,
++        num_days=None,
++    )
++    assert signal_data_signal1.num_snoozes_active == 1
++    assert signal_data_signal1.num_snoozes_expired == 1
++
++    # With signal2's id, only signal2's snooze filter is counted
++    signal_data_signal2 = get_signal_stats(
++        db_session=session,
++        entity_value=entity.value,
++        entity_type_id=entity_type.id,
++        signal_id=signal2.id,
++        num_days=None,
++    )
++    assert signal_data_signal2.num_snoozes_active == 1
++    assert signal_data_signal2.num_snoozes_expired == 0

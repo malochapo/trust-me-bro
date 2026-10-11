@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-dev",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The candidate matches the reference on every graded point. Order is snooze, then dedup, then case creation. Snooze handling covers skipping filters with no expiration, `break` on the first expired filter (which stops later filters), and the with-expression and no-expression cases. The default dedup window is 45 minutes from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, applies only when the signal has no filters, and the 1-hour docstring is noted as stale. Per-filter window is read as seconds through `_window_start`, with column default 3600 and Pydantic default 600. Canary handling is correct: never deduplicated or used as a dedup target, can still be snoozed, and the flow returns before case creation. The candidate does not explicitly point out that the UI labels windows as minutes, but it makes no false claim. The extra detail about the filter branch not requiring a `case_id` is plausible and does not contradict the reference.",
+    "score": 3
+  },
+  "graded_at": "2026-10-11T00:12:40+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-filter-overview__sobre-dev__r2",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

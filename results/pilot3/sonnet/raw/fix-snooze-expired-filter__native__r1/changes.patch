@@ -1,0 +1,52 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..9f55feea 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -760,7 +760,7 @@ def filter_snooze(*, db_session: Session, signal_instance: SignalInstance) -> Si
+             continue
+ 
+         if f.expiration.replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+-            break
++            continue
+ 
+         query = db_session.query(SignalInstance).filter(
+             SignalInstance.signal_id == signal_instance.signal_id
+diff --git a/tests/signal/test_signal_service.py b/tests/signal/test_signal_service.py
+index c253a7f3..c31edbf7 100644
+--- a/tests/signal/test_signal_service.py
++++ b/tests/signal/test_signal_service.py
+@@ -824,3 +824,34 @@ def test_canary_signals_not_deduplicated(session, signal, project):
+     # Check that the canary signal instance is not deduplicated (should have same case_id as before)
+     assert canary_signal_instance.case_id == initial_case_id
+     assert canary_signal_instance.filter_action != SignalFilterAction.deduplicate
++
++
++def test_filter_snooze__expired_filter_does_not_mask_valid_filter(session, project, signal):
++    from datetime import datetime, timedelta, timezone
++
++    from dispatch.signal.models import SignalFilterAction, SignalFilterMode
++    from dispatch.signal.service import filter_snooze
++    from tests.factories import SignalFilterFactory, SignalInstanceFactory
++
++    now = datetime.now(timezone.utc)
++    expired = SignalFilterFactory(
++        project=project,
++        action=SignalFilterAction.snooze,
++        mode=SignalFilterMode.active,
++        expression=[],
++        expiration=now - timedelta(days=7),
++    )
++    valid = SignalFilterFactory(
++        project=project,
++        action=SignalFilterAction.snooze,
++        mode=SignalFilterMode.active,
++        expression=[],
++        expiration=now + timedelta(days=30),
++    )
++    signal.filters = [expired, valid]
++    instance = SignalInstanceFactory(project=project, signal=signal)
++    session.commit()
++
++    filter_snooze(db_session=session, signal_instance=instance)
++
++    assert instance.filter_action == SignalFilterAction.snooze

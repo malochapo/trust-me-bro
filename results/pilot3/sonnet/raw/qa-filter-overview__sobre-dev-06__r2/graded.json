@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-dev-06",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The candidate matches the reference on every rubric point. Order: snooze, then dedup, then case creation. Snooze: skips filters with no expiration, and uses `break` on the first expired filter, so later snooze filters are never evaluated. An empty expression snoozes every instance. Default dedup: 45 minutes from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, applied only when the signal has no filters, and it notes the docstring's \"1 hour\" is stale. Per-filter windows: treated as seconds, with column default 3600 and pydantic default 600. Entity sharing is required, and the earliest match is used. Canary: never deduplicated, never a dedup target, can still be snoozed, and no case is created. It adds extra detail, such as a possible None case_id on a dedup match, that does not contradict the reference. It does not mention the UI showing windows labeled in minutes, which is a minor gap. It also words one canary bullet awkwardly (\"never snoozed-exempt\"), but the meaning is clear and correct.",
+    "score": 3
+  },
+  "graded_at": "2026-10-11T00:12:24+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-filter-overview__sobre-dev-06__r2",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

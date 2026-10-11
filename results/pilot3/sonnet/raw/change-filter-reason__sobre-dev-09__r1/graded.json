@@ -1,0 +1,44 @@
+{
+  "arm": "sobre-dev-09",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_filter_reason.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 0,
+      "last_line": "37 passed, 1 skipped in 12.82s",
+      "seconds": 17.4
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_filter_reason.py"
+      ],
+      "exit": 0,
+      "last_line": "5 passed in 4.21s",
+      "seconds": 9.2
+    }
+  },
+  "graded_at": "2026-10-10T23:57:09+00:00",
+  "kind": "tests",
+  "pass": true,
+  "rep": 1,
+  "run_id": "change-filter-reason__sobre-dev-09__r1",
+  "score": 1.0,
+  "task_id": "change-filter-reason",
+  "task_sha256": "c5ba9ecaef307d1e065616cf0ca1ffebbad2eb7a14ad1869c1ba262152d6d187"
+}

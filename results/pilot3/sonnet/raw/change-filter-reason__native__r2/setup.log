@@ -1,0 +1,4 @@
+--- setup.sh exit 0
+--- stdout
+{}
+--- stderr

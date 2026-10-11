@@ -1,0 +1,6 @@
+Signals now have an optional `muted_until`, and a muted signal's new instances are recorded with filter action `mute` and never open a case. The signal tests pass (34 passed, 1 skipped), including two new ones for an active and an expired mute. I haven't run the migration or loaded the web UI.
+
+- **Mute behaviour:** `filter_signal` in `signal/service.py` checks `muted_until` first. While it is in the future, the instance gets `mute` and the function returns early, so snooze and deduplication are never evaluated. Once the time passes, filtering is back to normal and nothing needs to clear the field. A naive stored timestamp is treated as UTC.
+- **Storage:** `Signal.muted_until` is a timezone-aware `DateTime` column. The migration is `database/revisions/tenant/versions/2025-09-02_3c1d7a9e5b24.py`, which revises `ff08d822ef2c`.
+- **API:** `muted_until` is on the base signal schema, so create, update and read all carry it.
+- **Web UI:** The signal table has a sortable "Muted until" column. The create/edit dialog has a "Muted until" date-time picker, using the existing `DateTimePickerMenu` component.

@@ -1,0 +1,25 @@
+{
+  "arm": "native",
+  "details": {
+    "hidden_files": [],
+    "regression": null,
+    "tests": {
+      "cmd": [
+        "bash",
+        "-c",
+        "git checkout 51546e13b36a1c5692f2c6a2e19cb6c2c32bbe37 -- tests && python -m pytest -q -p no:cacheprovider tests --deselect tests/ai/test_ai_service.py"
+      ],
+      "exit": 0,
+      "last_line": "351 passed, 4 skipped, 16 deselected in 47.64s",
+      "seconds": 55.4
+    }
+  },
+  "graded_at": "2026-10-11T00:31:58+00:00",
+  "kind": "tests",
+  "pass": true,
+  "rep": 2,
+  "run_id": "ci-red-regressions__native__r2",
+  "score": 1.0,
+  "task_id": "ci-red-regressions",
+  "task_sha256": "0fdb6f6f063d538abace3ef2a295b83a8ab8ccd4bd51a816bbe1679484201fb5"
+}

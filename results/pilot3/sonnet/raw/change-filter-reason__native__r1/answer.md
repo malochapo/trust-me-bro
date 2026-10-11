@@ -1,0 +1,5 @@
+Signal filters now have an optional free-text `reason`, stored in the database, accepted and returned by the API, and shown in the UI. The existing signal tests pass (32 passed, 1 skipped), but I didn't run the new migration or add a test for `reason`. I also didn't run the web UI.
+
+- **Database:** `SignalFilter` has a new nullable `reason` column. The new migration is `database/revisions/tenant/versions/2025-09-02_a1c3e5b7d9f2.py`, which follows `ff08d822ef2c`.
+- **API:** I added `reason` to `SignalFilterBase`, so it's accepted on create and update and returned when filters are read, including filters nested in signals. I changed no service or view code. Update only sets `reason` when the request includes it.
+- **UI:** The Snoozes table on the signal instance page has a new sortable "Reason" column, after Description. The snooze table loads its rows from the filter API, so it gets the value with no other change. The "create signal filter" dialog has a new optional Reason textarea.

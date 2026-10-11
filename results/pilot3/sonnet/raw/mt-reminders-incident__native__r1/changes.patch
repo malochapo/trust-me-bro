@@ -1,0 +1,133 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..d27c5d14 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,8 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # not every triage case has a triage_at date, fall back to when it was created
++            span = datetime.utcnow() - (case.triage_at or case.created_at)
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..01e15f59
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,102 @@
++from datetime import date, datetime, timedelta
++from types import SimpleNamespace
++from unittest.mock import patch
++
++import pytest
++
++from dispatch.case import scheduled
++from dispatch.case.enums import CaseStatus
++from dispatch.scheduler import scheduler
++
++
++class _FakeDate(date):
++    _today = date(2025, 8, 18)
++
++    @classmethod
++    def today(cls):
++        return cls._today
++
++
++@pytest.mark.parametrize(
++    "day,expected",
++    [
++        (date(2025, 8, 18), True),  # Monday
++        (date(2025, 8, 19), False),
++        (date(2025, 8, 20), False),
++        (date(2025, 8, 21), False),
++        (date(2025, 8, 22), False),
++        (date(2025, 8, 23), False),
++        (date(2025, 8, 24), False),  # Sunday
++    ],
++)
++def test_is_reminder_day(day, expected):
++    with patch.object(scheduled, "date", _FakeDate):
++        _FakeDate._today = day
++        assert scheduled._is_reminder_day() is expected
++
++
++class _Case:
++    def __init__(self, status, triage_at=None, created_days_ago=10):
++        self.status = status
++        self.triage_at = triage_at
++        self.stable_at = datetime.utcnow() - timedelta(days=10)
++        self.created_at = datetime.utcnow() - timedelta(days=created_days_ago)
++
++
++@pytest.mark.parametrize(
++    "task_name,status",
++    [
++        ("case-close-reminder", CaseStatus.triage),
++        ("case-stable-reminder", CaseStatus.stable),
++    ],
++)
++@pytest.mark.parametrize("day,sent", [(date(2025, 8, 18), 1), (date(2025, 8, 19), 0)])
++def test_weekly_reminders_only_sent_on_mondays(task_name, status, day, sent):
++    # scheduler.add returns None, so look the task up and unwrap the
++    # project decorator to call the task body directly
++    body = next(t["func"] for t in scheduler.registered_tasks if t["name"] == task_name)
++    while hasattr(body, "__wrapped__"):
++        body = body.__wrapped__
++
++    with (
++        patch.object(scheduled, "date", _FakeDate),
++        patch.object(scheduled, "get_all_by_status", return_value=[_Case(status, triage_at=datetime.utcnow() - timedelta(days=10))]),
++        patch.object(scheduled, "send_case_close_reminder") as send,
++    ):
++        _FakeDate._today = day
++        body(db_session=None, project=SimpleNamespace(id=1))
++    assert send.call_count == sent
++
++
++def _run_close_reminder(case, day):
++    body = next(
++        t["func"] for t in scheduler.registered_tasks if t["name"] == "case-close-reminder"
++    )
++    while hasattr(body, "__wrapped__"):
++        body = body.__wrapped__
++
++    with (
++        patch.object(scheduled, "date", _FakeDate),
++        patch.object(scheduled, "get_all_by_status", return_value=[case]),
++        patch.object(scheduled, "send_case_close_reminder") as send,
++        patch.object(scheduled.log, "exception") as log_exception,
++    ):
++        _FakeDate._today = day
++        body(db_session=None, project=SimpleNamespace(id=1))
++    return send, log_exception
++
++
++def test_close_reminder_without_triage_at_counts_from_created_at():
++    send, log_exception = _run_close_reminder(
++        _Case(CaseStatus.triage, triage_at=None, created_days_ago=10), date(2025, 8, 18)
++    )
++    log_exception.assert_not_called()
++    assert send.call_count == 1
++
++
++def test_close_reminder_without_triage_at_skips_recent_case():
++    send, log_exception = _run_close_reminder(
++        _Case(CaseStatus.triage, triage_at=None, created_days_ago=2), date(2025, 8, 18)
++    )
++    log_exception.assert_not_called()
++    assert send.call_count == 0

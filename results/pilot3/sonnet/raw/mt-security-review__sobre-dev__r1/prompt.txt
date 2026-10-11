@@ -1,0 +1,20 @@
+This repository is Dispatch, an incident management platform. Security review: which endpoints of the case API (src/dispatch/case/views.py) and the incident API (src/dispatch/incident/views.py) change data (POST, PUT, PATCH or DELETE routes) without declaring a PermissionsDependency in their route definition? List all of them, and only them. Do not change any code yet.
+
+
+----- next turn -----
+
+Thanks. Some of those are open on purpose: anyone may report a case or an incident. Is any of the others a regression rather than a design choice? If so, find the commit that removed its check, restore the check it had, and add a test that fails if the check goes missing again. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.
+
+
+----- next turn -----
+
+Another finding from the same review: a member of the security team says the cases list shows them restricted cases they do not take part in. Find the cause and fix it. The existing tests are correct; do not change them. Which commit introduced it?
+
+
+----- next turn -----
+
+Thanks. For the review report, give me a recap that ends with these four lines, in this exact form:
+UNPROTECTED_AT_START: <every handler that changed data without a PermissionsDependency before your changes, comma-separated, as case.<function> or incident.<function>>
+RESTORED: <the handler whose check you restored, as case.<function> or incident.<function>>
+REMOVED_BY: <hash of the commit that removed its check, at least 8 characters>
+VISIBILITY_BUG: <hash of the commit that let members see restricted cases they do not take part in, at least 8 characters>

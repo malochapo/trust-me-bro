@@ -1,0 +1,5 @@
+I fixed the bug: an expired snooze filter no longer stops the other snooze filters on the same signal from being checked.
+
+**Cause:** `filter_snooze` in `src/dispatch/signal/service.py` looped over the signal's filters and used `break` when it hit an expired one. The loop stopped there, so a valid filter listed after the expired one was never checked. The instance wasn't snoozed and went on to open a case. I changed `break` to `continue`.
+
+**Test:** I added `test_filter_actions_snooze_expired_then_valid` in `tests/signal/test_signal_service.py`. It gives a signal one expired and one valid snooze filter with the same expression, and checks the instance ends up snoozed. It fails without the fix. With the fix, it and the three existing snooze tests pass. I only ran the snooze tests, not the full suite.

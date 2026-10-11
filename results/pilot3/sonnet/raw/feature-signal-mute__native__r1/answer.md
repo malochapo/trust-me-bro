@@ -1,0 +1,9 @@
+Signal definitions now have an optional `muted_until`. While it's in the future, new instances are still recorded but filtered with the new `mute` action, and no case opens. The signal tests pass, including two new ones. I didn't run the migration or load the UI in a browser.
+
+- **Mute behaviour:** `filter_mute` runs first in `filter_signal` (`signal/service.py`). If the signal is muted, snooze and deduplication are skipped. Once the time passes, filtering goes back to normal on its own.
+- **Model and API:** `muted_until` is a nullable column on `Signal`, and `SignalBase` carries it, so create, update and read all accept and return it. Timestamps with a timezone are converted to naive UTC to match the other timestamp columns. Sending `muted_until: null` on an update clears the mute.
+- **Migration:** `2025-09-02_3b7c1d9e5a42.py` adds the column, chained after the current head `ff08d822ef2c`. The filename date (2025-09-02) is one I picked to follow the previous revision (2025-08-28), not today's date, so rename it if you want it to match.
+- **UI:** `Table.vue` has a sortable "Muted until" column showing a relative time with the full date in a tooltip. The create/edit dialog has a `datetime-local` field, shown and edited in local time and stored as UTC, which can be cleared to unmute. The `store.js` default is updated.
+- **Tests:** one covers an active mute (filtered as `mute`, `case_id` unchanged) and one an expired mute (not filtered).
+
+The signal instance factory presets a case on new instances, so the active-mute test checks that `case_id` doesn't change rather than that it's empty.

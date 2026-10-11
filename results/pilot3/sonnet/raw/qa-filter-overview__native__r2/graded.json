@@ -1,0 +1,16 @@
+{
+  "arm": "native",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The answer matches the reference on every graded point. The order is snooze, then dedup, then case creation. For snooze it describes the active/snooze filter selection, the skip of filters with no expiration, the `break` at the first expired filter that disables later ones, and the expression/no-expression behavior. The default window is 45 minutes from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, applies only when the signal has no filters, and the answer notes that the docstring is stale. Per-filter windows are treated as seconds, with the column default 3600 and the Pydantic default 600. Canary handling is correct: never deduplicated, never a dedup target, can be snoozed, and returns before case creation. The extra claim that the filter path does not require the matched instance to have a case_id is plausible and does not contradict the reference. It does not mention the UI minute labels, which is a minor gap.",
+    "score": 3
+  },
+  "graded_at": "2026-10-11T00:11:26+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-filter-overview__native__r2",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

@@ -1,0 +1,31 @@
+{
+  "arm": "native",
+  "details": {
+    "must": [
+      {
+        "id": "default",
+        "matched": true,
+        "pattern": "DEFAULT:\\s*`?40\\b"
+      },
+      {
+        "id": "file",
+        "matched": true,
+        "pattern": "FILE:\\s*`?\\S*case/Table\\.vue\\b"
+      },
+      {
+        "id": "store",
+        "matched": true,
+        "pattern": "STORE_DEFAULT:\\s*`?25\\b"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-10T22:52:15+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-cases-page-size__native__r2",
+  "score": 1.0,
+  "task_id": "qa-cases-page-size",
+  "task_sha256": "794ce786bf41f51dd0178f0d420bd252b2dfb6ab59aa18c86c919efbe883f790"
+}

@@ -1,0 +1,161 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..ab0395b9 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -5,7 +5,6 @@
+     :license: Apache, see LICENSE for more details.
+ """
+ 
+-import calendar
+ import logging
+ 
+ from datetime import datetime, date
+@@ -30,7 +29,8 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    # isoweekday() numbers Monday as 1 (calendar.MONDAY is 0)
++    return date.today().isoweekday() == 1
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,10 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # triage_at is not set when a case moves to triage from stable or escalated,
++            # so we count from when the case was created instead
++            triage_started_at = case.triage_at or case.created_at
++            span = datetime.utcnow() - triage_started_at
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..32c22bc5
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,119 @@
++from datetime import date, datetime, timedelta
++from unittest.mock import patch
++
++import pytest
++
++from dispatch.case import scheduled
++from dispatch.case.enums import CaseStatus
++from dispatch.scheduler import scheduler
++from tests.factories import CaseFactory
++
++
++class FrozenDate(date):
++    """Stands in for `date` so tests control what day it is."""
++
++    frozen_today = None
++
++    @classmethod
++    def today(cls):
++        return cls.frozen_today
++
++
++def _undecorated(name):
++    """Returns the plain task function registered under `name`, without the timer
++    and project-context decorators."""
++    task = next(t["func"] for t in scheduler.registered_tasks if t["name"] == name)
++    while hasattr(task, "__wrapped__"):
++        task = task.__wrapped__
++    return task
++
++
++case_close_reminder = _undecorated("case-close-reminder")
++case_stable_reminder = _undecorated("case-stable-reminder")
++
++
++@pytest.fixture
++def on_day():
++    def _on_day(day: date):
++        FrozenDate.frozen_today = day
++        return patch.object(scheduled, "date", FrozenDate)
++
++    return _on_day
++
++
++# 2025-08-11 is a Monday
++@pytest.mark.parametrize(
++    "day,expected",
++    [
++        (date(2025, 8, 11), True),  # Monday
++        (date(2025, 8, 12), False),
++        (date(2025, 8, 13), False),
++        (date(2025, 8, 14), False),
++        (date(2025, 8, 15), False),
++        (date(2025, 8, 16), False),
++        (date(2025, 8, 17), False),  # Sunday
++    ],
++)
++def test_is_reminder_day(on_day, day, expected):
++    with on_day(day):
++        assert scheduled._is_reminder_day() is expected
++
++
++def test_stable_reminder_sent_on_monday_only(session, case, on_day):
++    case.status = CaseStatus.stable
++    case.stable_at = datetime.utcnow() - timedelta(days=8)
++
++    with patch.object(scheduled, "send_case_close_reminder") as send:
++        with on_day(date(2025, 8, 12)):  # Tuesday
++            case_stable_reminder(db_session=session, project=case.project)
++        assert send.call_count == 0
++
++        with on_day(date(2025, 8, 11)):  # Monday
++            case_stable_reminder(db_session=session, project=case.project)
++        assert send.call_count == 1
++
++
++def test_triage_reminder_sent_on_monday_only(session, case, on_day):
++    case.status = CaseStatus.triage
++    case.triage_at = datetime.utcnow() - timedelta(days=8)
++
++    with patch.object(scheduled, "send_case_close_reminder") as send:
++        with on_day(date(2025, 8, 12)):  # Tuesday
++            case_close_reminder(db_session=session, project=case.project)
++        assert send.call_count == 0
++
++        with on_day(date(2025, 8, 11)):  # Monday
++            case_close_reminder(db_session=session, project=case.project)
++        assert send.call_count == 1
++
++
++def test_triage_reminder_counts_from_created_at_when_triage_at_missing(session, case, on_day):
++    # e.g. a case moved to triage from stable or escalated never gets a triage_at
++    case.status = CaseStatus.triage
++    case.triage_at = None
++    case.created_at = datetime.utcnow() - timedelta(days=8)
++
++    with patch.object(scheduled, "send_case_close_reminder") as send:
++        with on_day(date(2025, 8, 11)):  # Monday
++            case_close_reminder(db_session=session, project=case.project)
++        assert send.call_count == 1
++
++
++def test_triage_reminder_waits_for_week_from_created_at(session, case, on_day):
++    case.status = CaseStatus.triage
++    case.triage_at = None
++    case.created_at = datetime.utcnow() - timedelta(days=3)
++
++    with patch.object(scheduled, "send_case_close_reminder") as send:
++        with on_day(date(2025, 8, 11)):  # Monday
++            case_close_reminder(db_session=session, project=case.project)
++        assert send.call_count == 0
++
++
++def test_stable_reminder_skips_cases_without_stable_at(session, case, on_day):
++    CaseFactory(project=case.project, status=CaseStatus.stable, stable_at=None)
++
++    with patch.object(scheduled, "send_case_close_reminder") as send:
++        with on_day(date(2025, 8, 11)):  # Monday
++            case_stable_reminder(db_session=session, project=case.project)
++        assert send.call_count == 0

@@ -1,0 +1,84 @@
+{
+  "arm": "sobre-dev-09b",
+  "details": {
+    "parts": [
+      {
+        "details": {
+          "hidden_files": [
+            "tests/entity/test_hidden_mt_masked_entities.py"
+          ],
+          "regression": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/signal"
+            ],
+            "exit": 0,
+            "last_line": "32 passed, 1 skipped in 13.35s",
+            "seconds": 18.1
+          },
+          "tests": {
+            "cmd": [
+              "bash",
+              "-c",
+              "git checkout 51546e13b36a1c5692f2c6a2e19cb6c2c32bbe37 -- tests/entity && python -m pytest -q -p no:cacheprovider tests/entity"
+            ],
+            "exit": 0,
+            "last_line": "13 passed in 7.71s",
+            "seconds": 15.5
+          }
+        },
+        "kind": "tests",
+        "pass": true,
+        "score": 1.0
+      },
+      {
+        "details": {
+          "must": [
+            {
+              "id": "function",
+              "matched": true,
+              "pattern": "^\\s*REDACTION_FUNCTION:\\s*`?\\S*redaction\\S*redact_raw\\b"
+            },
+            {
+              "id": "keys",
+              "matched": true,
+              "pattern": "^\\s*DEFAULT_KEYS:(?=[^\\n]*\\bpassword\\b)(?=[^\\n]*\\bsecret\\b)(?=[^\\n]*\\bapi_key\\b)(?=[^\\n]*\\bsession_token\\b)(?=[^\\n]*\\bauthorization\\b)"
+            },
+            {
+              "id": "unmasked-in-database",
+              "matched": true,
+              "pattern": "^\\s*UNMASKED_IN_DATABASE:\\s*`?yes\\b"
+            },
+            {
+              "id": "extraction-bug",
+              "matched": true,
+              "pattern": "^\\s*EXTRACTION_BUG:\\s*`?{plant:q3-entity-first-match:short}"
+            },
+            {
+              "id": "masking-commit",
+              "matched": true,
+              "pattern": "^\\s*MASKING_COMMIT:\\s*`?{plant:p2-redact-raw:short}"
+            }
+          ],
+          "must_not": []
+        },
+        "kind": "facts",
+        "pass": true,
+        "score": 1.0
+      }
+    ]
+  },
+  "graded_at": "2026-10-11T00:57:35+00:00",
+  "kind": "all",
+  "pass": true,
+  "rep": 1,
+  "run_id": "mt-redaction-entities__sobre-dev-09b__r1",
+  "score": 1.0,
+  "task_id": "mt-redaction-entities",
+  "task_sha256": "805d2db984411c2f8ec93b87a8fca018d432a5327d1e2928e0e3ca7f913315b3"
+}

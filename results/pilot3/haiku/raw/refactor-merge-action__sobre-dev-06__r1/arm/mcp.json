@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "sobre": {
+      "command": "/root/.cache/sobre-bench/tools/bin/sobre-dev"
+    }
+  }
+}

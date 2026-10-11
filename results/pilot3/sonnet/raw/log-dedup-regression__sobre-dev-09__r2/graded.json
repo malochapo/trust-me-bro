@@ -1,0 +1,36 @@
+{
+  "arm": "sobre-dev-09",
+  "details": {
+    "must": [
+      {
+        "id": "file",
+        "matched": true,
+        "pattern": "FILE:\\s*`?\\S*signal/service\\.py\\b"
+      },
+      {
+        "id": "function",
+        "matched": true,
+        "pattern": "FUNCTION:\\s*`?(filter_dedup|_window_start)\\b"
+      },
+      {
+        "id": "cause",
+        "matched": true,
+        "pattern": "CAUSE:[^\\n]*\\bseconds?\\b"
+      },
+      {
+        "id": "commit",
+        "matched": true,
+        "pattern": "INTRODUCED_BY:\\s*`?{plant:p4-dedup-window-seconds:short}"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-11T00:04:02+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 2,
+  "run_id": "log-dedup-regression__sobre-dev-09__r2",
+  "score": 1.0,
+  "task_id": "log-dedup-regression",
+  "task_sha256": "01136f13a432255cbe659a647f1c4022a131de82bd580d05aee946bce901e365"
+}

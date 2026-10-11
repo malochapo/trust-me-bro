@@ -1,0 +1,7 @@
+The suite is green: 351 passed, 4 skipped, with `tests/ai/test_ai_service.py` excluded as you asked. No test files were changed; the fixes are two source edits.
+
+There were two failures, each from a regression that merged this week:
+
+1. **Restricted cases visible to members** (`src/dispatch/database/service.py`, `restricted_case_filter`). The commit `42699ebc` "flatten the restricted case filter" dropped the `and_` that limited restricted cases to their participants. Members could see every restricted case in the project, which is an authorization leak, not just a test problem. I restored the `and_(Case.visibility == restricted, IndividualContact.email == current_user.email)` clause.
+
+2. **Entity extraction returning one match instead of two** (`src/dispatch/entity/service.py`, `find_entities`). The commit `beb60cc4` "stop at the first JSONPath match" added `[:1]` to `jpath.find(...)`. Its premise was wrong: a JSONPath like `asset[*].id` legitimately matches several fields, and the slice silently dropped all but the first. I removed the slice. The "perf" intent of that commit is lost, but the behaviour the tests and users depend on is restored. If the performance concern was real, it needs a different approach that doesn't truncate results.

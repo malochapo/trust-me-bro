@@ -1,0 +1,8 @@
+I renamed `deduplicate` to `merge` across the backend, web UI and tests, and added a migration that rewrites the stored values. `python -m pytest tests/signal` passes (32 passed, 1 skipped). I did not run the full suite, and I did not run the migration against a database.
+
+- **Backend:** `SignalFilterAction.deduplicate` is now `SignalFilterAction.merge` with the value `"merge"`. The uses in `signal/service.py` and `signal/flows.py` are updated. The filter logic itself is unchanged.
+- **Web UI:** the radio value and its `v-if` check are now `merge`, and so are the color and label keys in `TableInstanceTriggers.vue`. I also changed the user-visible text: the radio label is now "Merge", and the description in `NewEditDialog.vue` says "Snooze" or "Merge".
+- **Tests:** I updated `tests/factories.py` and `tests/signal/test_signal_service.py`, including the comments and docstrings.
+- **Migration:** the new file is `2025-09-02_3c1a7e5b9d42.py`, revising `ff08d822ef2c`, which was the current head. It updates `signal_filter.action` and `signal_instance.filter_action` from `deduplicate` to `merge`. The downgrade reverses both updates.
+- **Wording:** a grep over `src` finds no remaining `deduplicat…` outside the migrations. I reworded every variant, so comments now read things like "merge logic" and "merged".
+- **Label left as is:** the instance table still shows the text "Duplicate" for this action. It isn't the word `deduplicate`, and you only asked for the rename, so I left it alone.

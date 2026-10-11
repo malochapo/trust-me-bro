@@ -1,0 +1,7 @@
+This repository is Dispatch, an incident management platform. Trace what happens to a signal instance sent to the API with POST /api/v1/{organization}/signals/instances, until it either opens a case or is filtered out. In particular: where are sensitive values removed from the instance's raw payload, which function does it, which keys does it remove by default, and does that happen while the API request is being handled?
+
+Finish your answer with these four lines, in this exact form:
+REDACTION_FUNCTION: <dotted module path>.<function>
+DEFAULT_KEYS: <comma-separated keys>
+BEFORE_ENTITY_EXTRACTION: <yes or no>
+DURING_API_REQUEST: <yes or no>

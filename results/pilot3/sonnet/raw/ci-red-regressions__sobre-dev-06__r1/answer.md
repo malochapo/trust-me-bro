@@ -1,0 +1,4 @@
+The suite is green again: 351 passed and 4 skipped, with `tests/ai/test_ai_service.py` ignored as you said. Two bugs were behind the failures, and I didn't touch any tests.
+
+1. **Restricted cases visible to every member** (`src/dispatch/database/service.py`, `restricted_case_filter`): the filter let a member see any restricted case, and the participant check was a separate condition. The restricted-visibility check and the participant-email check now sit in one `and_`, so members see open cases plus restricted cases they take part in. `restricted_incident_filter` already did it this way.
+2. **Entity extraction dropped matches** (`src/dispatch/entity/service.py`, `find_entities`): the recent "stop at the first JSONPath match" perf commit sliced the results with `[:1]`. A path that legitimately matches several values then produced only one entity. I removed the slice.

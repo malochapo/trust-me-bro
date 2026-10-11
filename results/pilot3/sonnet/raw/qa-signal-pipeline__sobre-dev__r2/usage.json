@@ -1,0 +1,42 @@
+{
+  "by_model": {
+    "claude-sonnet-5-5": {
+      "cache_read": 67321,
+      "cache_write_1h": 0,
+      "cache_write_5m": 11503,
+      "client_cost_usd": 0.051176,
+      "cost_usd": 0.0511756,
+      "input": 8,
+      "output": 1567,
+      "price_key": "claude-sonnet-5-5"
+    }
+  },
+  "client_total_cost_usd": 0.051176,
+  "conversation_turns": 1,
+  "cost_usd": 0.051176,
+  "duration_api_ms": 13538,
+  "duration_ms": 16777,
+  "flags": [],
+  "is_error": false,
+  "num_turns": 4,
+  "prices": {
+    "as_of": "2026-10-10",
+    "source": "https://platform.claude.com/docs/en/about-claude/pricing (model pricing table, footnote 2 and long context pricing), read on 2026-10-10"
+  },
+  "result_subtype": "success",
+  "source": "modelUsage",
+  "tokens": {
+    "cache_read": 67321,
+    "cache_write_1h": 0,
+    "cache_write_5m": 11503,
+    "input": 8,
+    "output": 1567
+  },
+  "tool_calls": {
+    "Bash": 3
+  },
+  "tool_calls_total": 3,
+  "tool_result_chars": 13325,
+  "tool_result_errors": 0,
+  "tool_results": 3
+}

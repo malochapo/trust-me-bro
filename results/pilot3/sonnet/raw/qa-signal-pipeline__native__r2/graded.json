@@ -1,0 +1,36 @@
+{
+  "arm": "native",
+  "details": {
+    "must": [
+      {
+        "id": "function",
+        "matched": true,
+        "pattern": "REDACTION_FUNCTION:\\s*`?\\S*redaction\\S*redact_raw\\b"
+      },
+      {
+        "id": "keys",
+        "matched": true,
+        "pattern": "DEFAULT_KEYS:(?=[^\\n]*\\bpassword\\b)(?=[^\\n]*\\bsecret\\b)(?=[^\\n]*\\bapi_key\\b)(?=[^\\n]*\\bsession_token\\b)(?=[^\\n]*\\bauthorization\\b)"
+      },
+      {
+        "id": "order",
+        "matched": true,
+        "pattern": "BEFORE_ENTITY_EXTRACTION:\\s*`?yes\\b"
+      },
+      {
+        "id": "async",
+        "matched": true,
+        "pattern": "DURING_API_REQUEST:\\s*`?no\\b"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-11T00:12:52+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-signal-pipeline__native__r2",
+  "score": 1.0,
+  "task_id": "qa-signal-pipeline",
+  "task_sha256": "62d2cbb8721a4b410032ef1398a537a3405519e6020fcc0f169c0fc10d1cf2db"
+}

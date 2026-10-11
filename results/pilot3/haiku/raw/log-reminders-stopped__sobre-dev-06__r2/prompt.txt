@@ -1,0 +1,7 @@
+This repository is Dispatch, an incident management platform; it is the code we run in production. Since mid-August, assignees no longer get the weekly Monday reminders to close their long-running triage and stable cases, while the daily triage reminders still arrive. Nobody changed the reminder settings. The scheduler's and the API's logs from 2025-07-28 to 2025-08-20 are in /tmp/sobre-bench-work/run-59611a097f71/data/scheduler.log and /tmp/sobre-bench-work/run-59611a097f71/data/api.log. Find the root cause.
+
+Finish your answer with these four lines, in this exact form:
+FILE: <path of the file with the faulty code>
+FUNCTION: <name of the function with the faulty code>
+CAUSE: <one sentence>
+INTRODUCED_BY: <hash of the commit that introduced it, at least 8 characters>

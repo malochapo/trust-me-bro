@@ -1,0 +1,41 @@
+{
+  "arm": "sobre-dev-06",
+  "details": {
+    "must": [
+      {
+        "id": "endpoint",
+        "matched": true,
+        "pattern": "ENDPOINT:\\s*`?GET\\s+\\S*?/?signals/stats\\b(?!/)"
+      },
+      {
+        "id": "function",
+        "matched": true,
+        "pattern": "FUNCTION:\\s*`?(\\S*\\.)?get_signal_stats\\b"
+      },
+      {
+        "id": "scope",
+        "matched": true,
+        "pattern": "SCOPED_TO_SIGNAL:\\s*`?no\\b"
+      },
+      {
+        "id": "window",
+        "matched": true,
+        "pattern": "INSTANCE_WINDOW:\\s*`?30\\b(?!\\s*(hours?|minutes?|h\\b|min))"
+      }
+    ],
+    "must_not": [
+      {
+        "id": "per-signal-endpoint",
+        "matched": false
+      }
+    ]
+  },
+  "graded_at": "2026-10-10T22:47:29+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-ui-entity-stats__sobre-dev-06__r1",
+  "score": 1.0,
+  "task_id": "qa-ui-entity-stats",
+  "task_sha256": "337e7b43eb80b90ce760b646ee02ad8254c2f37b8d53d122634b1fa71a7e5369"
+}
