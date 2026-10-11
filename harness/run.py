@@ -340,7 +340,8 @@ def execute(args, task, run_id, out_dir, work, claude, version, creds, auth):
         data = copy_data(task, work / "data")
         meta["work"]["data"] = str(data) if data else None
         data_dir = str(data or work / "data")
-        prompts = [text.replace("{DATA_DIR}", data_dir) for text in [task["prompt"], *(task.get("followups") or [])]]
+        turns = conversation(task)
+        prompts = [turn["prompt"].replace("{DATA_DIR}", data_dir) for turn in turns]
         (out_dir / "prompt.txt").write_text(TURN_SEPARATOR.join(prompts))
         if not args.no_venv:
             common.build_run_venv(venv, repo, args.deps_venv, log)
@@ -378,16 +379,19 @@ def execute(args, task, run_id, out_dir, work, claude, version, creds, auth):
         start = time.monotonic()
         deadline = start + args.timeout_min * 60  # one limit for the whole conversation
         session_id = None
-        for n, text in enumerate(prompts, 1):
-            # A later turn resumes the session, as a user typing their next message would.
-            resume = ["--resume", session_id] if session_id else []
+        for n, (turn, text) in enumerate(zip(turns, prompts), 1):
+            # A later turn resumes the session, as a user typing their next message would; a
+            # turn marked new_session starts a fresh one, as the user would the next day.
+            resume = ["--resume", session_id] if session_id and not turn["new_session"] else []
             rc, timed_out = run_agent([*isolation, claude, "-p", *resume, *flags], repo, agent_env, out_dir,
                                       max(1.0, deadline - time.monotonic()), append=n > 1, prompt=text)
             meta["turns"].append({"exit_code": rc, "timed_out": timed_out})
             meta["exit_code"], meta["timed_out"] = rc, timed_out
             if timed_out or rc != 0 or n == len(prompts):
                 break
-            session_id = (usage.init_event(usage.read_events(out_dir / "stream.jsonl")) or {}).get("session_id")
+            inits = [e for e in usage.read_events(out_dir / "stream.jsonl")
+                     if e.get("type") == "system" and e.get("subtype") == "init"]
+            session_id = inits[-1].get("session_id") if inits else None
             if not session_id:
                 break
         meta["turns_completed"] = sum(1 for t in meta["turns"] if t["exit_code"] == 0 and not t["timed_out"])
@@ -419,6 +423,18 @@ def execute(args, task, run_id, out_dir, work, claude, version, creds, auth):
         meta["network_commands"] = network_commands(events)
     meta["status"], meta["invalid_reason"] = decide_status(meta, events, result, args.model, expected_servers)
     return meta
+
+
+def conversation(task):
+    """The task's turns: its prompt, then each followup. A followup is the next message's text,
+    or {"prompt": ..., "new_session": true} for a message that starts a new session."""
+    turns = [{"prompt": task["prompt"], "new_session": True}]
+    for followup in task.get("followups") or []:
+        if isinstance(followup, str):
+            turns.append({"prompt": followup, "new_session": False})
+        else:
+            turns.append({"prompt": followup["prompt"], "new_session": bool(followup.get("new_session"))})
+    return turns
 
 
 def network_commands(events):

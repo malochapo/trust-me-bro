@@ -121,6 +121,22 @@ class RunTest(unittest.TestCase):
         self.assertEqual(u["conversation_turns"], 3)
         self.assertAlmostEqual(u["cost_usd"], 3 * 0.024828, places=6)
 
+    def test_a_followup_can_start_a_new_session(self):
+        self.task = make_task(self.root, task_id="t-days", prompt="Day one.",
+                              followups=["Still day one.", {"prompt": "Day two.", "new_session": True}, "Still day two."])
+        r, run_dir, meta, rec = self.run_arm("native")
+        self.assertEqual(meta["status"], "ok", meta.get("invalid_reason"))
+        self.assertEqual((meta["turns_planned"], meta["turns_completed"]), (4, 4))
+        argv = rec["argv"]  # the last turn's: it resumes the second session
+        self.assertEqual(argv[argv.index("--resume") + 1], "00000000-0000-4000-8000-000000000002")
+        events = [json.loads(l) for l in (run_dir / "stream.jsonl").read_text().splitlines() if l.strip()]
+        sessions = [e["session_id"] for e in events if e.get("type") == "result"]
+        self.assertEqual(sessions, ["00000000-0000-4000-8000-000000000001"] * 2 + ["00000000-0000-4000-8000-000000000002"] * 2)
+        self.assertEqual((run_dir / "prompt.txt").read_text().count(run.TURN_SEPARATOR), 3)
+        u = json.loads((run_dir / "usage.json").read_text())
+        # Each session reports running totals (1x then 2x the stub's usage): 2x per session.
+        self.assertAlmostEqual(u["cost_usd"], 4 * 0.024828, places=6)
+
     def test_the_agent_sees_only_its_own_processes(self):
         if not run.isolation_prefix():
             self.skipTest("unshare cannot make a PID namespace here")

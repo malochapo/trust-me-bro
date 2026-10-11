@@ -107,6 +107,21 @@ class UsageTest(unittest.TestCase):
         self.assertEqual(u["duration_api_ms"], 38)
         self.assertEqual((u["num_turns"], u["duration_ms"]), (8, 20))
 
+    def test_a_new_session_adds_its_own_running_totals(self):
+        def result(session, out, cost):
+            return {"type": "result", "subtype": "success", "session_id": session, "num_turns": 1,
+                    "duration_ms": 5, "duration_api_ms": out, "total_cost_usd": cost, "modelUsage": {
+                        "claude-sonnet-5-5": {"inputTokens": 1, "outputTokens": out, "cacheReadInputTokens": 0,
+                                              "cacheCreationInputTokens": 0, "costUSD": cost}}}
+
+        # Session a: 100 then 300 in all. Session b, new: 500 (more than a's total), then 600.
+        events = [result("a", 100, 0.001), result("a", 300, 0.003), result("b", 500, 0.005), result("b", 600, 0.006)]
+        u = usage.compute(write_stream(self.tmp, events))
+        self.assertEqual(u["by_model"]["claude-sonnet-5-5"]["output"], 900)
+        self.assertEqual(u["by_model"]["claude-sonnet-5-5"]["input"], 2)
+        self.assertAlmostEqual(u["client_total_cost_usd"], 0.009)
+        self.assertEqual(u["duration_api_ms"], 900)
+
     def test_tool_stats(self):
         u = usage.compute(fake_stream(self.tmp))
         self.assertEqual(u["tool_calls"], {"Agent": 1, "Bash": 1, "Grep": 1, "Read": 1})

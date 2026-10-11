@@ -5,7 +5,8 @@ Tokens per model come from the `result` events' `modelUsage`, which includes sub
 A multi-turn run resumes the session once per turn, and each turn ends with its own
 `result` event. A resumed session carries its counters over: each event's `modelUsage`,
 `total_cost_usd` and `duration_api_ms` are the session's running totals, so the last event
-holds the whole conversation (`num_turns` and `duration_ms` are per turn, and are summed).
+of a session holds all of it (`num_turns` and `duration_ms` are per turn, and are summed).
+A run that starts a new session sums its sessions, told apart by `session_id`.
 Claude Code reports cache writes there as one number; the 5-minute / 1-hour split comes
 from the per-message `usage.cache_creation` of the assistant events (each API response
 counted once: its message id repeats across events). Without a split, writes count as
@@ -113,13 +114,26 @@ def split_cache_writes(total, msgs, model, flags):
 
 def running_total(values):
     """The total of a counter that each turn of a resumed session reports as a running total.
-    A value below the one before means the count started again (a session that was not
-    resumed), so that value adds to what came before."""
+    A value below the one before means the count started again, so that value adds to what
+    came before."""
     total = previous = 0
     for value in values:
         total += value - previous if value >= previous else value
         previous = value
     return total
+
+
+def by_session(results):
+    """The result events grouped by session, in the order the sessions started."""
+    sessions = {}
+    for result in results:
+        sessions.setdefault(result.get("session_id"), []).append(result)
+    return list(sessions.values())
+
+
+def session_total(results, value):
+    """The total over the run of a counter each session reports as a running total."""
+    return sum(running_total([value(r) for r in session]) for session in by_session(results))
 
 
 def tokens_by_model(results, msg_usage, flags):
@@ -128,8 +142,11 @@ def tokens_by_model(results, msg_usage, flags):
     keys = ("inputTokens", "outputTokens", "cacheReadInputTokens", "cacheCreationInputTokens", "costUSD")
     models = dict.fromkeys(m for r in results for m in (r.get("modelUsage") or {}))
     for model in models:
-        reports = [r["modelUsage"][model] for r in results if model in (r.get("modelUsage") or {})]
-        summed[model] = Counter({key: running_total([mu.get(key) or 0 for mu in reports]) for key in keys})
+        summed[model] = Counter()
+        for session in by_session(results):
+            reports = [r["modelUsage"][model] for r in session if model in (r.get("modelUsage") or {})]
+            for key in keys:
+                summed[model][key] += running_total([mu.get(key) or 0 for mu in reports])
     out = {}
     if summed:
         for model, mu in summed.items():
@@ -255,10 +272,10 @@ def compute(stream_path, prices_path=DEFAULT_PRICES):
         "by_model": by_model,
         "tokens": {c: totals[c] for c in TOKEN_CLASSES},
         "cost_usd": round(cost, 6),
-        "client_total_cost_usd": round(running_total([r.get("total_cost_usd") or 0 for r in results]), 6) if results else None,
+        "client_total_cost_usd": round(session_total(results, lambda r: r.get("total_cost_usd") or 0), 6) if results else None,
         "num_turns": sum(r.get("num_turns") or 0 for r in results) if results else None,
         "duration_ms": sum(r.get("duration_ms") or 0 for r in results) if results else None,
-        "duration_api_ms": running_total([r.get("duration_api_ms") or 0 for r in results]) if results else None,
+        "duration_api_ms": session_total(results, lambda r: r.get("duration_api_ms") or 0) if results else None,
         "conversation_turns": len(results),
         "result_subtype": result.get("subtype") if result else None,
         "is_error": result.get("is_error") if result else None,

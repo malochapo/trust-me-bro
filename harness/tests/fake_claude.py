@@ -170,7 +170,19 @@ def judge(argv, scenario="ok"):
                       "structured_output": {"score": 2, "reasons": "stub judge"}}))
 
 
+def session_id(argv):
+    """The resumed session's id; for a new session, the next of a numbered series."""
+    if "--resume" in argv:
+        return opt(argv, "--resume")
+    counter = Path(os.environ.get("CLAUDE_CONFIG_DIR") or ".") / "fake-claude-sessions"
+    n = int(counter.read_text()) + 1 if counter.exists() else 1
+    if os.environ.get("CLAUDE_CONFIG_DIR"):
+        counter.write_text(str(n))
+    return f"00000000-0000-4000-8000-{n:012d}"
+
+
 def main():
+    global SESSION
     argv = sys.argv[1:]
     record_to = take(argv, "--record-to")
     scenario = take(argv, "--scenario") or "ok"
@@ -184,6 +196,7 @@ def main():
     if opt(argv, "--output-format") == "json":
         judge(argv, scenario)
     else:
+        SESSION = session_id(argv)
         stream(argv, scenario)
 
 
