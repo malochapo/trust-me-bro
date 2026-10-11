@@ -1,0 +1,38 @@
+{
+  "id": "ss-call-invite-choice",
+  "family": "code-qa-semantic",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. Some responders complain that they get pulled into the video call of every incident they work on, and a person can tell Dispatch to stop adding them to those calls. Which function honours that choice when an incident's call is set up? Is the choice honoured at all when the incident has its own group e-mail address for its responders? And are people who have no Dispatch account added to the call? Do not change any code.\n\nFinish your answer with these four lines, in this exact form:\nFILE: <path of the file that defines that function>\nFUNCTION: <name of the function>\nAPPLIED_WITH_GROUP: <yes or no: is the choice honoured when the incident has a group e-mail address for its responders>\nNO_ACCOUNT_ADDED: <yes or no: are people without a Dispatch account added to the call>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "file",
+        "any_of": [
+          "^\\s*FILE:\\s*`?\\S*incident/flows\\.py\\b"
+        ]
+      },
+      {
+        "id": "function",
+        "any_of": [
+          "^\\s*FUNCTION:\\s*`?(\\S*\\.)?filter_participants_for_bridge\\b"
+        ]
+      },
+      {
+        "id": "with_group",
+        "any_of": [
+          "^\\s*APPLIED_WITH_GROUP:\\s*`?no\\b"
+        ]
+      },
+      {
+        "id": "no_account",
+        "any_of": [
+          "^\\s*NO_ACCOUNT_ADDED:\\s*`?yes\\b"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Answer: src/dispatch/incident/flows.py, filter_participants_for_bridge, which reads the user setting auto_add_to_incident_bridges (default true, toggled in the UI's AppToolbar) and adds anyone without a DispatchUser. Its only caller, incident_create_resources, skips it when incident.tactical_group exists and invites the group's address instead, so the choice is not honoured then (usually the case once a group plugin is on). The two yes/no facts need the function and its caller. Lexical gap, grep -i: 'video call', 'stop adding', 'honour', 'group e-mail' have 0 hits; 'pulled' 2, 'responder' 2 (unrelated); 'video' 122 (114 in an icon file); 'choice' 31 (CLI, factories); 'account' 311 lines in 45 files (one is this function's comment); 'group' and 'call' over 1,000 lines each. The question avoids 'preference' and 'opt', whose few hits sit in this function's comments and the toolbar; the code says bridge, conference, settings. Memory: an upstream change of June 2025 (#6081, user settings for bridge auto-join); the tactical-group bypass and the no-account rule are not documented anywhere, and the natural guesses (applied always, unknown people skipped) are both wrong. No plant involved."
+}

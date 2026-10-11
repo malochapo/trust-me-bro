@@ -1,0 +1,38 @@
+{
+  "id": "ss-records-accuracy-mail",
+  "family": "code-qa-semantic",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. The people responsible for some of Dispatch's records (documents, on-call services, teams and notification lists) periodically get an e-mail asking them to check that those records are still accurate. Which scheduled function triggers these e-mails, on which day of the week and at what time of day is it set to run, and by default how many days must pass before the same record is included again? Do not change any code.\n\nFinish your answer with these four lines, in this exact form:\nFILE: <path of the file that defines that function>\nFUNCTION: <name of the function>\nRUNS: <day of the week and time of day>\nDEFAULT_DAYS: <number of days>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "file",
+        "any_of": [
+          "^\\s*FILE:\\s*`?\\S*evergreen/scheduled\\.py\\b"
+        ]
+      },
+      {
+        "id": "function",
+        "any_of": [
+          "^\\s*FUNCTION:\\s*`?(\\S*\\.)?create_evergreen_reminders?\\b"
+        ]
+      },
+      {
+        "id": "runs",
+        "any_of": [
+          "^\\s*RUNS:(?=[^\\n]*\\bmon(day)?s?\\b)(?=[^\\n]*(\\b18[:.h]?00\\b|\\b6(:00)?\\s*p\\.?m\\b))"
+        ]
+      },
+      {
+        "id": "days",
+        "any_of": [
+          "^\\s*DEFAULT_DAYS:\\s*`?90\\b"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Answer: src/dispatch/evergreen/scheduled.py, create_evergreen_reminders (scheduled every().monday.at('18:00'); create_evergreen_reminder, singular, sends each owner's e-mail and is accepted too), default evergreen_reminder_interval 90 days (dispatch/models.py EvergreenMixin and EvergreenBase). Easy: it is one of 27 scheduled jobs. Lexical gap, grep -i: 'notification list', 'day of the week', 'included again' have 0 hits; 'accurate' 3 (cost-type tables, cost model docs); 'periodically' 5 (Slack events, signal flows, cost docs); 'responsible' 9 (role descriptions); 'records' 4; 'e-mail' 1; 'schedul' 266 over 51 files (every scheduled job). The question avoids 'owner', 'review', 'up to date' and 'reminder', which the evergreen e-mail text and models use; the code says evergreen. Memory: a model may know Dispatch has evergreen reminders, but the weekday and hour of the job and the 90-day default are not in the docs (which give no default); other jobs run daily at 18:00, the likely wrong guess. No plant involved."
+}

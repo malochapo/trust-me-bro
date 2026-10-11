@@ -1,0 +1,32 @@
+{
+  "id": "ss-signal-post-redraw",
+  "family": "code-qa-semantic",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. When an alert keeps going off and each repeat is folded into a case that is already open, Dispatch does not redraw the alert's post at the top of that case's chat thread for every single repeat. Which function decides whether a given repeat gets that post redrawn, and how much time must have passed since the last redraw for the same case before a repeat can trigger another one? Do not change any code.\n\nFinish your answer with these three lines, in this exact form:\nFILE: <path of the file that defines that function>\nFUNCTION: <name of the function>\nMIN_GAP: <the minimum time since the last redraw, number and unit>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "file",
+        "any_of": [
+          "^\\s*FILE:\\s*`?\\S*signal/flows\\.py\\b"
+        ]
+      },
+      {
+        "id": "function",
+        "any_of": [
+          "^\\s*FUNCTION:\\s*`?(\\S*\\.)?_should_update_signal_message\\b"
+        ]
+      },
+      {
+        "id": "min_gap",
+        "any_of": [
+          "^\\s*MIN_GAP:\\s*`?(up\\s+to\\s+|under\\s+|less\\s+than\\s+|at\\s+least\\s+|<=?\\s*|>=?\\s*|~\\s*)?`?((5|five)\\s*`?\\s*(s|secs?|seconds?)\\b|(timedelta\\()?seconds\\s*=\\s*5\\b)"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Answer: src/dispatch/signal/flows.py, _should_update_signal_message (called from signal_instance_create_flow when filter_signal filtered the instance): a repeat redraws the case's signal message only if its filter action is deduplicate, the case has a signal_thread_ts and at least timedelta(seconds=5) separates it from the instance that last triggered a redraw. Trap: the TTLCache next to it has ttl=60 (entries expire after 60 s, which also allows a redraw); update_signal_message does the redraw but does not decide. Lexical gap, grep -i on the fixture (src, tests, docs): 'redraw', 'going off', 'alert post', 'chat thread', 'decide' have 0 hits; 'folded' 1 (an icon name); 'repeat' 10 (icons, CSS, eslint, a Vue viewer); 'alert' 478 (mostly icons, the API schema and the unrelated data/alert module); 'thread' 268, 'trigger' 322, 'post' 2424. The code says signal, deduplicate, update, message, cache. Memory: an upstream detail from 2023 (#3337): a private helper and a 5-second constant inside a TTL-cached throttle, nothing a model recalls; the obvious guesses are update_signal_message or the 60 s TTL. No plant involved."
+}

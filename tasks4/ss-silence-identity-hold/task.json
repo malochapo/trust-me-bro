@@ -1,0 +1,38 @@
+{
+  "id": "ss-silence-identity-hold",
+  "family": "code-qa-semantic",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. Before someone may silence an alert from the chat app, Dispatch can make them show it is really them: it gives them a link, and they have to say yes on a page of Dispatch's web UI. While Dispatch keeps the silencing on hold for that, how long does it give them, and what status is that check left in if they never say yes? Name the function that keeps it on hold. Do not change any code.\n\nFinish your answer with these four lines, in this exact form:\nFILE: <path of the file that defines that function>\nFUNCTION: <name of the function>\nTIMEOUT: <how long it gives them, number and unit>\nEND_STATUS: <the status the check is left in when they never say yes>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "file",
+        "any_of": [
+          "^\\s*FILE:\\s*`?\\S*dispatch_core/plugin\\.py\\b"
+        ]
+      },
+      {
+        "id": "function",
+        "any_of": [
+          "^\\s*FUNCTION:\\s*`?(\\S*\\.)?wait_for_challenge\\b"
+        ]
+      },
+      {
+        "id": "timeout",
+        "any_of": [
+          "^\\s*TIMEOUT:\\s*`?(up\\s+to\\s+|under\\s+|less\\s+than\\s+|at\\s+least\\s+|<=?\\s*|>=?\\s*|~\\s*)?`?(300\\s*`?\\s*(s|secs?|seconds?)\\b|5\\s*(min|mins|minutes?)\\b|five\\s+minutes?\\b)"
+        ]
+      },
+      {
+        "id": "status",
+        "any_of": [
+          "^\\s*END_STATUS:\\s*`?[\\\"']?(\\S*\\.)?expired\\b"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Answer: src/dispatch/plugins/dispatch_core/plugin.py, DispatchMfaPlugin.wait_for_challenge (timeout: int = 300, polls every 1 s, then marks the MfaChallenge EXPIRED). It is called by handle_snooze_submission_event (and the engagement confirmation) in plugins/dispatch_slack/case/interactive.py, whose comment 'Check if last_mfa_time was within the last hour' is a trap: nothing uses that hour. Lexical gap, grep -i: 'say yes', 'on hold', 'second time' have 0 hits; 'silence' 1 (an unrelated comment); 'really' 5 (unrelated comments); 'web UI' 17 (messages, docs); 'link' 906; 'status' 1736; 'give' 272. The question avoids 'approve', 'verify', 'confirm', 'pending', 'factor' and 'wait', which point at the MFA code; the code says MFA, challenge, snooze. Memory: the Dispatch MFA plugin is an upstream detail (#5175, Sept 2024) that lives in dispatch_core/plugin.py rather than auth/; the exact holder function, its 300 s default and the EXPIRED status are unlikely to be recalled together, and the misleading 'last hour' comment is the obvious guess. No plant involved."
+}

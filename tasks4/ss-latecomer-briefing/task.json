@@ -1,0 +1,38 @@
+{
+  "id": "ss-latecomer-briefing",
+  "family": "code-qa-semantic",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. Someone who comes late to an incident's channel can get a machine-written briefing on what they missed. When several latecomers ask one after another, Dispatch does not always write a fresh briefing: it may hand out an earlier one again. Which function decides between handing out an earlier briefing and writing a new one, how old may a briefing be and still be handed out again, and which function finds that earlier briefing? Do not change any code.\n\nFinish your answer with these four lines, in this exact form:\nFILE: <path of the file that defines the deciding function>\nFUNCTION: <name of the deciding function>\nMAX_AGE: <how old a briefing may be and still be handed out again, number and unit>\nLOOKUP: <name of the function that finds the earlier briefing>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "file",
+        "any_of": [
+          "^\\s*FILE:\\s*`?\\S*\\bai/service\\.py\\b"
+        ]
+      },
+      {
+        "id": "function",
+        "any_of": [
+          "^\\s*FUNCTION:\\s*`?(\\S*\\.)?generate_read_in_summary\\b"
+        ]
+      },
+      {
+        "id": "max_age",
+        "any_of": [
+          "^\\s*MAX_AGE:\\s*`?(up\\s+to\\s+|under\\s+|less\\s+than\\s+|at\\s+least\\s+|<=?\\s*|>=?\\s*|~\\s*)?`?(120\\s*`?\\s*(s|secs?|seconds?)\\b|2\\s*(min|mins|minutes?)\\b|two\\s+minutes?\\b)"
+        ]
+      },
+      {
+        "id": "lookup",
+        "any_of": [
+          "^\\s*LOOKUP:\\s*`?(\\S*\\.)?get_recent_summary_event\\b"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Answer: src/dispatch/ai/service.py, generate_read_in_summary (called by the Slack member-joined handler and the summary command), which reuses an AI read-in summary event logged within READ_IN_SUMMARY_CACHE_DURATION = 120 s (ai/constants.py), found by event/service.py get_recent_summary_event. Trap: get_recent_summary_event's own default is max_age_seconds=300 ('5 minutes default'), overridden by the caller. Lexical gap, grep -i: 'briefing', 'latecomer', 'machine-written', 'hand out', 'handed', 'how old', 'comes late' have 0 hits; 'missed' 3 (icons); 'fresh' 95 (UI refresh code); 'finds' 3; 'earlier' 1 (a conference test); 'channel' 663 lines in 82 files; 'late' is a substring of 'template' (5,000+ lines). The code says read-in summary, cache duration, event. The question avoids 'join(s)', which points at the Slack member-joined handler, 'so far', which is in the reply text, and 'recent', which is in the lookup function's name. Memory: read-in summaries were added upstream in July 2025 (#6116); the 120 s window and the lookup through the event log are too fine to recall, and the nearby 300 s default is the likely wrong pick. No plant involved."
+}
