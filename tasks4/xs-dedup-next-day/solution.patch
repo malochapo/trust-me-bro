@@ -1,0 +1,23 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -760,7 +760,7 @@ def filter_snooze(*, db_session: Session, signal_instance: SignalInstance) -> Si
+             continue
+
+         if f.expiration.replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+-            break
++            continue
+
+         query = db_session.query(SignalInstance).filter(
+             SignalInstance.signal_id == signal_instance.signal_id
+@@ -842,8 +842,8 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+         # Now apply filters
+         query = apply_filters(query, f.expression)
+
+-        # SignalFilter.window is stored in seconds
+-        window = _window_start(f.window)
++        # SignalFilter.window is in minutes, as the UI shows it
++        window = _window_start(f.window * 60)
+         query = query.filter(SignalInstance.created_at >= window)
+         query = query.join(SignalInstance.entities).filter(
+             Entity.id.in_([e.id for e in signal_instance.entities])

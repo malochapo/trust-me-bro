@@ -1,0 +1,6 @@
+Fixed, with a regression test.
+
+DEDUP_WINDOW_BUG: {plant:p4-dedup-window-seconds}
+CANARY: {plant:e46fa023b7b8899f4a5f24336ce84699618ed196}
+DEFAULT_WINDOW: 30 minutes
+DEFAULT_WINDOW_SETTING: SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES
