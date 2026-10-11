@@ -1,0 +1,132 @@
+{
+  "answer": "I can't see the repository, so this comes from my memory of Dispatch's open-source code and may not match your version.\n\n- **Which function decides:** I believe it is `case_add_or_reactivate_participant_flow` in `src/dispatch/case/flows.py`. After the participant is added to the case, it decides whether to add them to the conversation. For a case without a dedicated channel, I recall it checking whether the case has a thread.\n- **Cases opened by hand:** No, as I recall. A case opened by hand has no alert behind it. The thread-based path depends on the originating signal (alert) and its settings, so a hand-opened case has nothing to qualify it and people are not brought into a thread.\n- **Alerts:** The alert's definition (the signal) must have its thread option enabled, which I recall as the `create_thread` flag on the signal, set to true. I'm less sure of this than of the rest. Check the exact field name in the signal model.\n\nI haven't verified any of this against your code. Look at the function body and the signal model to confirm.\n\nFILE: src/dispatch/case/flows.py\nFUNCTION: case_add_or_reactivate_participant_flow\nHAND_OPENED: no\nREQUIRED_MARK: create_thread = true",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 9254,
+    "duration_ms": 9665,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1306,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1973,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.015229999999999999,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 1024,
+        "provider": "firstParty",
+        "thinkingTokens": 620,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't see the repository, so this comes from my memory of Dispatch's open-source code and may not match your version.\n\n- **Which function decides:** I believe it is `case_add_or_reactivate_participant_flow` in `src/dispatch/case/flows.py`. After the participant is added to the case, it decides whether to add them to the conversation. For a case without a dedicated channel, I recall it checking whether the case has a thread.\n- **Cases opened by hand:** No, as I recall. A case opened by hand has no alert behind it. The thread-based path depends on the originating signal (alert) and its settings, so a hand-opened case has nothing to qualify it and people are not brought into a thread.\n- **Alerts:** The alert's definition (the signal) must have its thread option enabled, which I recall as the `create_thread` flag on the signal, set to true. I'm less sure of this than of the rest. Check the exact field name in the signal model.\n\nI haven't verified any of this against your code. Look at the function body and the signal model to confirm.\n\nFILE: src/dispatch/case/flows.py\nFUNCTION: case_add_or_reactivate_participant_flow\nHAND_OPENED: no\nREQUIRED_MARK: create_thread = true",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "8d4ba3e4-9968-4bfe-a63c-3977f43da3aa",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 401,
+    "total_cost_usd": 0.015229999999999999,
+    "ttft_ms": 6242,
+    "ttft_stream_ms": 1305,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1973
+      },
+      "cache_creation_input_tokens": 1973,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1973
+          },
+          "cache_creation_input_tokens": 1973,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 1024,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 1024,
+      "output_tokens_details": {
+        "thinking_tokens": 620
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "3f404b0d-dc13-4d6a-8068-4041a79a4733"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "hand_opened",
+          "matched": true,
+          "pattern": "^\\s*HAND_OPENED:\\s*`?no\\b"
+        },
+        {
+          "id": "mark",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.25
+  }
+}

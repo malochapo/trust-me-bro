@@ -1,0 +1,132 @@
+{
+  "answer": "I can't see the repository and have no tools, so this is from memory of the open-source Dispatch project and may be wrong. Please check it against the code.\n\n- **Function:** I believe the counting is done by a helper in the feedback code that the scheduled on-call shift feedback job calls. It queries incidents where the person was the incident commander and cases where they were the assignee, within the shift window. I'm not sure of the exact name.\n- **Fallback window:** I'm guessing it falls back to a fixed look-back from the shift end when the paging tool gives no start time. I think that is 7 days, but I'm unsure.\n- **Other projects:** I think the query is scoped to the project the feedback job runs for, so incidents led in other projects of the same organization are not included. I'm moderately confident in this.\n\nThe file path and function name below are best guesses, not confirmed.\n\nFILE: src/dispatch/feedback/service/scheduled.py\nFUNCTION: get_oncall_shift_incident_counts\nFALLBACK_WINDOW: 7 days\nOTHER_PROJECTS: no",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 8698,
+    "duration_ms": 9130,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1289,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1974,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.0151725,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 1018,
+        "provider": "firstParty",
+        "thinkingTokens": 666,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't see the repository and have no tools, so this is from memory of the open-source Dispatch project and may be wrong. Please check it against the code.\n\n- **Function:** I believe the counting is done by a helper in the feedback code that the scheduled on-call shift feedback job calls. It queries incidents where the person was the incident commander and cases where they were the assignee, within the shift window. I'm not sure of the exact name.\n- **Fallback window:** I'm guessing it falls back to a fixed look-back from the shift end when the paging tool gives no start time. I think that is 7 days, but I'm unsure.\n- **Other projects:** I think the query is scoped to the project the feedback job runs for, so incidents led in other projects of the same organization are not included. I'm moderately confident in this.\n\nThe file path and function name below are best guesses, not confirmed.\n\nFILE: src/dispatch/feedback/service/scheduled.py\nFUNCTION: get_oncall_shift_incident_counts\nFALLBACK_WINDOW: 7 days\nOTHER_PROJECTS: no",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "d6bab8a0-3ab7-43e8-9b8d-e78c62515ce1",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 425,
+    "total_cost_usd": 0.0151725,
+    "ttft_ms": 6394,
+    "ttft_stream_ms": 1288,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1974
+      },
+      "cache_creation_input_tokens": 1974,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1974
+          },
+          "cache_creation_input_tokens": 1974,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 1018,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 1018,
+      "output_tokens_details": {
+        "thinking_tokens": 666
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "3c3d5751-e35e-43b1-9bb4-04cf760dad60"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": true,
+          "pattern": "^\\s*FILE:\\s*`?\\S*feedback/service/scheduled\\.py\\b"
+        },
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "window",
+          "matched": true,
+          "pattern": "^\\s*FALLBACK_WINDOW:\\s*`?(up\\s+to\\s+|under\\s+|less\\s+than\\s+|at\\s+least\\s+|<=?\\s*|>=?\\s*|~\\s*)?`?((7|seven)\\s*`?\\s*days?\\b|168\\s*`?\\s*(h|hrs?|hours?)\\b|(1|one)\\s*weeks?\\b|7\\s*\\*\\s*24\\b)"
+        },
+        {
+          "id": "other_projects",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.5
+  }
+}

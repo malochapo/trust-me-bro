@@ -1,0 +1,132 @@
+{
+  "answer": "In a project that has self-join turned off, an ordinary member's options differ between the two routes. This is from memory of the Dispatch code, not from reading your repository, so check it against the source.\n\n**(a) Chat button: yes.** The incident announcement in chat has separate subscribe and join buttons. The join button is tied to the project's self-join setting. Subscribing from chat only adds the person to the incident's e-mail updates and doesn't enrol them as a participant. I don't believe the subscribe handler applies the self-join check, so for an open incident it should work for any member.\n\n**(b) Web API: no.** The subscribe endpoint in `dispatch/incident/views.py` is guarded by `IncidentJoinOrSubscribePermission`. If the project doesn't allow self-join, this permission requires a more privileged role, such as an admin or the incident's commander or reporter. An ordinary member therefore gets a 403, even though the incident is open and unrestricted.\n\nThe chat button and the API therefore disagree.\n\nFILE: src/dispatch/incident/permissions.py\nCLASS: IncidentJoinOrSubscribePermission\nVIA_CHAT_BUTTON: yes\nVIA_API: no",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 9112,
+    "duration_ms": 10559,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 2386,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1957,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.01614,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 1119,
+        "provider": "firstParty",
+        "thinkingTokens": 724,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "In a project that has self-join turned off, an ordinary member's options differ between the two routes. This is from memory of the Dispatch code, not from reading your repository, so check it against the source.\n\n**(a) Chat button: yes.** The incident announcement in chat has separate subscribe and join buttons. The join button is tied to the project's self-join setting. Subscribing from chat only adds the person to the incident's e-mail updates and doesn't enrol them as a participant. I don't believe the subscribe handler applies the self-join check, so for an open incident it should work for any member.\n\n**(b) Web API: no.** The subscribe endpoint in `dispatch/incident/views.py` is guarded by `IncidentJoinOrSubscribePermission`. If the project doesn't allow self-join, this permission requires a more privileged role, such as an admin or the incident's commander or reporter. An ordinary member therefore gets a 403, even though the incident is open and unrestricted.\n\nThe chat button and the API therefore disagree.\n\nFILE: src/dispatch/incident/permissions.py\nCLASS: IncidentJoinOrSubscribePermission\nVIA_CHAT_BUTTON: yes\nVIA_API: no",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "6a8050eb-ac61-4cd5-819f-f6b2f1df741e",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 1434,
+    "total_cost_usd": 0.01614,
+    "ttft_ms": 7541,
+    "ttft_stream_ms": 2385,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1957
+      },
+      "cache_creation_input_tokens": 1957,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1957
+          },
+          "cache_creation_input_tokens": 1957,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 1119,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 1119,
+      "output_tokens_details": {
+        "thinking_tokens": 724
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "2bb653e7-4116-4117-ac5c-7a288873d17b"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "class",
+          "matched": true,
+          "pattern": "^\\s*CLASS:\\s*`?(\\S*\\.)?IncidentJoinOrSubscribePermission\\b"
+        },
+        {
+          "id": "chat_button",
+          "matched": true,
+          "pattern": "^\\s*VIA_CHAT_BUTTON:\\s*`?yes\\b"
+        },
+        {
+          "id": "api",
+          "matched": true,
+          "pattern": "^\\s*VIA_API:\\s*`?no\\b"
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.75
+  }
+}

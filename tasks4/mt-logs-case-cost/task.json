@@ -1,0 +1,82 @@
+{
+  "id": "mt-logs-case-cost",
+  "family": "multi-turn",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform; it is the code we run in production. Since early September, the finance team's warehouse has been receiving case response costs that are several times what they were the hour before. For example, the classic cost of dispatch-default-security-5363 went from $2,261 to $6,241 on September 9, when the case was marked stable. Nobody changed the hourly rates or the cost models. Our logs from 2025-08-25 to 2025-09-14 are in {DATA_DIR}: scheduler.log (the Dispatch scheduler), cost-sync.log (case-cost-sync, the finance team's hourly job that copies case costs from Dispatch's API into their warehouse) and events.log (the Kubernetes events of the dispatch namespace). Find the root cause, and the deploy that shipped it to production. Do not change any code yet.\n",
+  "followups": [
+    "Thanks. Please fix it, and add a regression test that would have caught it. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.\n",
+    "While you were in those logs: since September 8, the scheduler's hourly case cost job also logs a TypeError for a few cases every hour. Find out what causes it. Those cases should still get a cost: when a project has no annual employee cost or no business year hours set, use the project model's default for the missing value. Fix it and add a test.\n",
+    "Good. I am writing the incident report. Give me a recap that ends with these six lines, in this exact form:\nFILE: <path of the file with the cost bug>\nFUNCTION: <name of the function with the cost bug>\nINTRODUCED_BY: <hash of the commit that introduced the cost bug, at least 8 characters>\nDEPLOYED_IMAGE: <image tag of the deploy that shipped it>\nFIRST_INFLATED: <date of the first case cost inflated by this bug, YYYY-MM-DD>\nMISSING_SETTING: <the project setting whose absence caused the hourly TypeError>\n"
+  ],
+  "data": "build/pilot2/data/mt-logs-case-cost",
+  "grader": {
+    "kind": "all",
+    "graders": [
+      {
+        "kind": "tests",
+        "command": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/case_cost/test_hidden_mt_case_cost.py"
+        ],
+        "regression": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/case_cost",
+          "tests/incident_cost"
+        ]
+      },
+      {
+        "kind": "facts",
+        "must": [
+          {
+            "id": "file",
+            "any_of": [
+              "^\\s*FILE:\\s*`?\\S*case_cost/service\\.py\\b"
+            ]
+          },
+          {
+            "id": "function",
+            "any_of": [
+              "^\\s*FUNCTION:\\s*`?(\\S*\\.)?get_participant_role_time_seconds\\b"
+            ]
+          },
+          {
+            "id": "commit",
+            "any_of": [
+              "^\\s*INTRODUCED_BY:\\s*`?{plant:q2-case-cost-cutoff:short}"
+            ]
+          },
+          {
+            "id": "image",
+            "any_of": [
+              "^\\s*DEPLOYED_IMAGE:[^\\n]*main-{plant:2a90ae1b9fe5ebf8b5152673d965804a63f98275:short}"
+            ]
+          },
+          {
+            "id": "first-inflated",
+            "any_of": [
+              "^\\s*FIRST_INFLATED:\\s*`?2025-09-03\\b"
+            ]
+          },
+          {
+            "id": "missing-setting",
+            "any_of": [
+              "^\\s*MISSING_SETTING:\\s*`?(\\S*\\.)?annual[_ ]employee[_ ]cost\\b"
+            ]
+          }
+        ],
+        "must_not": []
+      }
+    ]
+  },
+  "notes": "Pilot 4 replication of mt-reminders-incident on a different bug, services and log format (data: fixture/gen_logs_pilot4.py). Turn 1: plant q2 makes get_participant_role_time_seconds cut a role's time at max() of the case's stable/escalated/closed times instead of min(). The hourly case cost job recomputes a stable case once, the first hour after it is marked stable, so the bug shows when a case escalated (or closed) earlier is marked stable: its classic cost then counts the whole escalation. cost-sync.log flags five such cases (+147% to +265%), the first on 2025-09-03 (case 5284, escalated 08-29, stable 09-03 10:41); an escalated case marked stable on 08-28 (5202) barely moved (3244 -> 3264). events.log shows the rollouts: main-3e0445ff on 08-27, main-65f7df6e on 2025-09-02 18:14Z (the replayed upstream commit 2a90ae1b, the first image that contains q2, along with q1 and q3), main-51546e13 on 09-04, plus a node drain restart (09-10), case-cost-sync's own upgrade to 1.5.0 (09-01, a red herring) and a failed image pull. Turn 2 restores min() (hidden tests: an escalated-then-stable and a stable-then-closed case, directly and through the unwrapped hourly job). Turn 3 needs the logs again: from 2025-09-08 every hourly run logs `unsupported operand type(s) for /: 'NoneType' and 'int'` from get_hourly_rate for each open case of the new fraud project, whose annual_employee_cost is NULL (the operand order says which setting is missing). The requested fallback to the project model's defaults (50000 a year, 2080 hours) is checked through the hourly job (no error logged, cost computed) and for a missing business_year_hours. The recap repeats facts from turns 1 and 3 after two turns of code changes."
+}

@@ -1,0 +1,132 @@
+{
+  "answer": "I can't see the repository and have no tools, so this is from memory of Dispatch's open-source layout, not a check of your code. Treat it as a lead to verify.\n\n- **Function:** my best recollection is `case_add_or_reactivate_participant_flow` in `src/dispatch/case/flows.py`. It runs when someone is added to a case, and it is where the code decides whether to add them to the case's conversation. I'm fairly confident of the function, less sure of the exact condition inside it.\n- **Hand-opened cases:** I believe not. For thread-based cases I recall the check keying off the alert (signal) that raised the case, so a case with no alert behind it wouldn't qualify. I can't confirm this without reading the function.\n- **Required mark:** I don't remember this reliably. The likeliest candidate is a restricted-visibility setting on the signal definition, but I'm guessing, and I'd rather say so than invent a value. Check the condition in that function and the signal model's fields in `src/dispatch/signal/models.py`.\n\nFILE: src/dispatch/case/flows.py\nFUNCTION: case_add_or_reactivate_participant_flow\nHAND_OPENED: no\nREQUIRED_MARK: Restricted (unverified guess)",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 10728,
+    "duration_ms": 11099,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1438,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1973,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.016829999999999998,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 1184,
+        "provider": "firstParty",
+        "thinkingTokens": 771,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "I can't see the repository and have no tools, so this is from memory of Dispatch's open-source layout, not a check of your code. Treat it as a lead to verify.\n\n- **Function:** my best recollection is `case_add_or_reactivate_participant_flow` in `src/dispatch/case/flows.py`. It runs when someone is added to a case, and it is where the code decides whether to add them to the case's conversation. I'm fairly confident of the function, less sure of the exact condition inside it.\n- **Hand-opened cases:** I believe not. For thread-based cases I recall the check keying off the alert (signal) that raised the case, so a case with no alert behind it wouldn't qualify. I can't confirm this without reading the function.\n- **Required mark:** I don't remember this reliably. The likeliest candidate is a restricted-visibility setting on the signal definition, but I'm guessing, and I'd rather say so than invent a value. Check the condition in that function and the signal model's fields in `src/dispatch/signal/models.py`.\n\nFILE: src/dispatch/case/flows.py\nFUNCTION: case_add_or_reactivate_participant_flow\nHAND_OPENED: no\nREQUIRED_MARK: Restricted (unverified guess)",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "6508d399-4749-4af2-bdbd-9bcfe6f1347a",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 365,
+    "total_cost_usd": 0.016829999999999998,
+    "ttft_ms": 7765,
+    "ttft_stream_ms": 1437,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1973
+      },
+      "cache_creation_input_tokens": 1973,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1973
+          },
+          "cache_creation_input_tokens": 1973,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 1184,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 1184,
+      "output_tokens_details": {
+        "thinking_tokens": 771
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "104163a1-4153-418e-95cb-88647904cca3"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "function",
+          "matched": false,
+          "pattern": null
+        },
+        {
+          "id": "hand_opened",
+          "matched": true,
+          "pattern": "^\\s*HAND_OPENED:\\s*`?no\\b"
+        },
+        {
+          "id": "mark",
+          "matched": false,
+          "pattern": null
+        }
+      ],
+      "must_not": []
+    },
+    "pass": false,
+    "score": 0.25
+  }
+}

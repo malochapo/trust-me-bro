@@ -1,0 +1,38 @@
+{
+  "id": "ss-thread-case-bring-in",
+  "family": "code-qa-semantic",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. Some security cases do not get a channel of their own: they live as a thread inside a shared channel. When a person is added to such a case, which function decides whether they are brought into that thread? Are they brought in when the case was opened by hand rather than raised by an alert? And when the case was raised by an alert, what must that alert's definition be marked as for them to be brought in? Do not change any code.\n\nFinish your answer with these four lines, in this exact form:\nFILE: <path of the file that defines that function>\nFUNCTION: <name of the function>\nHAND_OPENED: <yes or no: are people brought into the thread of a case opened by hand>\nREQUIRED_MARK: <the value the alert's definition must be marked with>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "file",
+        "any_of": [
+          "^\\s*FILE:\\s*`?\\S*conversation/flows\\.py\\b"
+        ]
+      },
+      {
+        "id": "function",
+        "any_of": [
+          "^\\s*FUNCTION:\\s*`?(\\S*\\.)?add_case_participants\\b"
+        ]
+      },
+      {
+        "id": "hand_opened",
+        "any_of": [
+          "^\\s*HAND_OPENED:\\s*`?no\\b"
+        ]
+      },
+      {
+        "id": "mark",
+        "any_of": [
+          "^\\s*REQUIRED_MARK:[^\\n]*\\bproduction\\b"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Answer: src/dispatch/conversation/flows.py, add_case_participants, the single path through which case_add_or_reactivate_participant_flow, case_create_conversation_flow and the Slack handlers add people to a case conversation. Since #5920 (April 2025) a thread case (has_thread) only gets them added when case.signal_instances[0].signal.lifecycle == 'production': a case reported by hand has no signal instances, so nobody is brought into its thread (channel cases are unaffected). The Slack helper add_users_to_conversation_thread does the bringing-in but does not decide. Lexical gap, grep -i: 'own channel', 'shared channel', 'by hand', 'decides', 'tried out' have 0 hits; 'brought' 1 (docs index); 'live' 8 lines; 'raised' 5 files (exceptions); 'marked' 39 lines in 25 files; 'thread' 268 lines in 40 files; 'alert' 478. The question avoids 'dedicated', 'manual', 'signal', 'lifecycle' (23 lines in 10 files, this function among them) and 'production'; the code says has_thread, signal_instances, lifecycle. Memory: an April 2025 change; the natural guess is that everyone added to a case is brought into its thread, and older code (which a model may remember) did exactly that. No plant involved."
+}

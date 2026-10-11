@@ -1,8 +1,6 @@
 {
   "leaked": [
-    "ss-case-shut-on-open",
-    "ss-records-accuracy-mail",
-    "ss-silence-identity-hold"
+    "ss-follow-without-enrol"
   ],
   "model": "claude-sonnet-5-5",
   "reps": 3

@@ -1,0 +1,132 @@
+{
+  "answer": "In a project with self-join turned off, I expect an ordinary member to be able to subscribe from the chat button but not through the web API. I'm answering from memory of the Dispatch code, without access to the repository, so this isn't verified against your copy.\n\n**(a) Chat button: yes.** The \"Subscribe\" button on the incident announcement is handled by the Slack plugin's own handler. As I recall, that handler adds the user to the incident's e-mail notifications and does not check the project's self-join setting. The setting only gates joining as a participant, so subscribing to an open incident from chat still works.\n\n**(b) Web API: no.** The join and subscribe endpoints in the incident views are guarded by `IncidentJoinOrSubscribePermission`. For a non-admin, that permission only lets the request through if the project allows self-join, or if the user is already a participant or has a role such as incident commander. Without self-join, an ordinary member is refused. The API therefore applies the project restriction to subscribing as well, and the chat button does not.\n\nThe deciding class is `IncidentJoinOrSubscribePermission`, defined in the auth permissions module.\n\nFILE: src/dispatch/auth/permissions.py\nCLASS: IncidentJoinOrSubscribePermission\nVIA_CHAT_BUTTON: yes\nVIA_API: no",
+  "auth": "api_key",
+  "raw": {
+    "api_error_status": null,
+    "duration_api_ms": 9968,
+    "duration_ms": 10288,
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "fast_mode_state": "off",
+    "first_content_frame_ms": 1216,
+    "is_error": false,
+    "modelUsage": {
+      "claude-sonnet-5-5": {
+        "cacheCreationInputTokens": 1966,
+        "cacheReadInputTokens": 535,
+        "canonicalModel": "claude-sonnet-5-5",
+        "contextWindow": 1000000,
+        "costBasis": "list",
+        "costUSD": 0.016892499999999998,
+        "inputTokens": 2,
+        "maxOutputTokens": 128000,
+        "outputTokens": 1192,
+        "provider": "firstParty",
+        "thinkingTokens": 756,
+        "webSearchRequests": 0
+      }
+    },
+    "num_turns": 1,
+    "permission_denials": [],
+    "queued_turn_count": 0,
+    "result": "In a project with self-join turned off, I expect an ordinary member to be able to subscribe from the chat button but not through the web API. I'm answering from memory of the Dispatch code, without access to the repository, so this isn't verified against your copy.\n\n**(a) Chat button: yes.** The \"Subscribe\" button on the incident announcement is handled by the Slack plugin's own handler. As I recall, that handler adds the user to the incident's e-mail notifications and does not check the project's self-join setting. The setting only gates joining as a participant, so subscribing to an open incident from chat still works.\n\n**(b) Web API: no.** The join and subscribe endpoints in the incident views are guarded by `IncidentJoinOrSubscribePermission`. For a non-admin, that permission only lets the request through if the project allows self-join, or if the user is already a participant or has a role such as incident commander. Without self-join, an ordinary member is refused. The API therefore applies the project restriction to subscribing as well, and the chat button does not.\n\nThe deciding class is `IncidentJoinOrSubscribePermission`, defined in the auth permissions module.\n\nFILE: src/dispatch/auth/permissions.py\nCLASS: IncidentJoinOrSubscribePermission\nVIA_CHAT_BUTTON: yes\nVIA_API: no",
+    "result_index": 0,
+    "safety_stops": 0,
+    "session_id": "7b5dd64b-fde6-464f-a9fc-b48d9ba1a8b6",
+    "stop_reason": "end_turn",
+    "subagent_stats": {
+      "by_type": {},
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "system": 0,
+        "user": 0
+      },
+      "max_depth": 0,
+      "refused": {
+        "budget": 0,
+        "concurrency_limit": 0,
+        "depth_limit": 0
+      },
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "spawned": 0,
+      "spawned_by_subagents": 0,
+      "started_in_background": 0
+    },
+    "subtype": "success",
+    "terminal_reason": "completed",
+    "time_to_request_ms": 311,
+    "total_cost_usd": 0.016892499999999998,
+    "ttft_ms": 7075,
+    "ttft_stream_ms": 1215,
+    "type": "result",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1966
+      },
+      "cache_creation_input_tokens": 1966,
+      "cache_read_input_tokens": 535,
+      "fallback_credit": null,
+      "inference_geo": "global",
+      "input_tokens": 2,
+      "iterations": [
+        {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1966
+          },
+          "cache_creation_input_tokens": 1966,
+          "cache_read_input_tokens": 535,
+          "input_tokens": 2,
+          "output_tokens": 1192,
+          "type": "message"
+        }
+      ],
+      "output_tokens": 1192,
+      "output_tokens_details": {
+        "thinking_tokens": 756
+      },
+      "server_tool_use": {
+        "web_fetch_requests": 0,
+        "web_search_requests": 0
+      },
+      "service_tier": "standard",
+      "speed": "standard"
+    },
+    "uuid": "2ba8d93a-f895-4239-97a2-5336351829fe"
+  },
+  "verdict": {
+    "details": {
+      "must": [
+        {
+          "id": "file",
+          "matched": true,
+          "pattern": "^\\s*FILE:\\s*`?\\S*auth/permissions\\.py\\b"
+        },
+        {
+          "id": "class",
+          "matched": true,
+          "pattern": "^\\s*CLASS:\\s*`?(\\S*\\.)?IncidentJoinOrSubscribePermission\\b"
+        },
+        {
+          "id": "chat_button",
+          "matched": true,
+          "pattern": "^\\s*VIA_CHAT_BUTTON:\\s*`?yes\\b"
+        },
+        {
+          "id": "api",
+          "matched": true,
+          "pattern": "^\\s*VIA_API:\\s*`?no\\b"
+        }
+      ],
+      "must_not": []
+    },
+    "pass": true,
+    "score": 1.0
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "ss-oncall-turn-tally",
+  "family": "code-qa-semantic",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform. When someone's turn on call ends, Dispatch can send them a short questionnaire about it, along with how many incidents and security cases they handled during that turn. Which function works out those numbers? If the paging tool does not say when the turn began, how far back does it look? And does it include incidents they led in other projects of the same organization? Do not change any code.\n\nFinish your answer with these four lines, in this exact form:\nFILE: <path of the file that defines that function>\nFUNCTION: <name of the function>\nFALLBACK_WINDOW: <how far back it looks when the start of the turn is unknown, number and unit>\nOTHER_PROJECTS: <yes or no: are incidents they led in other projects of the organization included>\n",
+  "data": null,
+  "grader": {
+    "kind": "facts",
+    "must": [
+      {
+        "id": "file",
+        "any_of": [
+          "^\\s*FILE:\\s*`?\\S*feedback/service/scheduled\\.py\\b"
+        ]
+      },
+      {
+        "id": "function",
+        "any_of": [
+          "^\\s*FUNCTION:\\s*`?(\\S*\\.)?find_schedule_and_send\\b"
+        ]
+      },
+      {
+        "id": "window",
+        "any_of": [
+          "^\\s*FALLBACK_WINDOW:\\s*`?(up\\s+to\\s+|under\\s+|less\\s+than\\s+|at\\s+least\\s+|<=?\\s*|>=?\\s*|~\\s*)?`?((7|seven)\\s*`?\\s*days?\\b|168\\s*`?\\s*(h|hrs?|hours?)\\b|(1|one)\\s*weeks?\\b|7\\s*\\*\\s*24\\b)"
+        ]
+      },
+      {
+        "id": "other_projects",
+        "any_of": [
+          "^\\s*OTHER_PROJECTS:\\s*`?yes\\b"
+        ]
+      }
+    ],
+    "must_not": []
+  },
+  "notes": "Answer: src/dispatch/feedback/service/scheduled.py, find_schedule_and_send (called by oncall_shift_feedback from the 16:00 and 06:00 UTC jobs): hours_in_shift comes from the oncall plugin's shift_start/shift_end, or 7 * 24 hours when shift_start is missing; it counts incidents from incident_service.get_all_last_x_hours whose commander is that person and cases from case_service.get_all_last_x_hours that have their own channel and are assigned to them. Both queries ignore the project, so incidents of every project in the organization count, although the job runs per project. Lexical gap, grep -i: 'questionnaire', 'began', 'paging tool' have 0 hits; 'paging' 3 files (a case paging message, docs); 'handled' 12 files (UI); 'numbers' 17; 'turn' is a substring of 'return'; 'call' 166 files; 'send' 93. The question avoids 'shift' (184 lines, mostly this feature), 'feedback', 'handoff' and 'how it went' ('went' hits the PagerDuty 'just went off shift' docstring); the code says oncall shift, health metrics, feedback. Memory: on-call shift metrics are an experimental, undocumented feature (#5204, Sept 2024; shift types April 2025); a guess would take the shift length (12 or 24 hours) as the fallback and assume a per-project count. No plant involved."
+}
