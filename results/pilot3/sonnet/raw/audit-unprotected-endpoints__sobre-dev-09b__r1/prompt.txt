@@ -1,0 +1,4 @@
+This repository is Dispatch, an incident management platform. Security review: which endpoints of the case API (src/dispatch/case/views.py) and the incident API (src/dispatch/incident/views.py) change data (POST, PUT, PATCH or DELETE routes) without declaring a PermissionsDependency in their route definition? List all of them, and only them.
+
+Finish your answer with this line, in this exact form:
+UNPROTECTED: <comma-separated handlers written as case.<function> or incident.<function>>

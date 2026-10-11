@@ -1,0 +1,90 @@
+{
+  "arm": "sobre-dev-09b",
+  "details": {
+    "parts": [
+      {
+        "details": {
+          "hidden_files": [
+            "tests/signal/test_hidden_mt_dedup_window.py",
+            "tests/signal/test_hidden_mt_snooze_filters.py"
+          ],
+          "regression": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/signal"
+            ],
+            "exit": 0,
+            "last_line": "40 passed, 1 skipped in 12.69s",
+            "seconds": 17.2
+          },
+          "tests": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/signal/test_hidden_mt_dedup_window.py",
+              "tests/signal/test_hidden_mt_snooze_filters.py"
+            ],
+            "exit": 0,
+            "last_line": "5 passed in 5.49s",
+            "seconds": 10.0
+          }
+        },
+        "kind": "tests",
+        "pass": true,
+        "score": 1.0
+      },
+      {
+        "details": {
+          "must": [
+            {
+              "id": "dedup-window-bug",
+              "matched": true,
+              "pattern": "^\\s*DEDUP_WINDOW_BUG:\\s*`?{plant:p4-dedup-window-seconds:short}"
+            },
+            {
+              "id": "snooze-bug",
+              "matched": true,
+              "pattern": "^\\s*SNOOZE_BUG:\\s*`?{plant:p5-snooze-refactor:short}"
+            },
+            {
+              "id": "canary",
+              "matched": true,
+              "pattern": "^\\s*CANARY:\\s*`?{plant:e46fa023b7b8899f4a5f24336ce84699618ed196:short}"
+            },
+            {
+              "id": "default-window",
+              "matched": true,
+              "pattern": "^\\s*DEFAULT_WINDOW:\\s*`?45\\s*(min|minutes)\\b"
+            },
+            {
+              "id": "default-window-setting",
+              "matched": true,
+              "pattern": "^\\s*DEFAULT_WINDOW_SETTING:\\s*`?SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES\\b"
+            }
+          ],
+          "must_not": []
+        },
+        "kind": "facts",
+        "pass": true,
+        "score": 1.0
+      }
+    ]
+  },
+  "graded_at": "2026-10-11T01:11:17+00:00",
+  "kind": "all",
+  "pass": true,
+  "rep": 2,
+  "run_id": "mt-dedup-snooze-regressions__sobre-dev-09b__r2",
+  "score": 1.0,
+  "task_id": "mt-dedup-snooze-regressions",
+  "task_sha256": "73d97166bf9f6f741ce1a96091ff4dee075ac522396264e0691dd74fdf4e932e"
+}

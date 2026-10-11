@@ -1,0 +1,73 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..4638b3f1 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -759,8 +759,9 @@ def filter_snooze(*, db_session: Session, signal_instance: SignalInstance) -> Si
+             log.warning(f"Signal filter {f.name} has no expiration date")
+             continue
+ 
++        # skip expired filters, a later filter for the same entity may still be active
+         if f.expiration.replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+-            break
++            continue
+ 
+         query = db_session.query(SignalInstance).filter(
+             SignalInstance.signal_id == signal_instance.signal_id
+diff --git a/tests/signal/test_signal_service.py b/tests/signal/test_signal_service.py
+index c253a7f3..5a08d9bd 100644
+--- a/tests/signal/test_signal_service.py
++++ b/tests/signal/test_signal_service.py
+@@ -702,6 +702,53 @@ def test_filter_actions_snooze_expired(session, entity, signal, project):
+     assert not filter_signal(db_session=session, signal_instance=signal_instance_1)
+ 
+ 
++def test_filter_actions_snooze_expired_then_active(session, entity, signal, project):
++    """An expired snooze filter must not prevent a later active snooze filter from applying."""
++    from datetime import datetime, timedelta, timezone
++    from dispatch.signal.models import SignalFilterAction
++    from dispatch.signal.service import filter_signal
++    from tests.factories import EntityTypeFactory, SignalInstanceFactory, SignalFilterFactory
++
++    entity_type = EntityTypeFactory(project=project)
++    session.add(entity_type)
++    signal.entity_types.append(entity_type)
++
++    session.add(entity)
++
++    signal_instance = SignalInstanceFactory(
++        project=project,
++        signal=signal,
++        entities=[entity],
++        raw=json.dumps({"id": "foo"}),
++    )
++    session.add(signal_instance)
++
++    expression = [{"or": [{"model": "Entity", "field": "id", "op": "==", "value": entity.id}]}]
++
++    # expired filter listed first so it is evaluated before the active one
++    expired_filter = SignalFilterFactory(
++        name="snooze-expired",
++        description="test",
++        expression=expression,
++        action="snooze",
++        expiration=datetime.now(timezone.utc) - timedelta(minutes=5),
++        project=project,
++    )
++    active_filter = SignalFilterFactory(
++        name="snooze-active",
++        description="test",
++        expression=expression,
++        action="snooze",
++        expiration=datetime.now(timezone.utc) + timedelta(days=30),
++        project=project,
++    )
++
++    signal.filters = [expired_filter, active_filter]
++    session.commit()
++    assert filter_signal(db_session=session, signal_instance=signal_instance)
++    assert signal_instance.filter_action == SignalFilterAction.snooze
++
++
+ def test_filter_actions_deduplicate_canary_signals(session, signal, project):
+     """Test that canary signals are not considered in deduplication logic."""
+     from dispatch.signal.models import SignalFilterAction

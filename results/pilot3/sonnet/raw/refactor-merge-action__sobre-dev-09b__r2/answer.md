@@ -1,0 +1,8 @@
+The `deduplicate` action is now `merge` everywhere, and the signal tests pass (32 passed, 1 skipped). I only ran `tests/signal`, not the full suite.
+
+- **Backend:** `SignalFilterAction.merge = "merge"` replaces the old member, and the usages in `signal/service.py` and `signal/flows.py` are updated.
+- **Web UI:** the filter create dialog now has a "Merge" radio with value `merge`. The instance triggers table keys on `merge` and shows "Merged" instead of "Duplicate". That label change is mine, so say if you'd rather keep "Duplicate".
+- **Migration:** `2025-09-02_a1c4e7b92d35.py` follows the current head `ff08d822ef2c`. It rewrites `signal_filter.action` and `signal_instance.filter_action` from `deduplicate` to `merge`, and the downgrade reverses it. I didn't run the migration against a database.
+- **Tests and other files:** `tests/factories.py` and `tests/signal/test_signal_service.py` use the new name, including the test names and comments. I also updated the `openapi.yaml` enum under `docs/`, but not the prose in `docs/docs/administration/settings/signal/filter.mdx`, which still says "deduplicate".
+
+The word `deduplicate` no longer appears in `src/dispatch` outside the migration. Some related words are still there, such as the `filter_dedup` function, `SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES`, and "deduplication" in comments and UI help text. They don't contain the word, so I left them alone.

@@ -1,10 +1,6 @@
-On first open, the Cases table shows **40** rows per page. The initial value is set in `Table.vue` (`const itemsPerPage = ref(40)`), which is bound to the table's `:items-per-page` prop. The case store module declares **25** for `table.options.itemsPerPage` (`store.js:141`), so the store default differs from what the table shows.
+The Cases table shows **40** rows per page on first open. The initial value is set in `Table.vue`, which declares `const itemsPerPage = ref(40)` and binds it to `v-data-table-server` via `:items-per-page`. The table's footer offers 10, 20, 40, and 80, so 40 is a valid option.
 
-I haven't run the app, so the 40 comes from reading the code. The table's `update:options` handler writes its own `itemsPerPage` back into the store, which is why the page size ends up as 40 even though the store starts at 25. One detail I didn't confirm: the mount-time `getAll` call (`Table.vue:207`) reads the store options, so it may briefly request 25 before the table's emitted options replace that value.
-
-The `store.js:534` value of 50 belongs to a different action (a plugin-type lookup), not the cases table, so I ignored it.
-
-Paths are relative to the repo root.
+The case Vuex store module declares `itemsPerPage: 25` in its `table.options` (`src/dispatch/static/dispatch/src/case/store.js:141`). That store value doesn't set the first-open view, because the table's `loadItems` handler writes the table's own `itemsPerPage` (40) back into the store when the table's options update. I didn't run the app to confirm this at runtime; the answer comes from reading the code.
 
 DEFAULT: 40
 FILE: src/dispatch/static/dispatch/src/case/Table.vue

@@ -15,9 +15,17 @@
     "timeout_min": 25
   },
   "cmd": [
+    "/usr/bin/unshare",
+    "--pid",
+    "--fork",
+    "--mount-proc",
+    "--kill-child",
+    "sh",
+    "-c",
+    "unset PWD OLDPWD; \"$@\"",
+    "sh",
     "/opt/claude-code/bin/claude",
     "-p",
-    "<prompt.txt>",
     "--model",
     "claude-haiku-5-5",
     "--effort",
@@ -38,19 +46,18 @@
     "3",
     "--disallowedTools",
     "WebFetch",
-    "WebSearch"
+    "WebSearch",
+    "< prompt.txt"
   ],
   "daemon": null,
   "effort": "medium",
-  "end_utc": "2026-10-10T22:17:14+00:00",
+  "end_utc": "2026-10-11T01:48:55+00:00",
   "exit_code": 0,
   "extra_env": {},
   "family": "refactor",
   "fixture": "/home/user/sobre-bench/build/pilot2/fixture.git",
   "fixture_head": "51546e13b36a1c5692f2c6a2e19cb6c2c32bbe37",
-  "flags": [
-    "network_command"
-  ],
+  "flags": [],
   "grader_kind": "tests",
   "init": {
     "apiKeySource": "ANTHROPIC_API_KEY",
@@ -122,17 +129,15 @@
     ]
   },
   "invalid_reason": null,
+  "isolated": true,
   "model": "claude-haiku-5-5",
-  "network_commands": [
-    "DISPATCH_ENCRYPTION_KEY=x DISPATCH_JWT_SECRET=x DISPATCH_UI_URL=https://example.com DATABASE_HOSTNAME=localhost DATABASE_CREDENTIALS=postgres:dispatch DATABASE_NAME=x python -c \"\nfrom alembic.script import ScriptDirectory\nfrom alembic.config import Config\ncfg=Config(); cfg.set_main_option('script_lo"
-  ],
   "probe_active": null,
   "rep": 1,
   "result_subtype": "success",
   "run_id": "refactor-merge-action__native__r1",
   "setup_exit_code": 0,
   "setup_seconds": 0.0,
-  "start_utc": "2026-10-10T22:15:44+00:00",
+  "start_utc": "2026-10-11T01:46:57+00:00",
   "status": "ok",
   "task_file": "/home/user/sobre-bench/tasks2/refactor-merge-action/task.json",
   "task_id": "refactor-merge-action",
@@ -147,9 +152,9 @@
   "turns_completed": 1,
   "turns_planned": 1,
   "untracked_files": [
-    "src/dispatch/database/revisions/tenant/versions/2026-10-10_6ee3f082fc2f.py"
+    "src/dispatch/database/revisions/tenant/versions/2026-10-11_5e1a9c3d7b42.py"
   ],
-  "wall_seconds": 89.9,
+  "wall_seconds": 117.9,
   "work": {
     "data": null,
     "dir": "/tmp/sobre-bench-work/run-887ed47870ab",

@@ -1,0 +1,13 @@
+--- setup.sh exit 0
+--- stdout
+{}
+--- stderr
+
+sobre init
+
+  Claude Code  connected
+                 created ~/.claude/.claude.json
+                 created ~/.claude/skills/sobre/SKILL.md
+                 created ~/.claude/settings.json
+
+  Restart the agents above so they load sobre, then check with: sobre doctor

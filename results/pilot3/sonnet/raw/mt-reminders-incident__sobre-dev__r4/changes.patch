@@ -1,0 +1,104 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..1a70af5d 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,8 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # some cases reach triage without triage_at being set, count from creation instead
++            span = datetime.utcnow() - (case.triage_at or case.created_at)
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..56e07e5d
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,73 @@
++from datetime import date, datetime, timedelta
++from unittest import mock
++
++import pytest
++
++from dispatch.case import scheduled
++from dispatch.scheduler import scheduler
++
++
++class _FakeDate(date):
++    today_value = None
++
++    @classmethod
++    def today(cls):
++        return cls.today_value
++
++
++@pytest.mark.parametrize("day", range(1, 8))
++def test_is_reminder_day_only_on_monday(day):
++    # 2025-08-18 is a Monday, so 2025-08-(17 + day) walks Monday..Sunday
++    _FakeDate.today_value = date(2025, 8, 17 + day)
++    with mock.patch.object(scheduled, "date", _FakeDate):
++        assert scheduled._is_reminder_day() == (day == 1)
++
++
++@pytest.mark.parametrize("today,expected", [(date(2025, 8, 18), True), (date(2025, 8, 19), False)])
++def test_case_close_reminder_sends_only_on_mondays(today, expected):
++    _FakeDate.today_value = today
++    case = mock.Mock(triage_at=datetime.utcnow() - timedelta(days=10))
++    with (
++        mock.patch.object(scheduled, "date", _FakeDate),
++        mock.patch.object(scheduled, "get_all_by_status", return_value=[case]) as get_cases,
++        mock.patch.object(scheduled, "send_case_close_reminder") as send,
++    ):
++        task = next(t for t in scheduler.registered_tasks if t["name"] == "case-close-reminder")
++        # run the task body against a fake project instead of every project in the database
++        with mock.patch(
++            "dispatch.decorators._execute_task_in_project_context",
++            side_effect=lambda func, *a, **kw: func(mock.Mock(), mock.Mock(id=1)),
++        ):
++            task["func"]()
++    get_cases.assert_called_once()
++    assert send.called == expected
++
++
++@pytest.mark.parametrize(
++    "triage_at,created_days_ago,expected",
++    [
++        (None, 10, True),  # no triage_at: count from created_at
++        (None, 3, False),
++        (datetime.utcnow() - timedelta(days=10), 1, True),  # triage_at wins over created_at
++        (datetime.utcnow() - timedelta(days=1), 30, False),
++    ],
++)
++def test_case_close_reminder_falls_back_to_created_at(triage_at, created_days_ago, expected):
++    _FakeDate.today_value = date(2025, 8, 18)  # a Monday
++    case = mock.Mock(
++        triage_at=triage_at, created_at=datetime.utcnow() - timedelta(days=created_days_ago)
++    )
++    with (
++        mock.patch.object(scheduled, "date", _FakeDate),
++        mock.patch.object(scheduled, "get_all_by_status", return_value=[case]),
++        mock.patch.object(scheduled, "send_case_close_reminder") as send,
++        mock.patch.object(scheduled.log, "exception") as log_exception,
++    ):
++        task = next(t for t in scheduler.registered_tasks if t["name"] == "case-close-reminder")
++        with mock.patch(
++            "dispatch.decorators._execute_task_in_project_context",
++            side_effect=lambda func, *a, **kw: func(mock.Mock(), mock.Mock(id=1)),
++        ):
++            task["func"]()
++    log_exception.assert_not_called()
++    assert send.called == expected

@@ -1,0 +1,197 @@
+diff --git a/src/dispatch/signal/models.py b/src/dispatch/signal/models.py
+index d583b957..d7c9670f 100644
+--- a/src/dispatch/signal/models.py
++++ b/src/dispatch/signal/models.py
+@@ -205,7 +205,7 @@ class SignalFilter(Base, ProjectMixin, EvergreenMixin, TimeStampMixin):
+     expiration = Column(DateTime, nullable=True)
+     window = Column(
+         Integer, default=(60 * 60)
+-    )  # number of seconds for duplication lookback default to 1 hour
++    )  # number of minutes for duplication lookback
+ 
+     creator_id = Column(Integer, ForeignKey(DispatchUser.id))
+     creator = relationship("DispatchUser", backref="signal_filters")
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..1c0ae67f 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -760,7 +760,7 @@ def filter_snooze(*, db_session: Session, signal_instance: SignalInstance) -> Si
+             continue
+ 
+         if f.expiration.replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+-            break
++            continue
+ 
+         query = db_session.query(SignalInstance).filter(
+             SignalInstance.signal_id == signal_instance.signal_id
+@@ -842,8 +842,8 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+         # Now apply filters
+         query = apply_filters(query, f.expression)
+ 
+-        # SignalFilter.window is stored in seconds
+-        window = _window_start(f.window)
++        # SignalFilter.window is stored in minutes, as set in the UI
++        window = _window_start(f.window * 60)
+         query = query.filter(SignalInstance.created_at >= window)
+         query = query.join(SignalInstance.entities).filter(
+             Entity.id.in_([e.id for e in signal_instance.entities])
+@@ -870,7 +870,7 @@ def filter_signal(*, db_session: Session, signal_instance: SignalInstance) -> bo
+     The function first checks if the signal instance is snoozed. If not snoozed,
+     it checks for a deduplication rule set on the signal instance. If no
+     deduplication rule is set, a default deduplication rule is applied,
+-    grouping all signal instances together for a 1-hour window, regardless of
++    grouping all signal instances together for a 45-minute window, regardless of
+     the entities in the signal instance.
+ 
+     Args:
+diff --git a/tests/signal/test_signal_service.py b/tests/signal/test_signal_service.py
+index c253a7f3..b871d546 100644
+--- a/tests/signal/test_signal_service.py
++++ b/tests/signal/test_signal_service.py
+@@ -569,6 +569,94 @@ def test_filter_actions_deduplicate(session, signal, project):
+     assert signal_instance_2.filter_action == SignalFilterAction.deduplicate
+ 
+ 
++def _create_dedupe_window_test_instances(session, signal, project, minutes_ago):
++    from datetime import datetime, timedelta, timezone
++    from tests.factories import EntityTypeFactory, EntityFactory, SignalInstanceFactory
++
++    entity_type = EntityTypeFactory(project=project)
++    session.add(entity_type)
++    signal.entity_types.append(entity_type)
++
++    entity = EntityFactory(entity_type=entity_type, project=project)
++    session.add(entity)
++
++    # earlier instance, created minutes_ago
++    signal_instance_1 = SignalInstanceFactory(
++        project=project,
++        signal=signal,
++        entities=[entity],
++        raw=json.dumps({"id": "foo"}),
++    )
++    session.add(signal_instance_1)
++    session.commit()
++    signal_instance_1.created_at = datetime.now(timezone.utc) - timedelta(minutes=minutes_ago)
++    session.commit()
++
++    signal_instance_2 = SignalInstanceFactory(
++        project=project,
++        signal=signal,
++        entities=[entity],
++        raw=json.dumps({"id": "foo"}),
++    )
++    session.add(signal_instance_2)
++    session.commit()
++    return entity_type, signal_instance_2
++
++
++def test_filter_actions_deduplicate_window_is_minutes(session, signal, project):
++    """A deduplication filter window is in minutes, as set in the UI."""
++    from dispatch.signal.models import SignalFilterAction
++    from dispatch.signal.service import filter_signal
++    from tests.factories import SignalFilterFactory
++
++    entity_type, signal_instance_2 = _create_dedupe_window_test_instances(
++        session, signal, project, minutes_ago=10
++    )
++
++    signal_filter = SignalFilterFactory(
++        name="dedupe1",
++        description="test",
++        expression=[
++            {"or": [{"model": "EntityType", "field": "id", "op": "==", "value": entity_type.id}]}
++        ],
++        action="deduplicate",
++        window=30,
++        project=project,
++    )
++    signal.filters.append(signal_filter)
++    session.commit()
++
++    assert filter_signal(db_session=session, signal_instance=signal_instance_2)
++    assert signal_instance_2.filter_action == SignalFilterAction.deduplicate
++
++
++def test_filter_actions_deduplicate_outside_window_minutes(session, signal, project):
++    """An earlier instance older than the deduplication window does not deduplicate."""
++    from dispatch.signal.models import SignalFilterAction
++    from dispatch.signal.service import filter_signal
++    from tests.factories import SignalFilterFactory
++
++    entity_type, signal_instance_2 = _create_dedupe_window_test_instances(
++        session, signal, project, minutes_ago=40
++    )
++
++    signal_filter = SignalFilterFactory(
++        name="dedupe1",
++        description="test",
++        expression=[
++            {"or": [{"model": "EntityType", "field": "id", "op": "==", "value": entity_type.id}]}
++        ],
++        action="deduplicate",
++        window=30,
++        project=project,
++    )
++    signal.filters.append(signal_filter)
++    session.commit()
++
++    assert not filter_signal(db_session=session, signal_instance=signal_instance_2)
++    assert signal_instance_2.filter_action == SignalFilterAction.none
++
++
+ def test_filter_action_with_dedupe_and_snooze(session, signal, project):
+     from datetime import datetime, timedelta, timezone
+     from dispatch.signal.models import SignalFilterAction
+@@ -702,6 +790,51 @@ def test_filter_actions_snooze_expired(session, entity, signal, project):
+     assert not filter_signal(db_session=session, signal_instance=signal_instance_1)
+ 
+ 
++def test_filter_actions_snooze_expired_then_valid(session, entity, signal, project):
++    """An expired snooze filter must not stop evaluation of a later valid snooze filter."""
++    from datetime import datetime, timedelta, timezone
++    from dispatch.signal.models import SignalFilterAction
++    from dispatch.signal.service import filter_signal
++    from tests.factories import EntityTypeFactory, SignalInstanceFactory, SignalFilterFactory
++
++    entity_type = EntityTypeFactory(project=project)
++    session.add(entity_type)
++    session.add(entity)
++
++    signal_instance_1 = SignalInstanceFactory(
++        project=project,
++        signal=signal,
++        entities=[entity],
++        raw=json.dumps({"id": "foo"}),
++    )
++    session.add(signal_instance_1)
++
++    # expired, listed first
++    expired_filter = SignalFilterFactory(
++        name="snooze_expired",
++        description="test",
++        expression=[{"or": [{"model": "Entity", "field": "id", "op": "==", "value": entity.id}]}],
++        action="snooze",
++        expiration=datetime.now(timezone.utc) - timedelta(days=7),
++        project=project,
++    )
++
++    # valid, listed second
++    valid_filter = SignalFilterFactory(
++        name="snooze_valid",
++        description="test",
++        expression=[{"or": [{"model": "Entity", "field": "id", "op": "==", "value": entity.id}]}],
++        action="snooze",
++        expiration=datetime.now(timezone.utc) + timedelta(days=30),
++        project=project,
++    )
++
++    signal.filters = [expired_filter, valid_filter]
++    session.commit()
++    assert filter_signal(db_session=session, signal_instance=signal_instance_1)
++    assert signal_instance_1.filter_action == SignalFilterAction.snooze
++
++
+ def test_filter_actions_deduplicate_canary_signals(session, signal, project):
+     """Test that canary signals are not considered in deduplication logic."""
+     from dispatch.signal.models import SignalFilterAction

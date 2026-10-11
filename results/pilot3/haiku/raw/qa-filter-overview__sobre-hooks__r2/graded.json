@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-hooks",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The answer gets the order right: snooze, then dedup, then case creation. It covers snooze matching and the `break` on an expired snooze filter. The 45-minute default from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES applies only when the signal has no filters, and the answer notes that the docstring still says 1 hour. It treats per-filter windows as seconds and points out the UI mislabels them as minutes. It states the 3600 column default and the 600 Pydantic default. Canary handling is correct: canaries are never deduplicated or used as dedup targets, can be snoozed, and never open a case when unfiltered. The extra details it adds, such as the missing case_id check on the filter path, do not contradict the reference.",
+    "score": 3
+  },
+  "graded_at": "2026-10-11T01:53:45+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 2,
+  "run_id": "qa-filter-overview__sobre-hooks__r2",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

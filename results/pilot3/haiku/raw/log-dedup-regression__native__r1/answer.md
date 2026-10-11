@@ -1,14 +1,14 @@
-The root cause is commit `9dc24f46`, which changed how `filter_dedup` converts a filter's `window` value. Filter windows entered in the UI are minutes, so the old code did `timedelta(minutes=f.window)`. The refactor passes the same raw value to `_window_start`, which treats it as seconds. A window of 120 went from 2 hours to 2 minutes, and GuardDuty alerts arrive more than 2 minutes apart, so they stop matching the open case.
+**Root cause:** commit `9dc24f46` changed how `filter_dedup` interprets a filter's `window`. Before it, the value was treated as minutes. Now it is passed to `_window_start` as seconds, so the stored `120` became a 2-minute lookback instead of 2 hours.
 
-Evidence:
-- **Logs:** GuardDuty signals joined existing cases throughout 2025-08-13 with gaps of up to about 20 minutes between them (e.g. case 48353 at 13:31, 13:35, 13:36, 13:48, 13:55, 14:07, 14:15). From 2025-08-14 on, nearly every GuardDuty alert creates a new case. The first post-refactor creations are at 19:04Z and 21:42Z on 08-14 (the commit is 12:15 -0500, i.e. 17:15Z).
-- **Diff:** `9dc24f46` replaced `timedelta(minutes=f.window)` with `_window_start(f.window)` and added the comment "SignalFilter.window is stored in seconds". Nothing converts the stored value, so the existing value of 120 now means seconds.
-- **UI:** `SignalFilterCreateDialog.vue` offers window choices of 5–30 and sends the value unconverted, so the UI treats the window as minutes. The model comment in `src/dispatch/signal/models.py` (`# number of seconds`) dates from 2022, so the commit's "stored in seconds" comment conflicts with how the UI and operators use the field.
-- **Other signals:** The default-window path already multiplies by 60 and is unaffected. Any other signal with a deduplicate filter would be affected too, but the report only mentions this one.
+**Evidence:**
+- **Before the commit**, the code was `timedelta(minutes=f.window)`. The UI's window choices are 5–30 (minutes), and the code had used minutes since `ecbad47f` (2022). The model's column comment says "seconds", but that comment was never what the dedup code actually did.
+- **The diff**: `window = datetime.now(...) - timedelta(minutes=f.window)` became `window = _window_start(f.window)`, with the comment "SignalFilter.window is stored in seconds". No `* 60` was added, and existing rows were not migrated.
+- **The default path is unaffected**: signals with no custom filter use `SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES * 60`, which is correct. That is why the other signals look fine.
+- **The logs match a 2-minute window after the change**: from 2025-08-14 21:56:23 a new case (48672) is followed by a dedup 19 seconds later, then a new case at 22:02, about 6 minutes later. Before that, dedup held across gaps of 10 to 80 minutes, which a 120-minute window would allow and a 2-minute window would not. The new-case breakage starts around 21:42Z, after the 17:15Z commit time, which probably reflects when the new code was deployed; I could not confirm the deploy time.
 
-I did not change any code. The likely fix is to restore minutes semantics in `filter_dedup` (for example `_window_start(f.window * 60)`), or else convert existing stored windows and fix the UI and model together. Confirm which unit the stored data really uses before choosing.
+**Fix (not applied):** restore the minute conversion in `filter_dedup`, i.e. `_window_start(f.window * 60)`, and fix the misleading "stored in seconds" comment. If the team really wants seconds, the existing filter rows (window=120 meaning minutes) must be migrated instead. I did not run tests or reproduce this; the conclusion rests on the diff and the logs.
 
 FILE: src/dispatch/signal/service.py
 FUNCTION: filter_dedup
-CAUSE: The filter window, which the UI stores and operators set in minutes, is passed unconverted to `_window_start` (seconds), shrinking a 120-minute dedup window to 120 seconds.
-INTRODUCED_BY: 9dc24f4634eb895b3d98b168e931306c3131dfef
+CAUSE: The window of a custom dedup filter (stored as minutes in the UI) is now passed to `_window_start` as seconds, shrinking a 120-minute lookback to 120 seconds.
+INTRODUCED_BY: 9dc24f46

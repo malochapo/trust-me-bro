@@ -1,0 +1,115 @@
+$ python -m pytest -q -p no:cacheprovider tests/signal/test_hidden_signal_mute.py
+.....F                                                                   [100%]
+=================================== FAILURES ===================================
+___________________________ test_ui_table_and_dialog ___________________________
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 341, in from_call
+    result: Optional[TResult] = func()
+                                ^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 262, in <lambda>
+    lambda: ihook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 177, in pytest_runtest_call
+    raise e
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 169, in pytest_runtest_call
+    item.runtest()
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/python.py", line 1792, in runtest
+    self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/schemathesis/extra/pytest_plugin.py", line 312, in pytest_pyfunc_call
+    yield
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/python.py", line 194, in pytest_pyfunc_call
+    result = testfunction(**testargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/sobre-bench-work/run-e2a0ed9e1f69/repo/tests/signal/test_hidden_signal_mute.py", line 98, in test_ui_table_and_dialog
+    assert re.search(r"v-model=\"[^\"]*muted[^\"]*\"", dialog, re.I)
+AssertionError: assert None
+ +  where None = <function search at 0x7fad56b1cf40>('v-model=\\"[^\\"]*muted[^\\"]*\\"', '<template>\n  <v-form @submit.prevent v-slot="{ isValid }">\n    <v-navigation-drawer v-model="showCreateEdit" locati...f (this.$route.query.project) {\n      this.project = { name: this.$route.query.project }\n    }\n  },\n}\n</script>\n', re.IGNORECASE)
+ +    where <function search at 0x7fad56b1cf40> = re.search
+ +    and   re.IGNORECASE = re.I
+=========================== short test summary info ============================
+FAILED tests/signal/test_hidden_signal_mute.py::test_ui_table_and_dialog - as...
+1 failed, 5 passed in 4.52s

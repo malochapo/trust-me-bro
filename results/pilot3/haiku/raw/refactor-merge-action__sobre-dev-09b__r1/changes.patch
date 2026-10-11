@@ -1,0 +1,396 @@
+# untracked files (their diffs follow the tracked changes):
+#   src/dispatch/database/revisions/tenant/versions/2026-10-11_8295286c1489.py
+diff --git a/docs/docs/administration/settings/signal/filter.mdx b/docs/docs/administration/settings/signal/filter.mdx
+index 2722d85a..f0f05daa 100644
+--- a/docs/docs/administration/settings/signal/filter.mdx
++++ b/docs/docs/administration/settings/signal/filter.mdx
+@@ -3,7 +3,7 @@
+ Signal Filters are used to define how Signals should be grouped together or when they should be snoozed.
+ 
+ :::note
+-To create a Signal Filter, you must first define the Entity Types that will be used to deduplicate or snooze Signals.
++To create a Signal Filter, you must first define the Entity Types that will be used to merge or snooze Signals.
+ :::
+ 
+ ## Snooze Filter
+@@ -32,7 +32,7 @@ To create an Snooze Filter, follow these steps:
+ In order to perform signal duplication, a duplication filter must be created. Deduplication filters leverage extracted signal entity types and a sliding time window in order to determine if a signal should be marked as a duplicate. If a match is found, the current signal is marked as duplicate and it is associated with the existing case.
+ 
+ :::info
+-By default, all Signals are deduplicated over a one hour window unless a custom Deduplication Filter is defined.
++By default, all Signals are merged over a one hour window unless a custom Deduplication Filter is defined.
+ :::
+ 
+ ### Creating a Deduplication Filter
+@@ -41,6 +41,6 @@ To create an Deduplication Filter, follow these steps:
+ 
+ 1. Navigate to a Signal Definition edit page.
+ 2. Click on the '+' icon adjacent to the 'Signal Filter(s)' dropdown menu.
+-3. Select the `Deduplication` radio button under the `BASIC` tab.
++3. Select the `Merge` radio button under the `BASIC` tab.
+ 
+ ![](/img/admin-ui-signal-filter-dedupe.png)
+diff --git a/docs/scripts/openapi.yaml b/docs/scripts/openapi.yaml
+index b3d3a4b3..30b48541 100644
+--- a/docs/scripts/openapi.yaml
++++ b/docs/scripts/openapi.yaml
+@@ -4511,7 +4511,7 @@ components:
+     SignalFilterAction:
+       description: An enumeration.
+       enum:
+-        - deduplicate
++        - merge
+         - snooze
+       title: SignalFilterAction
+       type: string
+diff --git a/src/dispatch/signal/flows.py b/src/dispatch/signal/flows.py
+index 11769fc7..86c0492d 100644
+--- a/src/dispatch/signal/flows.py
++++ b/src/dispatch/signal/flows.py
+@@ -86,7 +86,7 @@ def signal_instance_create_flow(
+             signal_instance.filter_action,
+             signal_instance.case_id,
+         )
+-        # If a case and conversation exists and the signal was deduplicated,
++        # If a case and conversation exists and the signal was merged,
+         # we need to update the corresponding signal message
+         if (
+             signal_instance.case_id
+@@ -368,7 +368,7 @@ def _should_update_signal_message(signal_instance: SignalInstance) -> bool:
+     time_since_last_update = signal_instance.created_at - last_cached_data["created_at"]
+ 
+     if (
+-        signal_instance.filter_action == SignalFilterAction.deduplicate
++        signal_instance.filter_action == SignalFilterAction.merge
+         and signal_instance.case.signal_thread_ts  # noqa
+         and time_since_last_update >= timedelta(seconds=5)  # noqa
+     ):
+diff --git a/src/dispatch/signal/models.py b/src/dispatch/signal/models.py
+index d583b957..e8b36ab2 100644
+--- a/src/dispatch/signal/models.py
++++ b/src/dispatch/signal/models.py
+@@ -110,7 +110,7 @@ class SignalFilterMode(DispatchEnum):
+ 
+ 
+ class SignalFilterAction(DispatchEnum):
+-    deduplicate = "deduplicate"
++    merge = "merge"
+     snooze = "snooze"
+     none = "none"
+ 
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..bd59cff1 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -819,14 +819,14 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+ 
+         if instance:
+             signal_instance.case_id = instance.case_id
+-            signal_instance.filter_action = SignalFilterAction.deduplicate
++            signal_instance.filter_action = SignalFilterAction.merge
+         return signal_instance
+ 
+     for f in signal_instance.signal.filters:
+         if f.mode != SignalFilterMode.active:
+             continue
+ 
+-        if f.action != SignalFilterAction.deduplicate:
++        if f.action != SignalFilterAction.merge:
+             continue
+ 
+         query = db_session.query(SignalInstance).filter(
+@@ -857,7 +857,7 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+         if instances:
+             # associate with existing case
+             signal_instance.case_id = instances[0].case_id
+-            signal_instance.filter_action = SignalFilterAction.deduplicate
++            signal_instance.filter_action = SignalFilterAction.merge
+             break
+ 
+     return signal_instance
+diff --git a/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue b/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
+index b91cd91b..c4c52244 100644
+--- a/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
++++ b/src/dispatch/static/dispatch/src/signal/NewEditDialog.vue
+@@ -305,7 +305,7 @@
+                   <template #activator="{ props }">
+                     <v-icon v-bind="props">mdi-help-circle-outline</v-icon>
+                   </template>
+-                  Defines a signal filter allowing you to take either a "Snooze" or "Deduplication"
++                  Defines a signal filter allowing you to take either a "Snooze" or "Merge"
+                   action for any match signal matching the filter.
+                 </v-tooltip>
+               </template>
+diff --git a/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue b/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue
+index ce7e308c..8fc0185e 100644
+--- a/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue
++++ b/src/dispatch/static/dispatch/src/signal/filter/SignalFilterCreateDialog.vue
+@@ -42,9 +42,9 @@
+                       :rules="[rules.required]"
+                     >
+                       <v-radio label="Snooze" value="snooze" />
+-                      <v-radio label="Deduplicate" value="deduplicate" />
++                      <v-radio label="Merge" value="merge" />
+                     </v-radio-group>
+-                    <span v-if="action === 'deduplicate'">
++                    <span v-if="action === 'merge'">
+                       <entity-type-filter-combobox
+                         :project="project"
+                         :signalDefinition="signalDefinition"
+diff --git a/src/dispatch/static/dispatch/src/signal/instance/TableInstanceTriggers.vue b/src/dispatch/static/dispatch/src/signal/instance/TableInstanceTriggers.vue
+index 6b7ebf15..6079029c 100644
+--- a/src/dispatch/static/dispatch/src/signal/instance/TableInstanceTriggers.vue
++++ b/src/dispatch/static/dispatch/src/signal/instance/TableInstanceTriggers.vue
+@@ -44,14 +44,14 @@
+         :color="
+           {
+             snooze: 'blue-accent-4',
+-            deduplicate: 'orange-darken-2',
++            merge: 'orange-darken-2',
+           }[value] || 'green-darken-1'
+         "
+       >
+         {{
+           {
+             snooze: "Snoozed",
+-            deduplicate: "Duplicate",
++            merge: "Duplicate",
+           }[value] || "Not Filtered"
+         }}
+       </v-chip>
+diff --git a/tests/factories.py b/tests/factories.py
+index 0033e649..87952589 100644
+--- a/tests/factories.py
++++ b/tests/factories.py
+@@ -910,7 +910,7 @@ class SignalFilterFactory(BaseFactory):
+     name = FuzzyText()
+     description = FuzzyText()
+     expression = [{}]
+-    action = FuzzyChoice(choices=["snooze", "deduplicate"])
++    action = FuzzyChoice(choices=["snooze", "merge"])
+ 
+     class Meta:
+         """Factory Configuration."""
+diff --git a/tests/signal/test_signal_service.py b/tests/signal/test_signal_service.py
+index c253a7f3..d61baf81 100644
+--- a/tests/signal/test_signal_service.py
++++ b/tests/signal/test_signal_service.py
+@@ -355,7 +355,7 @@ def test_delete(session, signal):
+     assert not get(db_session=session, signal_id=signal.id)
+ 
+ 
+-def test_filter_actions_default_deduplicate(session, signal, project):
++def test_filter_actions_default_merge(session, signal, project):
+     from dispatch.signal.models import SignalFilterAction
+     from dispatch.signal.service import filter_signal
+     from tests.factories import EntityTypeFactory, EntityFactory, CaseFactory, SignalInstanceFactory
+@@ -391,7 +391,7 @@ def test_filter_actions_default_deduplicate(session, signal, project):
+     session.commit()
+ 
+     assert filter_signal(db_session=session, signal_instance=signal_instance_2)
+-    assert signal_instance_2.filter_action == SignalFilterAction.deduplicate
++    assert signal_instance_2.filter_action == SignalFilterAction.merge
+ 
+     # Test default deduplication logic within the 1-hour window
+     signal_instance_3 = SignalInstanceFactory(
+@@ -405,10 +405,10 @@ def test_filter_actions_default_deduplicate(session, signal, project):
+     session.commit()
+ 
+     assert filter_signal(db_session=session, signal_instance=signal_instance_3)
+-    assert signal_instance_3.filter_action == SignalFilterAction.deduplicate
++    assert signal_instance_3.filter_action == SignalFilterAction.merge
+ 
+ 
+-def test_filter_actions_deduplicate_different_entities(session, signal, project):
++def test_filter_actions_merge_different_entities(session, signal, project):
+     from dispatch.signal.models import SignalFilterAction
+     from dispatch.signal.service import filter_signal
+     from tests.factories import (
+@@ -444,14 +444,14 @@ def test_filter_actions_deduplicate_different_entities(session, signal, project)
+     session.add(signal_instance_1)
+     session.commit()
+ 
+-    # create deduplicate signal filter
++    # create merge signal filter
+     signal_filter = SignalFilterFactory(
+         name="test",
+         description="dedupe0",
+         expression=[
+             {"or": [{"model": "EntityType", "field": "id", "op": "==", "value": entity_type_1.id}]}
+         ],
+-        action="deduplicate",
++        action="merge",
+         window=5,
+         project=project,
+     )
+@@ -462,7 +462,7 @@ def test_filter_actions_deduplicate_different_entities(session, signal, project)
+     assert signal_instance_1.filter_action == SignalFilterAction.none
+ 
+ 
+-def test_filter_actions_deduplicate_different_entities_types(session, signal, project):
++def test_filter_actions_merge_different_entities_types(session, signal, project):
+     from dispatch.signal.models import SignalFilterAction
+     from dispatch.signal.service import filter_signal
+     from tests.factories import (
+@@ -498,14 +498,14 @@ def test_filter_actions_deduplicate_different_entities_types(session, signal, pr
+     session.add(signal_instance_1)
+     session.commit()
+ 
+-    # create deduplicate signal filter
++    # create merge signal filter
+     signal_filter = SignalFilterFactory(
+         name="test",
+         description="dedupe0",
+         expression=[
+             {"or": [{"model": "EntityType", "field": "id", "op": "==", "value": entity_type_1.id}]}
+         ],
+-        action="deduplicate",
++        action="merge",
+         window=5,
+         project=project,
+     )
+@@ -516,7 +516,7 @@ def test_filter_actions_deduplicate_different_entities_types(session, signal, pr
+     assert signal_instance_1.filter_action == SignalFilterAction.none
+ 
+ 
+-def test_filter_actions_deduplicate(session, signal, project):
++def test_filter_actions_merge(session, signal, project):
+     from dispatch.signal.models import SignalFilterAction
+     from dispatch.signal.service import filter_signal
+     from tests.factories import (
+@@ -551,14 +551,14 @@ def test_filter_actions_deduplicate(session, signal, project):
+     session.add(signal_instance_2)
+     session.commit()
+ 
+-    # create deduplicate signal filter
++    # create merge signal filter
+     signal_filter = SignalFilterFactory(
+         name="dedupe1",
+         description="test",
+         expression=[
+             {"or": [{"model": "EntityType", "field": "id", "op": "==", "value": entity_type.id}]}
+         ],
+-        action="deduplicate",
++        action="merge",
+         window=5,
+         project=project,
+     )
+@@ -566,7 +566,7 @@ def test_filter_actions_deduplicate(session, signal, project):
+ 
+     session.commit()
+     assert filter_signal(db_session=session, signal_instance=signal_instance_2)
+-    assert signal_instance_2.filter_action == SignalFilterAction.deduplicate
++    assert signal_instance_2.filter_action == SignalFilterAction.merge
+ 
+ 
+ def test_filter_action_with_dedupe_and_snooze(session, signal, project):
+@@ -603,14 +603,14 @@ def test_filter_action_with_dedupe_and_snooze(session, signal, project):
+     )
+     session.add(signal_instance_2)
+     session.commit()
+-    # create deduplicate signal filter
++    # create merge signal filter
+     signal_filter = SignalFilterFactory(
+         name="dedupe1",
+         description="test",
+         expression=[
+             {"or": [{"model": "EntityType", "field": "id", "op": "==", "value": entity_type.id}]}
+         ],
+-        action="deduplicate",
++        action="merge",
+         window=5,
+         project=project,
+     )
+@@ -702,7 +702,7 @@ def test_filter_actions_snooze_expired(session, entity, signal, project):
+     assert not filter_signal(db_session=session, signal_instance=signal_instance_1)
+ 
+ 
+-def test_filter_actions_deduplicate_canary_signals(session, signal, project):
++def test_filter_actions_merge_canary_signals(session, signal, project):
+     """Test that canary signals are not considered in deduplication logic."""
+     from dispatch.signal.models import SignalFilterAction
+     from dispatch.signal.service import filter_signal
+@@ -741,9 +741,9 @@ def test_filter_actions_deduplicate_canary_signals(session, signal, project):
+     session.add(regular_signal_instance)
+     session.commit()
+ 
+-    # Check that the regular signal instance is not deduplicated against the canary
++    # Check that the regular signal instance is not merged against the canary
+     assert not filter_signal(db_session=session, signal_instance=regular_signal_instance)
+-    assert regular_signal_instance.filter_action != SignalFilterAction.deduplicate
++    assert regular_signal_instance.filter_action != SignalFilterAction.merge
+ 
+     # Create a second regular signal instance with a case
+     case2 = CaseFactory(project=project)
+@@ -760,7 +760,7 @@ def test_filter_actions_deduplicate_canary_signals(session, signal, project):
+     session.add(regular_signal_instance2)
+     session.commit()
+ 
+-    # Create a third regular signal instance that should deduplicate against the second
++    # Create a third regular signal instance that should merge against the second
+     regular_signal_instance3 = SignalInstanceFactory(
+         project=project,
+         signal=signal,
+@@ -770,14 +770,14 @@ def test_filter_actions_deduplicate_canary_signals(session, signal, project):
+     session.add(regular_signal_instance3)
+     session.commit()
+ 
+-    # Check that the third signal instance is deduplicated against the second (non-canary)
++    # Check that the third signal instance is merged against the second (non-canary)
+     assert filter_signal(db_session=session, signal_instance=regular_signal_instance3)
+-    assert regular_signal_instance3.filter_action == SignalFilterAction.deduplicate
++    assert regular_signal_instance3.filter_action == SignalFilterAction.merge
+     assert regular_signal_instance3.case_id == regular_signal_instance2.case_id
+ 
+ 
+-def test_canary_signals_not_deduplicated(session, signal, project):
+-    """Test that canary signals themselves are not deduplicated."""
++def test_canary_signals_not_merged(session, signal, project):
++    """Test that canary signals themselves are not merged."""
+     from dispatch.signal.models import SignalFilterAction
+     from dispatch.signal.service import filter_dedup
+     from tests.factories import EntityTypeFactory, EntityFactory, CaseFactory, SignalInstanceFactory
+@@ -821,6 +821,6 @@ def test_canary_signals_not_deduplicated(session, signal, project):
+     # Apply deduplication logic directly to test behavior
+     filter_dedup(db_session=session, signal_instance=canary_signal_instance)
+ 
+-    # Check that the canary signal instance is not deduplicated (should have same case_id as before)
++    # Check that the canary signal instance is not merged (should have same case_id as before)
+     assert canary_signal_instance.case_id == initial_case_id
+-    assert canary_signal_instance.filter_action != SignalFilterAction.deduplicate
++    assert canary_signal_instance.filter_action != SignalFilterAction.merge
+diff --git a/src/dispatch/database/revisions/tenant/versions/2026-10-11_8295286c1489.py b/src/dispatch/database/revisions/tenant/versions/2026-10-11_8295286c1489.py
+new file mode 100644
+index 00000000..970ad41c
+--- /dev/null
++++ b/src/dispatch/database/revisions/tenant/versions/2026-10-11_8295286c1489.py
+@@ -0,0 +1,29 @@
++"""Rename signal filter action deduplicate to merge.
++
++Revision ID: 8295286c1489
++Revises: ff08d822ef2c
++Create Date: 2026-10-11 10:00:00.000000
++
++"""
++
++from alembic import op
++
++# revision identifiers, used by Alembic.
++revision = "8295286c1489"
++down_revision = "ff08d822ef2c"
++branch_labels = None
++depends_on = None
++
++
++def upgrade():
++    op.execute("UPDATE signal_filter SET action = 'merge' WHERE action = 'deduplicate'")
++    op.execute(
++        "UPDATE signal_instance SET filter_action = 'merge' WHERE filter_action = 'deduplicate'"
++    )
++
++
++def downgrade():
++    op.execute("UPDATE signal_filter SET action = 'deduplicate' WHERE action = 'merge'")
++    op.execute(
++        "UPDATE signal_instance SET filter_action = 'deduplicate' WHERE filter_action = 'merge'"
++    )

@@ -91,6 +91,11 @@
       "sha256": "c53d5fcd89297311d1dbdc840aff1f56e2aa8e4ed157d5777b23b8d419097810",
       "binary": "sobre-dev-b",
       "note": "Build 935756b6b with compression_level = 0.9 (arms/sobre-dev-09b/setup.sh); install as $BENCH_TOOLS/bin/sobre-dev-b."
+    },
+    "sobre-keyonly": {
+      "tool": null,
+      "version": null,
+      "note": "Claude Code alone, billed to the sobre key: a control for the key (arms/sobre-keyonly/setup.sh)."
     }
   }
 }

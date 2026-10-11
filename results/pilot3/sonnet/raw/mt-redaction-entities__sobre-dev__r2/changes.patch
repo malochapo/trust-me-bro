@@ -1,0 +1,78 @@
+diff --git a/src/dispatch/entity/service.py b/src/dispatch/entity/service.py
+index 8e9cfe06..2698d44d 100644
+--- a/src/dispatch/entity/service.py
++++ b/src/dispatch/entity/service.py
+@@ -14,6 +14,7 @@ from dispatch.entity.models import Entity, EntityCreate, EntityUpdate, EntityRea
+ from dispatch.entity_type import service as entity_type_service
+ from dispatch.entity_type.models import EntityType
+ from dispatch.signal.models import Signal, SignalInstance
++from dispatch.signal.redaction import is_redacted_match
+ 
+ 
+ log = logging.getLogger(__name__)
+@@ -286,10 +287,9 @@ def find_entities(
+         for entity_type, _, jpath in entity_type_pairs:
+             if jpath:
+                 try:
+-                    # a JSONPath names one field: keep its first match
+-                    matches = jpath.find(signal_instance.raw)[:1]
++                    matches = jpath.find(signal_instance.raw)
+                     for match in matches:
+-                        if isinstance(match.value, str):
++                        if isinstance(match.value, str) and not is_redacted_match(match):
+                             yield EntityCreate(
+                                 id=None,
+                                 value=match.value,
+diff --git a/src/dispatch/signal/redaction.py b/src/dispatch/signal/redaction.py
+index e4523a46..03755027 100644
+--- a/src/dispatch/signal/redaction.py
++++ b/src/dispatch/signal/redaction.py
+@@ -26,3 +26,15 @@ def _redact(value, names):
+     if isinstance(value, list):
+         return [_redact(item, names) for item in value]
+     return value
++
++
++def is_redacted_match(match, fields: Iterable[str] = SIGNAL_REDACTED_RAW_FIELDS) -> bool:
++    """Returns True if a JSONPath match is a masked value or sits under a masked key.
++
++    A masked value is identical for every instance, so it must never become an entity.
++    """
++    if match.value == MASK:
++        return True
++    names = {field.strip().lower() for field in fields if field.strip()}
++    keys = getattr(match.path, "fields", ())
++    return any(str(key).lower() in names for key in keys)
+diff --git a/tests/entity/test_entity_service.py b/tests/entity/test_entity_service.py
+index 54251a28..e89d6510 100644
+--- a/tests/entity/test_entity_service.py
++++ b/tests/entity/test_entity_service.py
+@@ -322,3 +322,28 @@ def test_find_entities_multiple_entity_types(session, signal_instance, project):
+     values = {getattr(e, "value", None) for e in entities if hasattr(e, "value") and isinstance(e.value, str)}
+     assert "arn:aws:iam::123456789012:role/Test" in values
+     assert "arn:aws:s3:::ap-northeast-3-123456789012-s3-server-access-logs" in values
++
++
++def test_find_entities_skips_masked_values(session, signal_instance, project):
++    from dispatch.signal.redaction import MASK, redact_raw
++
++    signal_instance.raw = {
++        "session_token": "tok-123",
++        "nested": {"Password": "hunter2"},
++        "user": "alice",
++    }
++    entity_types = [
++        EntityType(name="Token", jpath="session_token", regular_expression=None, project=project),
++        EntityType(name="Pass", jpath="nested.Password", regular_expression=None, project=project),
++        EntityType(name="User", jpath="user", regular_expression=None, project=project),
++    ]
++
++    # unmasked payload: values under masked keys must not become entities
++    entities = entity_service.find_entities(session, signal_instance, entity_types)
++    assert {e.value for e in entities} == {"alice"}
++
++    # masked payload: the mask itself must not become an entity
++    signal_instance.raw = redact_raw(signal_instance.raw)
++    assert signal_instance.raw["session_token"] == MASK
++    entities = entity_service.find_entities(session, signal_instance, entity_types)
++    assert {e.value for e in entities} == {"alice"}

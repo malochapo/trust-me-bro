@@ -1,0 +1,16 @@
+{
+  "arm": "sobre-dev-09b",
+  "details": {
+    "judge_model": "claude-sonnet-5-5",
+    "reasons": "The candidate gets the order right: snooze, then dedup, then case creation. It describes filter_snooze correctly, including the `break` on an expired filter, the skip when there is no expiration, and the unconditional snooze when there is no expression. It gives the 45-minute default from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, says it applies only when the signal has no filters, and notes that the docstring still says 1 hour. It treats per-filter windows as seconds. It does not mention the UI minute-label mismatch, but that is a minor gap. Canary handling is correct: never deduplicated, never a dedup target, can still be snoozed, and the flow returns before case creation. I found no false statements. The extra details, such as no case_id check on the filter path, are plausible and do not contradict the reference.",
+    "score": 3
+  },
+  "graded_at": "2026-10-11T01:24:31+00:00",
+  "kind": "judge",
+  "pass": true,
+  "rep": 1,
+  "run_id": "qa-filter-overview__sobre-dev-09b__r1",
+  "score": 1.0,
+  "task_id": "qa-filter-overview",
+  "task_sha256": "1111eb78e34d50c9e1e4d694450373fa6b057bdf33951b31d960ceca89d99754"
+}

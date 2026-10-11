@@ -1,0 +1,54 @@
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..9f55feea 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -760,7 +760,7 @@ def filter_snooze(*, db_session: Session, signal_instance: SignalInstance) -> Si
+             continue
+ 
+         if f.expiration.replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+-            break
++            continue
+ 
+         query = db_session.query(SignalInstance).filter(
+             SignalInstance.signal_id == signal_instance.signal_id
+diff --git a/tests/signal/test_signal_stats_service.py b/tests/signal/test_signal_stats_service.py
+index 34b4261d..5cafe4da 100644
+--- a/tests/signal/test_signal_stats_service.py
++++ b/tests/signal/test_signal_stats_service.py
+@@ -236,3 +236,36 @@ def test_get_signal_stats_with_signal_id_filter(session, entity, entity_type):
+         + signal_data_signal2.num_signal_instances_snoozed
+         == 2
+     )
++
++
++def test_filter_snooze_skips_expired_filter_and_applies_later_active_filter(
++    session, entity, entity_type, signal, signal_instance
++):
++    """An expired snooze filter must not stop a later active one from snoozing."""
++    from dispatch.signal.models import SignalFilterAction, SignalFilterMode
++    from dispatch.signal.service import filter_snooze
++    from tests.factories import SignalFilterFactory
++
++    entity.entity_type = entity_type
++    signal_instance.entities.append(entity)
++    signal_instance.signal = signal
++
++    expression = [{"or": [{"model": "Entity", "field": "id", "op": "==", "value": entity.id}]}]
++    expired = SignalFilterFactory(
++        action=SignalFilterAction.snooze,
++        mode=SignalFilterMode.active,
++        expiration=datetime.now(timezone.utc) - timedelta(days=7),
++        expression=expression,
++    )
++    active = SignalFilterFactory(
++        action=SignalFilterAction.snooze,
++        mode=SignalFilterMode.active,
++        expiration=datetime.now(timezone.utc) + timedelta(days=30),
++        expression=expression,
++    )
++    signal.filters.extend([expired, active])
++    session.commit()
++
++    result = filter_snooze(db_session=session, signal_instance=signal_instance)
++
++    assert result.filter_action == SignalFilterAction.snooze

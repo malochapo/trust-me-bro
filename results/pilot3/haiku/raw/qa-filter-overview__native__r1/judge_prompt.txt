@@ -30,70 +30,67 @@ Score the candidate against the reference, on what the code does today.
 ## Candidate answer
 
 <candidate>
-## Short answer
+## How a new signal instance is routed
 
-For each new `SignalInstance`, `filter_signal` checks snooze first, then deduplication, and only if neither applies does the instance continue toward case creation. Canaries skip deduplication and never get a case. The default dedup window is 45 minutes in code, although the docstring and docs say one hour.
+The entry point is `signal_instance_create_flow` in `src/dispatch/signal/flows.py:46`. After redaction and entity extraction, it calls `signal_service.filter_signal` (`src/dispatch/signal/service.py:866`). Only if that call reports "not filtered" does the flow go on to case creation.
 
-## Entry point and order
+**Order of checks in `filter_signal`:**
 
-`signal_instance_create_flow` (`src/dispatch/signal/flows.py:46`) redacts the raw payload, extracts entities, then calls `signal_service.filter_signal` (`flows.py:78`). The order is:
+1. **`filter_snooze`** (`service.py:743`) runs first. If it sets a `filter_action`, deduplication is skipped.
+2. **`filter_dedup`** (`service.py:789`) runs only if nothing was snoozed.
+3. If neither set a `filter_action`, it is set to `SignalFilterAction.none` and the instance is not filtered. Otherwise `filtered = True`. The session is committed and the result returned.
 
-1. **`filter_snooze`** (`src/dispatch/signal/service.py:743`) runs first.
-2. **`filter_dedup`** (`service.py:789`) runs only if `filter_action` is still unset.
-3. If neither set `filter_action`, it is set to `none` and the instance is not filtered (`service.py:866-899`, `filter_signal`).
+**Back in the flow:**
 
-Back in the flow, a filtered instance returns early (`flows.py:78-101`). If a case and conversation already exist and the action was deduplicate, the Slack signal message may be updated. Otherwise the code continues:
-
-- `flows.py:103`: if `canary`, return without creating a case.
-- If `signal.create_case` is false, return.
-- Otherwise resolve case type, priority, oncall service and conversation target, then create the case.
+- If filtered, the flow returns. It updates the Slack signal message if the linked case has a conversation. No case is created.
+- If `signal_instance.canary`, it returns without creating a case.
+- If `signal.create_case` is false, it returns.
+- Otherwise it resolves case type, priority, oncall, and conversation target, then creates the case (the rest of the flow, not traced here).
 
 ## Snooze (`filter_snooze`)
 
-- Iterates `signal.filters` in order. Only filters with `mode == active` and `action == snooze` are considered; other modes are ignored.
-- A snooze filter with no `expiration` is skipped with a warning.
-- If `expiration` is in the past, the loop `break`s. Later snooze filters are not evaluated, even if they would match.
-- **No expression:** every instance of that signal is snoozed until expiry.
-- **With expression:** the expression is applied to the signal's instances (`apply_filter_specific_joins`, `apply_filters`), and the filter matches only if the current instance's id is in the result. The first match sets `filter_action = snooze` and stops.
-- There is no time window for snooze. It matches on the expression and the expiration.
+Iterates `signal.filters` in order. For each filter:
+
+- Skipped unless `mode == active` and `action == snooze`.
+- No `expiration`: logs a warning and continues.
+- `expiration <= now` (UTC; a naive datetime is treated as UTC): **`break`**. This ends the whole loop, so later snooze filters are not checked.
+- Empty `expression`: snoozes every instance of the signal, regardless of entity.
+- Non-empty `expression`: runs `apply_filter_specific_joins` and `apply_filters` against the signal's instances and snoozes only if the new instance's `id` is in the result. Matching is on the expression, typically entity fields.
+
+There is no snooze window. The only time value is `expiration`, an absolute datetime. Snooze has no canary check, so a canary can be snoozed.
+
+Snooze filters created through Slack (`_create_snooze_filter`, `src/dispatch/plugins/dispatch_slack/case/interactive.py:970`) set `expiration = now + delta`, where `delta` comes from the relative date picker. Selected entities become the expression. With no entities selected, the expression is `[]`.
 
 ## Deduplication (`filter_dedup`)
 
-- **Canary:** returns immediately, so canaries are never deduplicated.
-- **Default path**, used only when the signal has no filters at all (`service.py:800-824`):
-  - Lookback window is `SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES * 60` seconds (`config.py:95-96`, default **45 minutes**, so 2700 seconds). `_window_start` (`service.py:784`) computes the cutoff from `now`.
-  - Candidates must be the same signal, created within the window, not the current instance, with a non-null `case_id`, and not canary.
-  - Entities are not compared. The most recent candidate (`order_by desc(created_at)`) supplies the case. Every instance of the signal in the window groups together.
-- **Filter path**, used when the signal has at least one filter (`service.py:826-863`):
-  - Only `mode == active` filters with `action == deduplicate` are considered. If the signal has other filters but no active dedup filter, no dedup happens and the default path is not used.
-  - `SignalFilter.window` is in seconds, and the cutoff is `now - window`.
-  - Candidates must be the same signal, in the window, not canary, not the current instance, and share at least one entity with the current instance, with `apply_filters(query, f.expression)` applied to the candidates' entities and entity types.
-  - The earliest matching candidate (`order_by asc(created_at)`) supplies `case_id`. Unlike the default path, this query does not require `case_id` to be non-null, so it can set `deduplicate` with `case_id = None`.
+**Canary:** returns immediately. Canary instances are also excluded from every candidate query (`~SignalInstance.canary`).
 
-## Time windows and defaults
+**Branch A: the signal has no filters at all** (`not signal_instance.signal.filters`):
 
-| Item | Unit | Value in code |
-|---|---|---|
-| `SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES` | minutes (converted to seconds) | 45 (`config.py:95-96`) |
-| `SignalFilter.window` column | seconds | DB default 3600 (`models.py:206-208`) |
-| `SignalFilterBase.window` (API schema) | seconds | 600 (`models.py:282`) |
-| Snooze | none | expiration timestamp only |
+- Window: `SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES` from `src/dispatch/config.py:95`, an env-configurable value in **minutes**, default **45**. Converted with `* 60` to seconds.
+- Matches the most recent (`created_at desc`) instance of the same signal in that window that has a non-null `case_id`, excluding itself. No entity matching.
+- On match: copies that `case_id` and sets `deduplicate`.
 
-The API-schema default of 600 seconds is what gets stored when a client omits `window`. The DB column default of 3600 applies only to rows inserted without the field. The `filter_signal` docstring and `docs/docs/administration/settings/signal/filter.mdx:35` both say one hour, which does not match the 45-minute code default.
+**Branch B: the signal has one or more filters.** The default window is not applied at all, even if none of the filters match. For each filter:
+
+- Skipped unless `mode == active` and `action == deduplicate`.
+- Candidates: same signal, non-canary, joined to entities and entity types, matching `f.expression`, with `created_at >= now - f.window`, sharing at least one entity with the new instance, excluding itself. Ordered by `created_at asc`, first match wins.
+- Window: `SignalFilter.window`, in **seconds**. The DB column default is 3600 (1 hour). The API schema `SignalFilterBase.window` defaults to 600 (10 minutes), so filters created through the schema get 600 unless a value is supplied.
+
+## Things the code does that may surprise you
+
+- **Branch B does not require the matched instance to have a case.** Branch A filters on `case_id IS NOT NULL`; Branch B does not. Snoozed instances have no case, so a deduplicate filter can match a snoozed instance, copy its null `case_id`, and mark the new instance `deduplicate`. The result is that it is filtered and no case is created.
+- **Any existing filter disables the 45-minute default.** The check is `not signal.filters`, not "no active dedup filter", so a signal with only an inactive or snooze filter gets no default dedup.
+- **Expired snooze filters stop the scan.** The `break` at `service.py:763` means a single expired snooze filter prevents later snooze filters on the same signal from being evaluated.
+- **Stale docstring.** The `filter_signal` docstring says "1-hour window". The code uses 45 minutes in Branch A.
 
 ## Canary signals
 
-- **Snooze:** `filter_snooze` has no canary check, so a canary can be snoozed like any other instance.
-- **Deduplication:** a canary is never deduplicated (`service.py:801`), and canaries are excluded from both the default and filter dedup candidate queries (`service.py:813`, `:834`).
-- **Case creation:** a non-snoozed canary is stored with `filter_action = none` and returns at `flows.py:103` without creating a case.
+- Snooze is applied to canaries (no check), so a canary can get `filter_action = snooze`.
+- Deduplication is skipped for canaries, and canaries are never matched as dedup targets.
+- A canary that is not snoozed gets `filter_action = none` from `filter_signal`. It returns from the flow at the `canary` check (`flows.py:102`) without creating a case, so its `case_id` stays null.
 
-## Other things I noticed
-
-- `filter_snooze` `break`s on an expired filter, so later snooze filters are not checked.
-- A signal with any filter set (even only snooze or monitor filters) never uses the 45-minute default dedup.
-- The default and filter dedup paths choose different candidates: most recent versus earliest.
-
-I read the code and did not run anything or test these paths.
+I read the code but did not run tests or execute these paths against a database. The Branch B null-case behavior is inferred from the query and has not been confirmed with a test.
 </candidate>
 
 Reply with the score (an integer from 0 to 3) and short reasons.

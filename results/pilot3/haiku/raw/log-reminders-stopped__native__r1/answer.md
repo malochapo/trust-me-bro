@@ -1,16 +1,14 @@
-The root cause is a weekday mismatch in the helper that c509d45e introduced. `calendar.MONDAY` is `0`, but `isoweekday()` returns `1` for Monday, so the Monday check never passes.
+The weekly stable and close reminders stopped because a refactor compared ISO weekday numbers against Python's `calendar.MONDAY`, which is 0, not 1.
 
-**Evidence**
-- `calendar.MONDAY == 0` in this Python 3.11 runtime. `date.today().isoweekday()` returns 1 on Mondays (ISO numbering is 1–7), so `_is_reminder_day()` is always False.
-- The close-reminder logs match. "Case close reminder sent" appears 6 times on Monday 2025-08-11, the last Monday before the change, and 0 times on Monday 2025-08-18. The one close-reminder line on 08-18 is for an incident, not a case.
-- The triage reminder (`case_triage_reminder`) has no weekday check, so it keeps firing daily, as reported.
-- The original code compared `date.today().isoweekday() == 1`. Commit c509d45e (Aug 12, "refactor(case): share the weekly reminder check") moved that check into `_is_reminder_day()` and changed the constant from `1` to `calendar.MONDAY`. That is the first Monday-less day after the change, and it matches the "since mid-August" timing.
-- The stable-case reminder errors in the logs (`case.stable_at` is None) are a separate, earlier problem already fixed in 32fa810f. They are not the cause of the missing reminders.
+**Root cause:** `_is_reminder_day()` returns `date.today().isoweekday() == calendar.MONDAY`. `isoweekday()` numbers Monday as 1, but `calendar.MONDAY` is 0 (I confirmed this with `python3`). So the check is never true, and the weekly reminders never fire on any day. The daily triage reminder (`case_triage_reminder`) doesn't use this check, which is why it still arrives.
 
-**Fix (not applied; you asked for the root cause only)**
-Use `date.today().weekday() == calendar.MONDAY`, which keeps the `calendar` constant and matches its 0-based numbering. Alternatively, compare `isoweekday()` against `1`.
+**Timeline:** commit `c509d45e` ("refactor(case): share the weekly reminder check", Aug 12 2025) replaced the inline `date.today().isoweekday() == 1` with the helper. Before that commit the code compared against 1, so the Monday check worked. The first Monday after the change was Aug 18, which matches the report of reminders stopping in mid-August. The scheduler log does not show the stable reminder failing after Aug 12, which fits the check silently returning false from then on.
+
+**Fix:** compare against `1` (or `calendar.MONDAY + 1`). The clearer option is to use `isoweekday() == 1` directly, since the helper's own docstring is about Mondays.
+
+Note: the log errors (`case_stable_reminder` and `case_close_reminder` raising on a `None` timestamp) are a separate, earlier issue. The `if case.stable_at:` guard from `32fa810f` covers the stable case in the current code, and the `case_close_reminder` `None` errors don't explain the silent Monday skip.
 
 FILE: src/dispatch/case/scheduled.py
 FUNCTION: _is_reminder_day
-CAUSE: It compares `date.today().isoweekday()` (ISO Monday = 1) against `calendar.MONDAY` (Python Monday = 0), so the weekly Monday check never passes.
-INTRODUCED_BY: c509d45e97f4eeacf950450c142ee27da8fcda3f
+CAUSE: The helper compares `date.today().isoweekday()` (Monday = 1) to `calendar.MONDAY` (Monday = 0), so the Monday check is never true and the weekly stable and close reminders never send.
+INTRODUCED_BY: c509d45e

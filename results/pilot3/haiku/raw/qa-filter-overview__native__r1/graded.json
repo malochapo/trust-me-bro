@@ -2,10 +2,10 @@
   "arm": "native",
   "details": {
     "judge_model": "claude-sonnet-5-5",
-    "reasons": "Order is correct: filter_snooze, then filter_dedup, then case creation. Snooze matching is right, including the skip when there is no expiration, the break on an expired filter, and the no-expression case that snoozes everything. The 45-minute default comes from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES and applies only when the signal has no filters; the answer notes the docstring still says one hour. Per-filter windows are treated as seconds, with the 3600 column default and the 600 schema default. Dedup filters match on the expression plus at least one shared entity, and the earliest instance supplies the case. Canary handling is correct: never deduplicated, can be snoozed, and returns before case creation. The answer does not spell out the UI minutes-versus-seconds mismatch, but that is a minor gap. Its extra claims are not contradicted by the reference.",
+    "reasons": "The answer gets the order right: filter_snooze, then filter_dedup, then case creation. It describes snooze matching correctly, including the skip when there is no expiration, the break on an expired filter that stops later snooze filters, and the empty-expression case that snoozes every instance. It gives the default dedup window as 45 minutes from SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, applied only when the signal has no filters, and notes the docstring still says 1 hour. It treats per-filter windows as seconds and gives the 3600 column default and the 600 schema default. Its canary handling matches the reference: canaries can be snoozed, are never deduplicated or used as dedup targets, and return before case creation. It does not mention that the UI labels the window in minutes, a small omission. Its extra claim that a dedup filter can match a snoozed instance with no case is flagged as inferred and does not contradict the reference.",
     "score": 3
   },
-  "graded_at": "2026-10-10T22:13:38+00:00",
+  "graded_at": "2026-10-11T01:45:27+00:00",
   "kind": "judge",
   "pass": true,
   "rep": 1,

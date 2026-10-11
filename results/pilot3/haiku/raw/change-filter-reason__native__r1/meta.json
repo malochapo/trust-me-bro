@@ -15,9 +15,17 @@
     "timeout_min": 25
   },
   "cmd": [
+    "/usr/bin/unshare",
+    "--pid",
+    "--fork",
+    "--mount-proc",
+    "--kill-child",
+    "sh",
+    "-c",
+    "unset PWD OLDPWD; \"$@\"",
+    "sh",
     "/opt/claude-code/bin/claude",
     "-p",
-    "<prompt.txt>",
     "--model",
     "claude-haiku-5-5",
     "--effort",
@@ -38,11 +46,12 @@
     "3",
     "--disallowedTools",
     "WebFetch",
-    "WebSearch"
+    "WebSearch",
+    "< prompt.txt"
   ],
   "daemon": null,
   "effort": "medium",
-  "end_utc": "2026-10-10T22:15:33+00:00",
+  "end_utc": "2026-10-11T01:46:30+00:00",
   "exit_code": 0,
   "extra_env": {},
   "family": "cross-layer",
@@ -120,6 +129,7 @@
     ]
   },
   "invalid_reason": null,
+  "isolated": true,
   "model": "claude-haiku-5-5",
   "probe_active": null,
   "rep": 1,
@@ -127,7 +137,7 @@
   "run_id": "change-filter-reason__native__r1",
   "setup_exit_code": 0,
   "setup_seconds": 0.0,
-  "start_utc": "2026-10-10T22:13:54+00:00",
+  "start_utc": "2026-10-11T01:45:13+00:00",
   "status": "ok",
   "task_file": "/home/user/sobre-bench/tasks/change-filter-reason/task.json",
   "task_id": "change-filter-reason",
@@ -142,9 +152,9 @@
   "turns_completed": 1,
   "turns_planned": 1,
   "untracked_files": [
-    "src/dispatch/database/revisions/tenant/versions/2026-10-10_3c9a1f7e2b58.py"
+    "src/dispatch/database/revisions/tenant/versions/2026-10-11_3c9e1f7a2b4d.py"
   ],
-  "wall_seconds": 98.7,
+  "wall_seconds": 77.1,
   "work": {
     "data": null,
     "dir": "/tmp/sobre-bench-work/run-0343591f1f1c",

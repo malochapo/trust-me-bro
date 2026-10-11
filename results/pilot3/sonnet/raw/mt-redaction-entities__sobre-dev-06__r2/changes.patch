@@ -1,0 +1,81 @@
+diff --git a/src/dispatch/entity/service.py b/src/dispatch/entity/service.py
+index 8e9cfe06..10b3d371 100644
+--- a/src/dispatch/entity/service.py
++++ b/src/dispatch/entity/service.py
+@@ -14,6 +14,7 @@ from dispatch.entity.models import Entity, EntityCreate, EntityUpdate, EntityRea
+ from dispatch.entity_type import service as entity_type_service
+ from dispatch.entity_type.models import EntityType
+ from dispatch.signal.models import Signal, SignalInstance
++from dispatch.signal.redaction import MASK, redact_raw
+ 
+ 
+ log = logging.getLogger(__name__)
+@@ -283,13 +284,14 @@ def find_entities(
+         Yields:
+             EntityCreate: An entity found in the SignalInstance.
+         """
++        # masked values must never become entities, even if the stored payload is not yet redacted
++        raw = redact_raw(signal_instance.raw)
+         for entity_type, _, jpath in entity_type_pairs:
+             if jpath:
+                 try:
+-                    # a JSONPath names one field: keep its first match
+-                    matches = jpath.find(signal_instance.raw)[:1]
++                    matches = jpath.find(raw)
+                     for match in matches:
+-                        if isinstance(match.value, str):
++                        if isinstance(match.value, str) and match.value != MASK:
+                             yield EntityCreate(
+                                 id=None,
+                                 value=match.value,
+diff --git a/tests/entity/test_entity_service.py b/tests/entity/test_entity_service.py
+index 54251a28..bb04c5c7 100644
+--- a/tests/entity/test_entity_service.py
++++ b/tests/entity/test_entity_service.py
+@@ -322,3 +322,46 @@ def test_find_entities_multiple_entity_types(session, signal_instance, project):
+     values = {getattr(e, "value", None) for e in entities if hasattr(e, "value") and isinstance(e.value, str)}
+     assert "arn:aws:iam::123456789012:role/Test" in values
+     assert "arn:aws:s3:::ap-northeast-3-123456789012-s3-server-access-logs" in values
++
++
++def test_find_entities_skips_masked_values(session, project):
++    from dispatch.signal.redaction import MASK, redact_raw
++
++    entity_types = [
++        EntityType(
++            name="Session Token",
++            jpath="session_token",
++            regular_expression=None,
++            project=project,
++        ),
++        EntityType(
++            name="Nested Token",
++            jpath="events[*].SESSION_TOKEN",
++            regular_expression=None,
++            project=project,
++        ),
++        EntityType(
++            name="User",
++            jpath="user",
++            regular_expression=None,
++            project=project,
++        ),
++    ]
++    raw = {
++        "id": "4893bde0-f8bc-4472-a7dc-8b44b26b2198",
++        "variant": "test",
++        "user": "alice",
++        "session_token": "abc123",
++        "events": [{"SESSION_TOKEN": "def456"}],
++    }
++
++    # already redacted payload: the mask must not become an entity
++    redacted = SignalInstanceFactory(raw=redact_raw(raw))
++    entities = entity_service.find_entities(session, redacted, entity_types)
++    assert {e.value for e in entities} == {"alice"}
++
++    # payload stored before redaction: secrets must not become entities either
++    unredacted = SignalInstanceFactory(raw=raw)
++    entities = entity_service.find_entities(session, unredacted, entity_types)
++    assert {e.value for e in entities} == {"alice"}
++    assert MASK not in {e.value for e in entities}

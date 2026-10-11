@@ -1,0 +1,68 @@
+diff --git a/src/dispatch/entity/service.py b/src/dispatch/entity/service.py
+index 8e9cfe06..8638185e 100644
+--- a/src/dispatch/entity/service.py
++++ b/src/dispatch/entity/service.py
+@@ -14,6 +14,7 @@ from dispatch.entity.models import Entity, EntityCreate, EntityUpdate, EntityRea
+ from dispatch.entity_type import service as entity_type_service
+ from dispatch.entity_type.models import EntityType
+ from dispatch.signal.models import Signal, SignalInstance
++from dispatch.signal.redaction import MASK, redact_raw
+ 
+ 
+ log = logging.getLogger(__name__)
+@@ -283,13 +284,15 @@ def find_entities(
+         Yields:
+             EntityCreate: An entity found in the SignalInstance.
+         """
++        # callers may pass a payload that is not masked yet, so mask a copy here
++        raw = redact_raw(signal_instance.raw)
+         for entity_type, _, jpath in entity_type_pairs:
+             if jpath:
+                 try:
+-                    # a JSONPath names one field: keep its first match
+-                    matches = jpath.find(signal_instance.raw)[:1]
++                    matches = jpath.find(raw)
+                     for match in matches:
+-                        if isinstance(match.value, str):
++                        # a masked value is a placeholder: it would group unrelated instances
++                        if isinstance(match.value, str) and match.value != MASK:
+                             yield EntityCreate(
+                                 id=None,
+                                 value=match.value,
+diff --git a/tests/entity/test_entity_service.py b/tests/entity/test_entity_service.py
+index 54251a28..0678e550 100644
+--- a/tests/entity/test_entity_service.py
++++ b/tests/entity/test_entity_service.py
+@@ -322,3 +322,32 @@ def test_find_entities_multiple_entity_types(session, signal_instance, project):
+     values = {getattr(e, "value", None) for e in entities if hasattr(e, "value") and isinstance(e.value, str)}
+     assert "arn:aws:iam::123456789012:role/Test" in values
+     assert "arn:aws:s3:::ap-northeast-3-123456789012-s3-server-access-logs" in values
++
++
++def test_find_entities_ignores_masked_values(session, project):
++    from dispatch.signal.redaction import MASK
++
++    entity_types = [
++        EntityType(
++            name="Session Token",
++            jpath="session_token",
++            regular_expression=None,
++            project=project,
++        ),
++        EntityType(
++            name="User",
++            jpath="user",
++            regular_expression=None,
++            project=project,
++        ),
++    ]
++
++    # already masked payload, as in signal_instance_create_flow
++    masked = SignalInstanceFactory(raw={"session_token": MASK, "user": "alice"})
++    entities = entity_service.find_entities(session, masked, entity_types)
++    assert [e.value for e in entities] == ["alice"]
++
++    # payload that has not been masked yet must not yield the secret either
++    unmasked = SignalInstanceFactory(raw={"session_token": "ghp_abc123", "user": "alice"})
++    entities = entity_service.find_entities(session, unmasked, entity_types)
++    assert [e.value for e in entities] == ["alice"]

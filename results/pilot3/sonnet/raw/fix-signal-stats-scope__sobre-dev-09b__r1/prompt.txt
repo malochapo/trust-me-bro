@@ -1,0 +1,3 @@
+This repository is Dispatch, an incident management platform. Bug report: GET /api/v1/{organization}/signals/{signal_id}/stats returns snooze counts (num_snoozes_active and num_snoozes_expired) that also include snooze filters belonging to other signals for the same entity. When a signal id is given, only the snooze filters attached to that signal must be counted. GET /signals/stats, without a signal, must keep counting the snooze filters of every signal. The instance counts are already right. Fix it and add a test.
+
+The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.

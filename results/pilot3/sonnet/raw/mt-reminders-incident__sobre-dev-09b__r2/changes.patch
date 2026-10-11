@@ -1,0 +1,96 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..782d68b1 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,8 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # triage_at is only set by the triage transition flow, so fall back to created_at
++            span = datetime.utcnow() - (case.triage_at or case.created_at)
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..607f970d
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,65 @@
++from datetime import date, datetime, timedelta
++from unittest import mock
++
++import pytest
++
++from dispatch.case import scheduled
++
++
++@pytest.mark.parametrize(
++    "day, expected",
++    [
++        (date(2025, 8, 18), True),  # Monday
++        (date(2025, 8, 19), False),  # Tuesday
++        (date(2025, 8, 20), False),
++        (date(2025, 8, 24), False),  # Sunday
++    ],
++)
++def test_is_reminder_day(day, expected):
++    with mock.patch.object(scheduled, "date") as mock_date:
++        mock_date.today.return_value = day
++        assert scheduled._is_reminder_day() is expected
++
++
++def _job_body(name):
++    """Returns the undecorated job function registered with the scheduler."""
++    func = next(t["func"] for t in scheduled.scheduler.registered_tasks if t["name"] == name)
++    # unwrap the timer and project-context decorators to exercise the job body
++    while hasattr(func, "__wrapped__"):
++        func = func.__wrapped__
++    return func
++
++
++@pytest.mark.parametrize("name", ["case-stable-reminder", "case-close-reminder"])
++@pytest.mark.parametrize("day, sent", [(date(2025, 8, 18), True), (date(2025, 8, 19), False)])
++def test_weekly_reminders_only_sent_on_mondays(name, day, sent):
++    case = mock.Mock(
++        triage_at=datetime.utcnow() - timedelta(days=10),
++        stable_at=datetime.utcnow() - timedelta(days=10),
++    )
++
++    with mock.patch.object(scheduled, "date") as mock_date, mock.patch.object(
++        scheduled, "get_all_by_status", return_value=[case]
++    ), mock.patch.object(scheduled, "send_case_close_reminder") as send:
++        mock_date.today.return_value = day
++        _job_body(name)(db_session=mock.Mock(), project=mock.Mock(id=1))
++
++    assert send.called is sent
++
++
++@pytest.mark.parametrize(
++    "age_days, sent", [(10, True), (3, False)]
++)
++def test_close_reminder_falls_back_to_created_at_without_triage_at(age_days, sent):
++    case = mock.Mock(triage_at=None, created_at=datetime.utcnow() - timedelta(days=age_days))
++
++    with mock.patch.object(scheduled, "date") as mock_date, mock.patch.object(
++        scheduled, "get_all_by_status", return_value=[case]
++    ), mock.patch.object(scheduled, "send_case_close_reminder") as send, mock.patch.object(
++        scheduled.log, "exception"
++    ) as log_exception:
++        mock_date.today.return_value = date(2025, 8, 18)  # Monday
++        _job_body("case-close-reminder")(db_session=mock.Mock(), project=mock.Mock(id=1))
++
++    log_exception.assert_not_called()
++    assert send.called is sent

@@ -1,0 +1,44 @@
+{
+  "arm": "sobre-hooks",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_filter_reason.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 0,
+      "last_line": "39 passed, 1 skipped in 12.71s",
+      "seconds": 17.1
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_filter_reason.py"
+      ],
+      "exit": 0,
+      "last_line": "5 passed in 3.86s",
+      "seconds": 8.4
+    }
+  },
+  "graded_at": "2026-10-11T02:01:11+00:00",
+  "kind": "tests",
+  "pass": true,
+  "rep": 1,
+  "run_id": "change-filter-reason__sobre-hooks__r1",
+  "score": 1.0,
+  "task_id": "change-filter-reason",
+  "task_sha256": "c5ba9ecaef307d1e065616cf0ca1ffebbad2eb7a14ad1869c1ba262152d6d187"
+}

@@ -1,0 +1,16 @@
+--- setup.sh exit 0
+--- stdout
+{}
+--- stderr
+
+sobre init
+
+  Claude Code  connected
+                 created ~/.claude/.claude.json
+                 created ~/.claude/skills/sobre/SKILL.md
+                 created ~/.claude/settings.json
+
+  Restart the agents above so they load sobre, then check with: sobre doctor
+indexes (graph + BM25) done
+  BM25: indexed 8562 chunks, 1.2 MB persisted
+Updated compression_level = 0.9

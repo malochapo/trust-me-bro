@@ -1,0 +1,140 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..ea730699 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,10 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # triage_at is only set by the status transition flow, so cases that were
++            # never transitioned into triage don't have it; count from creation instead
++            triage_started_at = case.triage_at or case.created_at
++            span = datetime.utcnow() - triage_started_at
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..c6edeb52
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,107 @@
++import inspect
++from datetime import date, datetime, timedelta
++from types import SimpleNamespace
++from unittest.mock import MagicMock, patch
++
++import pytest
++
++from dispatch.case import scheduled
++from dispatch.scheduler import scheduler
++
++
++class _FakeDate(date):
++    """date whose today() is pinned, so weekday behaviour is deterministic."""
++
++    _today = date(2025, 8, 18)
++
++    @classmethod
++    def today(cls):
++        return cls._today
++
++
++def _task(name):
++    """The scheduler decorator doesn't return the function, so look it up in the registry."""
++    return next(t["func"] for t in scheduler.registered_tasks if t["name"] == name)
++
++
++def _run(task, cases, today):
++    _FakeDate._today = today
++    send = MagicMock()
++    with (
++        patch.object(scheduled, "date", _FakeDate),
++        patch.object(scheduled, "get_all_by_status", return_value=cases),
++        patch.object(scheduled, "send_case_close_reminder", send),
++    ):
++        inspect.unwrap(task)(db_session=MagicMock(), project=SimpleNamespace(id=1))
++    return send
++
++
++MONDAY = date(2025, 8, 18)
++TUESDAY = date(2025, 8, 19)
++SUNDAY = date(2025, 8, 17)
++
++
++def test_is_reminder_day_only_on_monday():
++    for offset in range(7):
++        day = MONDAY + timedelta(days=offset)
++        _FakeDate._today = day
++        with patch.object(scheduled, "date", _FakeDate):
++            assert scheduled._is_reminder_day() == (day == MONDAY)
++
++
++@pytest.mark.parametrize(
++    "task,field",
++    [
++        (_task("case-close-reminder"), "triage_at"),
++        (_task("case-stable-reminder"), "stable_at"),
++    ],
++)
++class TestLongRunningCaseReminders:
++    def _case(self, field, age_days):
++        return SimpleNamespace(**{field: datetime.utcnow() - timedelta(days=age_days)})
++
++    def test_sent_on_monday_for_old_case(self, task, field):
++        case = self._case(field, 10)
++        send = _run(task, [case], MONDAY)
++        send.assert_called_once()
++        assert send.call_args.args[0] is case
++
++    @pytest.mark.parametrize("day", [TUESDAY, SUNDAY])
++    def test_not_sent_on_other_days(self, task, field, day):
++        assert not _run(task, [self._case(field, 10)], day).called
++
++    def test_not_sent_for_recent_case(self, task, field):
++        assert not _run(task, [self._case(field, 2)], MONDAY).called
++
++    def test_case_without_timestamp_does_not_block_others(self, task, field):
++        missing = SimpleNamespace(**{field: None, "created_at": datetime.utcnow()})
++        old = self._case(field, 10)
++        send = _run(task, [missing, old], MONDAY)
++        send.assert_called_once()
++        assert send.call_args.args[0] is old
++
++
++def _created_only_case(age_days):
++    return SimpleNamespace(
++        triage_at=None, created_at=datetime.utcnow() - timedelta(days=age_days)
++    )
++
++
++def test_close_reminder_counts_from_created_at_when_triage_at_missing(caplog):
++    case = _created_only_case(10)
++    send = _run(_task("case-close-reminder"), [case], MONDAY)
++    send.assert_called_once()
++    assert send.call_args.args[0] is case
++    assert "TypeError" not in caplog.text
++
++
++def test_close_reminder_not_sent_for_recent_case_without_triage_at():
++    assert not _run(_task("case-close-reminder"), [_created_only_case(2)], MONDAY).called
++
++
++def test_close_reminder_prefers_triage_at_over_created_at():
++    case = SimpleNamespace(
++        triage_at=datetime.utcnow() - timedelta(days=2),
++        created_at=datetime.utcnow() - timedelta(days=30),
++    )
++    assert not _run(_task("case-close-reminder"), [case], MONDAY).called

@@ -1,0 +1,7 @@
+This repository is Dispatch, an incident management platform. In the web UI, the signal instance views show, for each entity, how many signal instances alerted or were snoozed and how many snoozes are active or expired. Which backend endpoint does the UI call to get these counts, which backend function computes them, are the counts limited to the signal being viewed, and over what period are the alerted and snoozed instance counts taken?
+
+Finish your answer with these four lines, in this exact form:
+ENDPOINT: <HTTP method> <path relative to the organization's API prefix>
+FUNCTION: <name of the function that computes the counts>
+SCOPED_TO_SIGNAL: <yes or no>
+INSTANCE_WINDOW: <number of days, or "all time">

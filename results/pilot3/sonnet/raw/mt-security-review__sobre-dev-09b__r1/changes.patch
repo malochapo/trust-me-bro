@@ -1,0 +1,59 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/incident/test_incident_views_permissions.py
+diff --git a/src/dispatch/database/service.py b/src/dispatch/database/service.py
+index e927a561..32e34f85 100644
+--- a/src/dispatch/database/service.py
++++ b/src/dispatch/database/service.py
+@@ -833,8 +833,10 @@ def restricted_case_filter(query: orm.Query, current_user: DispatchUser, role: U
+         .filter(
+             or_(
+                 Case.visibility == Visibility.open,
+-                Case.visibility == Visibility.restricted,
+-                IndividualContact.email == current_user.email,
++                and_(
++                    Case.visibility == Visibility.restricted,
++                    IndividualContact.email == current_user.email,
++                ),
+             )
+         )
+     )
+diff --git a/src/dispatch/incident/views.py b/src/dispatch/incident/views.py
+index a4ca2d4c..b901f1f3 100644
+--- a/src/dispatch/incident/views.py
++++ b/src/dispatch/incident/views.py
+@@ -503,6 +503,7 @@ def export_timeline_event(
+ @router.delete(
+     "/{incident_id}/event/{event_uuid}",
+     summary="Deletes a custom event.",
++    dependencies=[Depends(PermissionsDependency([IncidentEventPermission]))],
+ )
+ def delete_custom_event(
+     db_session: DbSession,
+diff --git a/tests/incident/test_incident_views_permissions.py b/tests/incident/test_incident_views_permissions.py
+new file mode 100644
+index 00000000..59da604f
+--- /dev/null
++++ b/tests/incident/test_incident_views_permissions.py
+@@ -0,0 +1,22 @@
++from dispatch.auth.permissions import IncidentEventPermission, PermissionsDependency
++from dispatch.incident.views import router
++
++
++def _permission_classes(route):
++    classes = []
++    for dependency in route.dependencies:
++        call = dependency.dependency
++        if isinstance(call, PermissionsDependency):
++            classes.extend(call.permissions_classes)
++    return classes
++
++
++def test_delete_custom_event_requires_event_permission():
++    """Regression: deleting an incident timeline event must check IncidentEventPermission."""
++    routes = [
++        r
++        for r in router.routes
++        if r.path == "/{incident_id}/event/{event_uuid}" and "DELETE" in r.methods
++    ]
++    assert len(routes) == 1
++    assert IncidentEventPermission in _permission_classes(routes[0])

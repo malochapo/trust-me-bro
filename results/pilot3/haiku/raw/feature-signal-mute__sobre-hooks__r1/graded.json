@@ -1,0 +1,44 @@
+{
+  "arm": "sobre-hooks",
+  "details": {
+    "hidden_files": [
+      "tests/signal/test_hidden_signal_mute.py"
+    ],
+    "regression": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal"
+      ],
+      "exit": 1,
+      "last_line": "1 failed, 39 passed, 1 skipped in 13.94s",
+      "seconds": 18.5
+    },
+    "tests": {
+      "cmd": [
+        "python",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/signal/test_hidden_signal_mute.py"
+      ],
+      "exit": 1,
+      "last_line": "1 failed, 5 passed in 4.52s",
+      "seconds": 9.4
+    }
+  },
+  "graded_at": "2026-10-11T02:08:47+00:00",
+  "kind": "tests",
+  "pass": false,
+  "rep": 1,
+  "run_id": "feature-signal-mute__sobre-hooks__r1",
+  "score": 0.0,
+  "task_id": "feature-signal-mute",
+  "task_sha256": "e5b92346490ab25409a9e1999692e284fe290f7a224f88cd251593b245de4dc4"
+}
