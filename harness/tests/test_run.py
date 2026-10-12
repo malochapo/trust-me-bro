@@ -73,7 +73,8 @@ class RunTest(unittest.TestCase):
         self.assertEqual(argv[0], "-p")
         prompt = rec["stdin"]  # on stdin, in no process's argv
         self.assertNotIn(prompt, argv)
-        self.assertTrue(meta["isolated"])
+        # isolated where unshare can make a PID namespace (not on GitHub-hosted runners)
+        self.assertEqual(meta["isolated"], bool(run.isolation_prefix()))
         self.assertIn(str(work / "data") + "/app.log", prompt)
         self.assertTrue((work / "data" / "app.log").exists())
         pairs = {argv[i]: argv[i + 1] for i in range(1, len(argv) - 1) if argv[i].startswith("--")}
