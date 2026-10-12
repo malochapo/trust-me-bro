@@ -211,5 +211,23 @@ class InitValidationTest(unittest.TestCase):
         self.assertIsNotNone(run.validate_init(None, "claude-sonnet-5-5", [])[0])
 
 
+
+class SetupTimeoutTest(unittest.TestCase):
+    def test_a_setup_timeout_stops_what_setup_started(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            arm_dir, pid_file = Path(tmp), Path(tmp) / "child.pid"
+            (arm_dir / "setup.sh").write_text(f"#!/bin/sh\nsleep 300 &\necho $! > {pid_file}\nwait\n")
+            (arm_dir / "setup.sh").chmod(0o755)
+            saved, run.SETUP_TIMEOUT_S = run.SETUP_TIMEOUT_S, 1
+            try:
+                with open(arm_dir / "setup.log", "w") as log, self.assertRaises(subprocess.TimeoutExpired):
+                    run.run_setup(arm_dir, dict(os.environ), tmp, log)
+            finally:
+                run.SETUP_TIMEOUT_S = saved
+            child = int(pid_file.read_text())
+            # Reaped by init or not, a killed child no longer runs.
+            state = Path(f"/proc/{child}/stat")
+            self.assertTrue(not state.exists() or state.read_text().split()[2] == "Z")
+
 if __name__ == "__main__":
     unittest.main()

@@ -20,10 +20,15 @@ Native runs of pilot 3 (Sonnet):
 | Cache reads | 17% | 25% |
 
 - **Most cache writes are the context, written once:** Claude Code's system prompt and tools at the first call, then each new message and tool result.
-- **Tool results are small.** Agents filter their output themselves (`| head`, `grep -c`, line ranges), and read files with `sed -n` and `cat` far more than with Read. Removing every tool result outright would save about 5% of a Sonnet conversation.
-- **No tool output repeated** within a run, so deduplicating outputs has nothing to find on these tasks.
+- **Tool results cost more than their size.** A result is written to the cache once, then read again at every later call of the session: Claude Code never drops one in these runs. Counted that way, tool results are about 28% of a native run's cost on one-message tasks and 36% on conversations, on both models (pilot 3, medians), and 43% to 50% on the log conversations. An earlier version of this page said about 5%, which was wrong.
+- **What reaches the context is mostly what the agent asked for.** Agents filter their output themselves (`| head`, `grep -c`, `cut -c`, line ranges), and read files with `sed -n` and `cat` far more than with Read. On the log conversations:
+  - folding every log line template seen 8 times or more, keeping the first and the last, would remove at most 13% of the outputs' characters without touching a warning or error line. The second log fold (PR malochapo/sobre-ai#106) removes 12.8%: close to that ceiling;
+  - replayed through each build's hook, on the same paths, rc.2 would have removed 0.4% to 4% of a run's cost and the second fold 2.4% to 8%;
+  - no output repeats within a run, and lines already shown earlier in the session make up 6% of the outputs.
 
-A context tool can therefore move cost mainly by changing the agent's path: fewer turns, less reasoning. That is what search and memory aim at, and what folded logs seem to do.
+Shrinking what the agent asked for therefore saves a few percent at most. A context tool moves cost beyond that only by changing the agent's path: fewer turns, less reasoning. That is what search and memory aim at, and what folded logs seemed to do in pilot 3.
+
+How these figures are computed: `harness/result_share.py` splits each API call's new tokens between the results and messages added since the previous call, and with `--hook` replays each native result through a build's hook.
 
 ## Tasks (`tasks4/`, pilot 2 fixture)
 

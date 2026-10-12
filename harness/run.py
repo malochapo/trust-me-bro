@@ -46,6 +46,8 @@ import usage
 
 TURN_SEPARATOR = "\n\n----- next turn -----\n\n"
 RESERVED_ENV = {"PATH", "HOME", "CLAUDE_CONFIG_DIR", "CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"}
+# A dense build indexes the fixture with local embeddings: over 3 minutes alone, more under load.
+SETUP_TIMEOUT_S = 1200
 
 # Shell commands that reach the network: the agent could fetch upstream Dispatch and diff it.
 NETWORK_COMMAND = re.compile(
@@ -127,17 +129,25 @@ def make_toolbin(toolbin, arm, bench_tools):
 def run_setup(arm_dir, env, home, log):
     """arms/<arm>/setup.sh; returns (exit code, extra env dict or None, seconds)."""
     start = time.monotonic()
-    r = subprocess.run([str(arm_dir / "setup.sh")], cwd=home, env=env, stdin=subprocess.DEVNULL,
-                       capture_output=True, text=True, timeout=600)
-    log.write(f"--- setup.sh exit {r.returncode}\n--- stdout\n{r.stdout}--- stderr\n{r.stderr}")
-    lines = [l for l in r.stdout.splitlines() if l.strip()]
+    # In its own process group, so that a timeout also stops what it started: a dense index
+    # build left running slows every later setup down.
+    proc = subprocess.Popen([str(arm_dir / "setup.sh")], cwd=home, env=env, stdin=subprocess.DEVNULL,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True)
+    try:
+        stdout, stderr = proc.communicate(timeout=SETUP_TIMEOUT_S)
+    except subprocess.TimeoutExpired:
+        signal_group(proc.pid, signal.SIGKILL)
+        proc.communicate()
+        raise
+    log.write(f"--- setup.sh exit {proc.returncode}\n--- stdout\n{stdout}--- stderr\n{stderr}")
+    lines = [l for l in stdout.splitlines() if l.strip()]
     extra = None
-    if r.returncode == 0 and lines:
+    if proc.returncode == 0 and lines:
         try:
             extra = json.loads(lines[-1])
         except ValueError:
             pass
-    return r.returncode, extra, round(time.monotonic() - start, 1)
+    return proc.returncode, extra, round(time.monotonic() - start, 1)
 
 
 def run_probe(arm_dir, env, cwd):
