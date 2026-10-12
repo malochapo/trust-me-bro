@@ -178,6 +178,14 @@
       "binary": "sobre-dev-fold2",
       "sha256": "82035214625eda622d4345908d1cafcf329d15282859982ebc44a4deb0b07eb1",
       "version_output": "sobre 0.1.0"
+    },
+    "sobre-dev-fold3": {
+      "tool": "sobre",
+      "version": "dev build of malochapo/sobre-ai@da6865915 (branch sobre-8ff0b8, PR #106)",
+      "source": "local-build",
+      "binary": "sobre-dev-fold3",
+      "sha256": "9e64829f572065180eaa543cd9ad6266863571adba8439484a3afc769af09d25",
+      "version_output": "sobre 0.1.0"
     }
   }
 }
