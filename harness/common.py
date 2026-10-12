@@ -15,7 +15,7 @@ BENCH_ROOT = Path(__file__).resolve().parent.parent
 ARMS_DIR = BENCH_ROOT / "arms"
 DEFAULT_FIXTURE = BENCH_ROOT / "build" / "fixture.git"
 DEFAULT_PLANTS = BENCH_ROOT / "build" / "plants.json"
-DEFAULT_WORK = Path("/tmp/sobre-bench-work")
+DEFAULT_WORK = Path("/tmp/trust-me-bro-work")
 ALL_ARMS = ["native", "native-told", "sobre", "sobre-dev", "sobre-dev-06", "sobre-dev-09", "sobre-dev-09b", "sobre-hooks",
             "sobre-keyonly", "sobre-rc2", "sobre-rc2-mcp", "sobre-rc2-mcp-told", "sobre-rc2-dense", "sobre-rc2-dense-told",
             "sobre-rc3-dense", "sobre-rc3-dense-told", "sobre-dev-fold2", "sobre-dev-fold3",
@@ -35,7 +35,7 @@ SYSTEM_PATH = ["/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/s
 # (bench.py --jobs).
 DB_PORT = int(os.environ.get("BENCH_DB_PORT") or 5432)
 LOCK_FILE = Path(os.environ.get("BENCH_LOCK_FILE")
-                 or ("/tmp/sobre-bench.lock" if DB_PORT == 5432 else f"/tmp/sobre-bench.{DB_PORT}.lock"))
+                 or ("/tmp/trust-me-bro.lock" if DB_PORT == 5432 else f"/tmp/trust-me-bro.{DB_PORT}.lock"))
 
 
 def read_json(path, default=None):

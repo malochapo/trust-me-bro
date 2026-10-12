@@ -26,7 +26,7 @@ python3 -I fixture/build.py
 python3 -I fixture/gen_logs.py build
 
 # Dispatch's dependencies, shared by every run's venv
-export BENCH_DEPS_VENV=~/.cache/sobre-bench/deps
+export BENCH_DEPS_VENV=~/.cache/trust-me-bro/deps
 uv venv -q -p 3.11 "$BENCH_DEPS_VENV"
 uv pip install -q --python "$BENCH_DEPS_VENV/bin/python" -r fixture/requirements.lock hatchling versioningit editables
 

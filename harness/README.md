@@ -24,7 +24,7 @@ base, once per arm (`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`; see
 - Postgres on `localhost:5432`, user `postgres`, password `dispatch` (the fixture's
   tests create and drop the database `dispatch-test`). One database for everything,
   so runs and grading are strictly sequential: `run.py` and the tests grader take the
-  lock `/tmp/sobre-bench.lock` (`BENCH_LOCK_FILE`), and `run.py`/`bench.py` refuse to
+  lock `/tmp/trust-me-bro.lock` (`BENCH_LOCK_FILE`), and `run.py`/`bench.py` refuse to
   start when `pg_isready -h localhost` fails.
 - Running as root: Claude Code refuses `bypassPermissions` as root outside a sandbox;
   the harness sets `IS_SANDBOX=1` for the agent. Run in a container or VM.
@@ -33,14 +33,14 @@ base, once per arm (`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`; see
 
 ```bash
 # 1. The arms' tools, at the pinned versions (idempotent), into $BENCH_TOOLS
-#    (default ~/.cache/sobre-bench/tools)
+#    (default ~/.cache/trust-me-bro/tools)
 arms/install.sh
 
 # 2. The fixture: build/fixture.git (bare, branch main), build/plants.json, build/data/
 python3 -I fixture/build.py
 
 # 3. Dispatch's dependencies, once, in a shared virtualenv without Dispatch itself
-export BENCH_DEPS_VENV=$HOME/.cache/sobre-bench/deps
+export BENCH_DEPS_VENV=$HOME/.cache/trust-me-bro/deps
 uv venv -p 3.11 "$BENCH_DEPS_VENV"
 uv pip install --python "$BENCH_DEPS_VENV/bin/python" -r fixture/requirements.lock hatchling versioningit editables
 
@@ -75,7 +75,7 @@ python3 -I harness/report.py
 ```
 
 `run.py` options (defaults): `--fixture build/fixture.git`, `--out results/raw`,
-`--work /tmp/sobre-bench-work`, `--model claude-sonnet-5-5`, `--effort medium`,
+`--work /tmp/trust-me-bro-work`, `--model claude-sonnet-5-5`, `--effort medium`,
 `--max-turns 80`, `--max-budget-usd 8`, `--timeout-min 25`, `--claude-bin claude`,
 `--deps-venv $BENCH_DEPS_VENV`, `--cleanup` (delete the work dir afterwards; grading
 a tests task needs it), `--force` (replace an existing run dir). `bench.py` passes
@@ -161,7 +161,7 @@ and dropping those runs could favor an arm. Invalid runs are never scored.
 | `grade_tests.log`, `grade_regression.log` | tests grader output |
 | `judge_prompt.txt`, `judge_reply.json` | judge grader: exact prompt and raw reply |
 
-The work dir (`/tmp/sobre-bench-work/run-<hash>/`, path in `meta.json`) keeps the
+The work dir (`/tmp/trust-me-bro-work/run-<hash>/`, path in `meta.json`) keeps the
 repo as the agent left it, its HOME and the virtualenv.
 
 ## Tokens and cost (`usage.py`)

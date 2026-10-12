@@ -131,7 +131,7 @@ def build(spec, cache, out):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--cache", type=Path, default=Path.home() / ".cache" / "sobre-bench")
+    parser.add_argument("--cache", type=Path, default=Path.home() / ".cache" / "trust-me-bro")
     parser.add_argument("--out", type=Path, default=HERE.parent / "build")
     parser.add_argument("--spec", type=Path, default=HERE / "plants.json")
     args = parser.parse_args()

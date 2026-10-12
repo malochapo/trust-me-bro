@@ -70,7 +70,7 @@ def parse_args(argv):
     p.add_argument("--max-budget-usd", type=float, default=3)
     p.add_argument("--timeout-min", type=float, default=25)
     p.add_argument("--claude-bin", default="claude")
-    p.add_argument("--bench-tools", default=os.environ.get("BENCH_TOOLS", str(Path.home() / ".cache/sobre-bench/tools")))
+    p.add_argument("--bench-tools", default=os.environ.get("BENCH_TOOLS", str(Path.home() / ".cache/trust-me-bro/tools")))
     p.add_argument("--deps-venv", default=os.environ.get("BENCH_DEPS_VENV"),
                    help="shared virtualenv with Dispatch's dependencies (default: $BENCH_DEPS_VENV)")
     p.add_argument("--no-venv", action="store_true", help="do not build the run's virtualenv (tests)")

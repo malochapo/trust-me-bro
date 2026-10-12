@@ -1,4 +1,4 @@
-# sobre-bench
+# trust-me-bro
 
 A paired benchmark of context tools for coding agents. It runs Claude Code on the same tasks, on the same code base, under five setups ("arms"), and measures two things: what each run costs, and whether its answer is right.
 
@@ -41,9 +41,9 @@ Needs git, Python 3.11, [uv](https://docs.astral.sh/uv/) and PostgreSQL on local
 ```sh
 python3 -I fixture/build.py                     # build/fixture.git and build/plants.json
 python3 -I fixture/gen_logs.py build            # build/data/log-dedup-regression/
-uv venv -p 3.11 ~/.cache/sobre-bench/deps
-VIRTUAL_ENV=~/.cache/sobre-bench/deps uv pip install -r fixture/requirements.lock hatchling versioningit editables
-python3 -I tasks/validate.py --fixture build/fixture.git --deps-venv ~/.cache/sobre-bench/deps
+uv venv -p 3.11 ~/.cache/trust-me-bro/deps
+VIRTUAL_ENV=~/.cache/trust-me-bro/deps uv pip install -r fixture/requirements.lock hatchling versioningit editables
+python3 -I tasks/validate.py --fixture build/fixture.git --deps-venv ~/.cache/trust-me-bro/deps
 ```
 
 Running the benchmark itself is described in [harness/README.md](harness/README.md). The steps for phases 0 and 1 are in [docs/RUNBOOK.md](docs/RUNBOOK.md).

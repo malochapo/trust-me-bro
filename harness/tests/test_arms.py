@@ -17,7 +17,7 @@ from support import make_fixture, git
 import common
 import run
 
-TOOLS = Path(os.environ.get("BENCH_TOOLS", str(Path.home() / ".cache/sobre-bench/tools")))
+TOOLS = Path(os.environ.get("BENCH_TOOLS", str(Path.home() / ".cache/trust-me-bro/tools")))
 
 
 def installed(arm):

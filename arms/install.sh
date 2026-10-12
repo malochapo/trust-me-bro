@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install every arm's tool once, at the version pinned in arms/versions.json.
 #
-#   BENCH_TOOLS   where to install (default $HOME/.cache/sobre-bench/tools)
+#   BENCH_TOOLS   where to install (default $HOME/.cache/trust-me-bro/tools)
 #                 binaries go to $BENCH_TOOLS/bin, python tools to $BENCH_TOOLS/venvs/<tool>
 #
 # Idempotent: a tool whose `--version` already reports the pinned version is skipped.
@@ -10,7 +10,7 @@ set -euo pipefail
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 VERSIONS="$HERE/versions.json"
-BENCH_TOOLS=${BENCH_TOOLS:-$HOME/.cache/sobre-bench/tools}
+BENCH_TOOLS=${BENCH_TOOLS:-$HOME/.cache/trust-me-bro/tools}
 BIN="$BENCH_TOOLS/bin"
 mkdir -p "$BIN" "$BENCH_TOOLS/venvs" "$BENCH_TOOLS/downloads"
 

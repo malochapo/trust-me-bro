@@ -188,7 +188,7 @@ def status_lines(runs):
 
 
 def write_markdown(path, runs, good, arms, summaries, table, comparisons, args):
-    out = ["# sobre-bench report", "",
+    out = ["# trust-me-bro report", "",
            f"{len(good)} scored runs (graded, or timed out or errored, which count as failures) out of {len(runs)}. "
            f"Bootstrap: {args.resamples} resamples over tasks, seed {args.seed}. "
            f"Non-inferiority margin: {args.margin_pp} percentage points of success. "
