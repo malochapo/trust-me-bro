@@ -44,6 +44,8 @@ Cost relative to native: the geometric mean of per-task ratios of mean cost. The
 
 Per-task tables are in `results/pilot5/{haiku,sonnet}/report.md`. They can also be printed with `python3 -I harness/pilot4_summary.py --pilot pilot5`. Every tool's probe reported it active in every run.
 
+**Correction (2026-10-12).** Headroom and lean-ctx have prompt prefixes of their own, which only their own runs warmed: they started warm at 1 and 3 of their 12 Haiku sessions, native and rtk at all of them. With every session priced as if it had started cold, the ratios move little on conversations this long: on Haiku, Headroom 0.87 (0.79–0.98), rtk 1.47 (1.20–1.74), lean-ctx 1.74 (1.26–2.20); on Sonnet, Headroom 1.07 (0.97–1.16), rtk 1.18 (1.05–1.33), lean-ctx 1.18 (1.12–1.25) ([cache-isolation.md](cache-isolation.md)).
+
 ## What pilot 5 found
 
 1. **Headroom is the only tool measured below native, and only on Haiku.**

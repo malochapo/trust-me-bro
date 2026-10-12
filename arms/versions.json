@@ -117,6 +117,17 @@
       "archive_binary": "sobre",
       "version_output": "sobre 0.1.0-rc.2"
     },
+    "sobre-rc2-mcp-always": {
+      "tool": "sobre",
+      "version": "0.1.0-rc.2",
+      "source": "github-release",
+      "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.2/sobre-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "36e4f0dcfd38aec629d7f58019549850311d6d391d03e008164356283a4de3e2",
+      "binary": "sobre-rc2",
+      "archive_binary": "sobre",
+      "version_output": "sobre 0.1.0-rc.2",
+      "note": "The sobre-rc2-mcp setup, with its MCP server's tools loaded up front (alwaysLoad, arms/lib.sh always_load_mcp)."
+    },
     "sobre-rc2-mcp-told": {
       "tool": "sobre",
       "version": "0.1.0-rc.2",
@@ -160,6 +171,17 @@
       "binary": "sobre-rc3-dense",
       "archive_binary": "sobre",
       "version_output": "sobre 0.1.0-rc.3"
+    },
+    "sobre-rc3-dense-always": {
+      "tool": "sobre",
+      "version": "0.1.0-rc.3 (build with local embeddings)",
+      "source": "github-release",
+      "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.3/sobre-dense-x86_64-unknown-linux-gnu.tar.gz",
+      "sha256": "a8284d6e36a8444d37fd3fc7f4e2259b28e186c35a9054c45b3c8fe79392e01b",
+      "binary": "sobre-rc3-dense",
+      "archive_binary": "sobre",
+      "version_output": "sobre 0.1.0-rc.3",
+      "note": "The sobre-rc3-dense setup, with its MCP server's tools loaded up front (alwaysLoad, arms/lib.sh always_load_mcp)."
     },
     "sobre-rc3-dense-told": {
       "tool": "sobre",

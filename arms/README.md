@@ -73,6 +73,17 @@ sha256 recorded in `versions.json`.
 
 Both bill to `BENCH_KEY_SOBRE` unless they have their own key, and use the `sobre` probe.
 
+### sobre-rc2-mcp-always and sobre-rc3-dense-always — MCP tools loaded up front
+
+Not vendor arms. `sobre init claude --mcp` registers sobre's server without `alwaysLoad`,
+so Claude Code defers its tools behind tool search and the agent sees only their names.
+These two arms are `sobre-rc2-mcp` and `sobre-rc3-dense` with the server marked
+`alwaysLoad` (`finish_setup '<env>' always-load`, `arms/lib.sh`), so that its tools come
+with every request. They ask whether agents left sobre's tools unused because they did not
+see them ([docs/mcp-visibility.md](../docs/mcp-visibility.md)). `run.py` records which
+servers load up front (`mcp_always_load` in `meta.json`) and marks a run of an arm named
+`*-always` invalid when a server does not.
+
 ### rtk — `rtk init -g --auto-patch`
 
 Source: README "Quick Start" (`rtk init -g`, "Claude Code / Copilot (default)") and
@@ -174,3 +185,8 @@ profile `coding`, CCR on, rate limit on, anonymous beacon on.
 - lean-ctx's `init` denies native Grep and Glob. Claude Code's deny rules "block in
   every mode, including `bypassPermissions`" (docs, permission modes), so this arm
   cannot call Grep or Glob. That is lean-ctx's default for Claude Code, kept as is.
+- Every arm's key shares one workspace, and the prompt cache belongs to the workspace.
+  An arm whose setup changes Claude Code's prompt prefix (tools loaded up front like
+  lean-ctx's, a proxy that rewrites the prompt like Headroom's) has a prefix only its
+  own runs warm, while native, rtk and sobre share one. Reports therefore also price
+  each run as if its sessions had started cold ([docs/cache-isolation.md](../docs/cache-isolation.md)).

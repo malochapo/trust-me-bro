@@ -65,6 +65,13 @@ class ArmSetupTest(unittest.TestCase):
         self.assertIn(("UserPromptSubmit", ".*", "sobre hook observe"), commands)
         self.assertIs(probe["active"], False)  # nothing ran yet
 
+    def test_sobre_rc2_mcp_always(self):
+        extra, settings, servers, probe, _ = self.setup_arm("sobre-rc2-mcp-always")
+        self.assertEqual(extra, {})
+        self.assertEqual(list(servers), ["sobre"])
+        self.assertIs(servers["sobre"]["alwaysLoad"], True)
+        self.assertIs(probe["active"], False)
+
     def test_rtk(self):
         extra, settings, servers, probe, home = self.setup_arm("rtk")
         self.assertEqual((extra, servers), ({}, {}))

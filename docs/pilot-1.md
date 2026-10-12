@@ -25,6 +25,8 @@ All 100 runs were valid: each was billed to its arm's key, and the MCP servers o
 
 On these tasks, every tool costs more than Claude Code alone, and each 95% interval lies above 1. The runs are short: 5 to 9 turns, about 30 seconds, and tool outputs of a few thousand characters. So there is little to compress, and what decides the cost is each tool's fixed overhead: the tool definitions and instructions it adds to the prompt prefix, which is written to the cache once and re-read on every turn, and the extra turns its tools invite.
 
+**Correction (2026-10-12).** Part of that overhead was the shared prompt cache. native, rtk and sobre start from one prompt prefix, which each of their runs found warm; Headroom and lean-ctx have prefixes of their own, found warm at 16 and 14 of their 20 starts. With every session priced as if it had started cold, the ratios are rtk 1.04 (1.00–1.08), sobre 1.08 (1.02–1.16), Headroom 1.00 (0.97–1.03) and lean-ctx 1.40 (1.31–1.49): Headroom costs what native costs ([cache-isolation.md](cache-isolation.md)).
+
 **Spend:** $6.56 for the 100 runs, computed from tokens and public prices. That matches Claude Code's own estimate to the cent. A first version of this report overstated it at $7.63: it priced Sonnet 5.5 cache hits at $0.20 per million tokens instead of $0.10 (0.05× base input; PROTOCOL.md changelog). Add about $0.17 for the judge and $0.29 for the leakage check.
 
 | Arm | Computed spend |

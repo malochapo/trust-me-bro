@@ -292,6 +292,25 @@ def validate_init(init, model, expected_servers):
     return None, summary
 
 
+def mcp_always_load(mcp_config):
+    """{server: True when its tools load up front}. Claude Code defers MCP tools behind tool
+    search, so the agent sees only their names until it searches; `alwaysLoad: true` sends a
+    server's tools with every request instead (docs/mcp-visibility.md)."""
+    servers = json.loads(Path(mcp_config).read_text()).get("mcpServers") or {}
+    return {name: bool((cfg or {}).get("alwaysLoad")) for name, cfg in sorted(servers.items())}
+
+
+def always_load_problem(arm, always_load):
+    """An arm named "<arm>-always" exists to load its MCP tools up front: the reason it does not,
+    or None."""
+    if not arm.endswith("-always"):
+        return None
+    deferred = [name for name, up_front in always_load.items() if not up_front]
+    if not always_load or deferred:
+        return f"arm {arm!r} must load its MCP tools up front, but {deferred or 'it has no MCP server'} does not"
+    return None
+
+
 def main_loop_models(events):
     return {(e.get("message") or {}).get("model") for e in events
             if e.get("type") == "assistant" and e.get("parent_tool_use_id") is None} - {None, "<synthetic>"}
@@ -369,6 +388,11 @@ def execute(args, task, run_id, out_dir, work, claude, version, creds, auth):
             meta["status"], meta["invalid_reason"] = "invalid", f"setup.sh may not set {sorted(RESERVED_ENV & set(extra))}"
             return meta
         expected_servers = sorted(json.loads(mcp_config.read_text()).get("mcpServers") or {})
+        meta["mcp_always_load"] = mcp_always_load(mcp_config)
+        problem = always_load_problem(args.arm, meta["mcp_always_load"])
+        if problem:
+            meta["status"], meta["invalid_reason"] = "invalid", problem
+            return meta
         save_arm_config(home, out_dir / "arm")
 
         agent_path = ([] if args.no_venv else [venv / "bin"]) + base_path
