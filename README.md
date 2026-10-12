@@ -1,42 +1,69 @@
 # trust-me-bro
 
-A paired benchmark of context tools for coding agents. It runs Claude Code on the same tasks, on the same code base, under five setups ("arms"), and measures two things: what each run costs, and whether its answer is right.
+> "Cuts your agent's token usage by up to 90%." Trust me, bro.
 
-| Arm | Setup |
+A paired benchmark of the tools that promise to make coding agents cheaper. It runs Claude Code on the same tasks, on the same code base, with and without each tool, and compares what matters: what the provider bills for the run, and whether the answer is still right.
+
+## What it found
+
+Claude Code 2.1.296, October 2026. Cost of a run relative to Claude Code alone: 1 is the same cost, above 1 costs more. Geometric mean of per-task cost ratios, with a 95% bootstrap interval.
+
+| Tool | Short tasks, Sonnet 5.5 ([pilot 1](docs/pilot-1.md)) | Harder tasks, Sonnet 5.5 ([pilot 2](docs/pilot-2.md)) | Long conversations ([pilot 5](docs/pilot-5.md)) |
+| --- | --- | --- | --- |
+| [rtk](https://github.com/rtk-ai/rtk) 0.51.0 | 1.06 (1.01–1.11) | 1.10 (0.91–1.44) | running |
+| [Headroom](https://github.com/chopratejas/headroom) 0.40.0 | 1.14 (1.06–1.25) | 1.30 (1.22–1.40) | running |
+| [lean-ctx](https://github.com/yvgude/lean-ctx) 3.11.2 | 1.62 (1.43–1.82) | 1.81 (1.52–2.11) | running |
+| [sobre](https://github.com/malochapo/sobre-ai) 0.1.0-rc.1 | 1.13 (1.04–1.24) | 1.08 (0.96–1.23) | see below |
+
+Every run of pilots 1 and 2 succeeded, in every arm: no tool changed whether the task got done, only what it cost. sobre, written by this benchmark's author, was measured further in pilots 3 and 4 ([pilot 3](docs/pilot-3.md), [pilot 4](docs/pilot-4.md)). Its best build cost what Claude Code alone costs (0.98 to 1.03 on Sonnet's multi-turn conversations), and it was archived.
+
+## Why they do not save
+
+Measured across the 998 runs of pilots 1 to 4:
+
+- **Every API call re-reads the whole prompt.** A tool result is written to the prompt cache once and read again at every later call. That is why tool results make up 28% to 50% of a run's cost ([pilot 4](docs/pilot-4.md)).
+- **Agents already keep their outputs small.** Given megabytes of logs and full test suites, they pipe into `head`, `tail` and `grep -c`. Compressing what is left saves about 1% of a run ([pilot 2](docs/pilot-2.md), [pilot 4](docs/pilot-4.md)).
+- **A tool's fixed cost is paid on every call.** Its tool definitions and instructions sit in the prompt prefix, and the extra turns it invites cost more than the bytes it removes ([pilot 1](docs/pilot-1.md)).
+- **Agents do not use tools they are not told about.** In 454 runs with a context tool's MCP server connected, no agent called it unless a `CLAUDE.md` said to. Told to search with it, Haiku's runs cost 1.27 times more ([pilot 4](docs/pilot-4.md)).
+- **The host's own features win.** Asked to save findings for the next day, every agent used Claude Code's own memory. Told to use an add-on memory instead, Sonnet's next day cost 1.23 times more ([pilot 4](docs/pilot-4.md)).
+- **The lever that would matter belongs to the host.** In a long session, clearing old tool results from the prompt would cut about 20% of the cost on the same path. Claude Code clears them only once the cache has expired, and a tool outside the host cannot do it without breaking the cache ([docs/clearing.md](docs/clearing.md)).
+
+## Who wrote this
+
+The author of sobre, one of the tools measured. To keep that from tilting the results:
+- the protocol is written before the runs ([PROTOCOL.md](PROTOCOL.md));
+- every run is published with its transcript, failures included;
+- each tool gets its vendor's documented default setup ([arms/README.md](arms/README.md));
+- each tool's authors may review their arm and answer the results.
+
+sobre was archived because of what this benchmark found.
+
+## How it works
+
+- **A real code base.** [Netflix Dispatch](https://github.com/Netflix/dispatch) (Apache-2.0, archived upstream), with commits planted in its history: facts that memory cannot supply, bugs to diagnose and fix, megabytes of logs. The build is deterministic ([fixture/](fixture/)).
+- **Realistic tasks, graded.** Code questions, history questions, log diagnosis, bug fixes, cross-layer changes, multi-turn conversations, sessions compacted with `/compact`, work resumed the next day. Each is graded by expected facts, hidden tests or a blind judge. Every fact task is also run without the code, to check that memory cannot answer it.
+- **Same agent, one variable.** Every arm runs the same pinned Claude Code, model, effort and limits. Each run starts in an empty home directory, with explicit settings and MCP configuration and no web access. The arms run interleaved, in a seeded random order, so that drift over time favors none.
+- **Billed tokens only.** Each arm has its own API key, and a run billed to the wrong key is invalid. Cost is the run's tokens by class (input, output, cache reads, cache writes by lifetime) at public prices ([harness/prices.json](harness/prices.json)), subagents included. It is never an estimate of bytes saved.
+- **Enough repetitions to see the noise.** Runs are paired by task, with at least two repetitions and bootstrap intervals. A/A arms measure the noise of the design itself.
+
+## Repository map
+
+| Path | What |
 | --- | --- |
-| `native` | Claude Code alone |
-| `sobre` | [sobre](https://github.com/malochapo/sobre-ai) |
-| `lean-ctx` | [lean-ctx](https://github.com/yvgude/lean-ctx) |
-| `headroom` | [Headroom](https://github.com/chopratejas/headroom), proxy mode |
-| `rtk` | [rtk](https://github.com/rtk-ai/rtk) |
+| [docs/](docs/) | one report per pilot, the run book, the clearing study |
+| [tasks/](tasks/), [tasks2/](tasks2/), [tasks3/](tasks3/), [tasks4/](tasks4/) | the tasks of pilots 1, 2, 3 and 4; pilot 5 reuses pilot 4's long conversations |
+| [results/](results/) | every run: `raw/` for pilot 1, then `pilot2/` to `pilot5/`. Each run keeps its transcript, usage, grade and metadata |
+| [arms/](arms/) | how each tool is installed, set up and checked |
+| [harness/](harness/) | runs, grading, usage, reports (Python 3.11, standard library only) |
+| [fixture/](fixture/) | the build of the code base |
 
-Each tool gets its vendor's documented default setup for Claude Code, nothing more ([arms/README.md](arms/README.md)).
+The arms named `sobre-*` are sobre's development builds. They are kept apart from the released tools in every report. [docs/sobre-dev.md](docs/sobre-dev.md) shows what they were for: measuring each change to a tool before shipping it.
 
-sobre's maintainer wrote this benchmark. To keep that from tilting it, the protocol is fixed before any scored run ([PROTOCOL.md](PROTOCOL.md)). Every run is published, failures included, and each tool's authors may review their arm's setup and answer the results.
+## Run it
 
-## Status
-
-- **Pilot 1 is done** ([docs/pilot-1.md](docs/pilot-1.md)): 100 runs, all successful. Its tasks were too easy to separate the arms on success. On cost, against Claude Code alone: rtk 1.06, sobre 1.13, Headroom 1.14, lean-ctx 1.62.
-- **Pilot 2 is done** ([docs/pilot-2.md](docs/pilot-2.md)): 84 runs on harder tasks, all successful again. On cost, against Claude Code alone: sobre 1.08, rtk 1.10, Headroom 1.30, lean-ctx 1.81, with wide intervals over 6 tasks.
-- **Pilot 3 is done** ([docs/pilot-3.md](docs/pilot-3.md)): 488 runs on Sonnet 5.5 and Haiku 5.5, with four multi-turn conversations, measuring sobre at compression levels 0.3, 0.6 and 0.9 against Claude Code alone. sobre costs what Claude Code alone costs (Sonnet 0.98 to 1.03; Haiku within the spread of an A/A control). One log-diagnosis conversation came out 12% cheaper with sobre (p = 0.09).
-- **Pilot 4 is done** ([docs/pilot-4.md](docs/pilot-4.md)): 326 runs on Sonnet 5.5 and Haiku 5.5, on long sessions with `/compact`, work resumed the next day in a new session, search by meaning with and without local embeddings, and log diagnosis. In 454 runs of pilots 1 to 4 with sobre's MCP server connected, no agent called a sobre tool unless a CLAUDE.md told it to. Asked to save its findings for tomorrow, every agent used Claude Code's own memory; told to use sobre's, Sonnet's next day cost more (1.23 times native). Tool results are 28% to 50% of a run's cost, but agents already filter what they ask for, and folding logs saves about 1% without hiding lines they asked for.
-- **Clearing old tool results** ([docs/clearing.md](docs/clearing.md)), an offline study with no API spend: on the bench's conversations, the API's `clear_tool_uses` edit would save 1 to 9% on Haiku (median, depending on a token count the streams do not give exactly) and nothing on Sonnet; on one long real session, about 22% on the same path. Claude Code already clears when the cache has expired, and sobre's proxy prunes nothing with Claude Code.
-- **sobre's development arms** ([docs/sobre-dev.md](docs/sobre-dev.md)) measure a build of sobre that removes rc.1's overhead. It costs what Claude Code alone costs: 1.02 on pilot 1 and 1.01 on pilot 2, against 1.13 and 1.08 for rc.1. They are kept apart from the released tools' results.
-
-## Why another benchmark
-
-Published numbers for these tools mostly measure bytes saved on synthetic inputs, not what an agent pays to finish a task, nor whether it still finishes it. The few paired runs that exist found effects smaller than their own run-to-run variance. This benchmark counts the tokens of whole agent runs, grades their outcome, and repeats runs enough to separate effect from noise.
-
-## What is in it
-
-- [fixture/](fixture/): the code base. It is [Netflix Dispatch](https://github.com/Netflix/dispatch) (Apache-2.0, archived in 2025, so it no longer changes): a FastAPI backend, a Vue frontend and a signal-ingestion pipeline. Eight commits are planted in its real history: facts that memory cannot supply and bugs to diagnose or fix. The build is deterministic: the same inputs give the same commit ids.
-- [tasks/](tasks/): ten pilot tasks across six families: code questions, a cross-layer question, a frontend question, a git-history question, log diagnosis, bug fixes and a cross-layer change. They are graded by expected facts, hidden tests or a blind judge. `tasks/validate.py` checks each task against its reference answer.
-- [harness/](harness/): runs one task under one arm in an isolated home directory, collects token usage from Claude Code's output, grades the run and builds the report.
-- [arms/](arms/): installs each tool at a pinned version and configures it per run.
-
-## Build and check
-
-Needs git, Python 3.11, [uv](https://docs.astral.sh/uv/) and PostgreSQL on localhost (user `postgres`, password `dispatch`).
+You need:
+- Linux x86_64, git, Python 3.11 and 3.13, [uv](https://docs.astral.sh/uv/) and Claude Code;
+- PostgreSQL on localhost (user `postgres`, password `dispatch`).
 
 ```sh
 python3 -I fixture/build.py                     # build/fixture.git and build/plants.json
@@ -44,9 +71,19 @@ python3 -I fixture/gen_logs.py build            # build/data/log-dedup-regressio
 uv venv -p 3.11 ~/.cache/trust-me-bro/deps
 VIRTUAL_ENV=~/.cache/trust-me-bro/deps uv pip install -r fixture/requirements.lock hatchling versioningit editables
 python3 -I tasks/validate.py --fixture build/fixture.git --deps-venv ~/.cache/trust-me-bro/deps
+arms/install.sh                                 # every tool, at its pinned version
 ```
 
-Running the benchmark itself is described in [harness/README.md](harness/README.md). The steps for phases 0 and 1 are in [docs/RUNBOOK.md](docs/RUNBOOK.md).
+Then set one API key per arm (`BENCH_KEY_NATIVE`, `BENCH_KEY_RTK`, …) plus `BENCH_KEY_JUDGE`, and follow [harness/README.md](harness/README.md) and [docs/RUNBOOK.md](docs/RUNBOOK.md). A run costs $0.02 to $0.75 on Sonnet 5.5; each pilot report gives its total.
+
+## Add your tool
+
+An arm is a directory under `arms/` with three parts ([arms/README.md](arms/README.md) has the contract):
+- a `setup.sh` that installs the tool the way its README tells Claude Code users to;
+- a `probe.sh` that says whether the tool did anything during the run;
+- its pinned version in `arms/versions.json`.
+
+Open a pull request. If your tool documents a setup this benchmark does not follow, that is a bug in the benchmark.
 
 ## License
 
