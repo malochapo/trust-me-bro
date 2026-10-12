@@ -6,7 +6,7 @@ import support  # noqa: F401  (puts harness/ on sys.path)
 
 import clear_sim
 
-FLAT = clear_sim.unit_prices(None)  # read 0.1, write 2, input 1 per token
+FLAT = clear_sim.unit_prices(None, "1h")  # not in the price table: read 0.1, write 2, input 1 per token
 
 
 def call(read, write, results=(), output=0, segment=1):

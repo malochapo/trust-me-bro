@@ -25,17 +25,17 @@ Cost ratio to the recorded run (median over runs), policy `trigger 50,000 tokens
 | pilot 3, Haiku conversations | 8 | | 1.00 | |
 | pilot 3, Sonnet conversations | 12 | | 1.00 | |
 | one-message tasks, both models | 30 | | 1.00 | |
-| one long Claude Code session (10,883 calls, 1M-token context) | 1 | 0.75 | 0.70 | 0.68 |
+| one long Claude Code session (10,904 calls, 1M-token context, Opus 5.5) | 1 | 0.82 | 0.78 | 0.76 |
 
 Other policies (trigger 30,000 to 100,000, keep 3 or 5) give the same picture. A 30,000 trigger costs more on Sonnet (median 1.06), because it clears in runs too short to pay back the rewrite.
 
-What decides it is how many calls follow a clearing. Haiku's conversations make twice as many calls as Sonnet's (median 26 to 53 against 16 to 34) with larger prompts (median 36,000 to 69,000 tokens against 26,000 to 45,000). Sonnet's runs end before a cleared result has been skipped often enough to pay for the rewrite. The bench's tasks are short next to real sessions. The long session in the last row, which ran these pilots, has a median prompt of 420,000 tokens. There, clearing would cut about 30% of the cost on the same path. Haiku's long-prompt prices (over 100,000 tokens) play no part: 4 of the 32 Haiku runs have a call over that threshold, and simulating without those prices gives the same ratios.
+What decides it is how many calls follow a clearing. Haiku's conversations make twice as many calls as Sonnet's (median 26 to 53 against 16 to 34) with larger prompts (median 36,000 to 69,000 tokens against 26,000 to 45,000). Sonnet's runs end before a cleared result has been skipped often enough to pay for the rewrite. The bench's tasks are short next to real sessions. The long session in the last row, which ran these pilots, has a median prompt of 420,000 tokens. There, clearing would cut about 22% of the cost on the same path. It is priced at Opus 5.5's prices with the 1-hour cache it used: on the 5.5 family a cache read costs 0.05 times the input price, against 0.1 before, so re-reading an old result costs half as much and clearing saves less than it would on earlier models. Haiku's long-prompt prices (over 100,000 tokens) play no part: 4 of the 32 Haiku runs have a call over that threshold, and simulating without those prices gives the same ratios.
 
 ## Claude Code already clears
 
 A local capture of Claude Code 2.1.296's requests, against a fake endpoint with no key, shows a `context_management` field in every request. It holds one edit, `clear_thinking_20251015` with `keep: all`, and no tool clearing. The binary also contains:
 
-- a `clear_tool_uses_20250919` edit sent when a session resumes after being idle, when the cache has expired and a rewrite costs nothing extra. It sits behind a rollout setting (`off`, `shadow`, on);
+- a `clear_tool_uses_20250919` edit sent when a session resumes after 65 minutes idle, once the 1-hour cache has expired and a rewrite costs nothing extra. It keeps the last 5 tool uses, needs at least 20, and sits behind a remote flag that is off by default;
 - a client-side "time-based microcompact" that replaces old tool results, keeps the most recent ones and saves the originals to disk.
 
 In the long session above, the prompt shrank seven times without a compaction (for example from 772,619 to 447,159 tokens), each time with a cache miss. Claude Code thus clears when clearing is cheap, and its auto-compaction bounds the prompt otherwise. A proxy that added its own `clear_tool_uses` edit would duplicate a mechanism the host is still tuning, and could conflict with it.

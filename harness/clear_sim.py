@@ -63,7 +63,7 @@ def calls_of(path, transcript=False):
             usage = message.get("usage") or {}
             if message.get("id") not in by_id:
                 by_id[message.get("id")] = len(calls)
-                calls.append({"usage": usage, "segment": segment, "results": pending})
+                calls.append({"usage": usage, "segment": segment, "results": pending, "model": message.get("model")})
                 pending = []
             elif usage:
                 calls[by_id[message["id"]]]["usage"] = usage
@@ -74,18 +74,19 @@ def calls_of(path, transcript=False):
     return calls, sum(output.values())
 
 
-def unit_prices(model):
-    """$ per token, Haiku's long-prompt prices from their threshold on; None prices in input units
-    with Opus-like ratios and a 1-hour cache, for transcripts."""
-    if model is None:
-        flat = {"input": 1.0, "output": 5.0, "cache_read": 0.1, "cache_write": 2.0}
+def unit_prices(model, ttl="5m"):
+    """$ per token, Haiku's long-prompt prices from their threshold on. A model missing from the
+    price table is priced in input units with the ratios of models before the 5.5 family (cache
+    read 0.1, write 1.25 for 5 minutes and 2 for an hour, output 5)."""
+    if model not in PRICES:
+        flat = {"input": 1.0, "output": 5.0, "cache_read": 0.1, "cache_write": 2.0 if ttl == "1h" else 1.25}
         return lambda prompt: flat
     p = PRICES[model]
 
     def at(prompt):
         q = p["long_prompt"] if "long_prompt" in p and prompt > p["long_prompt"]["over_tokens"] else p
         return {"input": q["input"] / 1e6, "output": q["output"] / 1e6,
-                "cache_read": q["cache_read"] / 1e6, "cache_write": q["cache_write_5m"] / 1e6}
+                "cache_read": q["cache_read"] / 1e6, "cache_write": q[f"cache_write_{ttl}"] / 1e6}
     return at
 
 
@@ -153,13 +154,17 @@ def bench(root, tokens_per_char):
 
 def transcript(path, tokens_per_char):
     calls, output_tokens = calls_of(path, transcript=True)
-    prices = unit_prices(None)
+    model = collections.Counter(c["model"] for c in calls).most_common(1)[0][0]
+    one_hour = sum((c["usage"].get("cache_creation") or {}).get("ephemeral_1h_input_tokens", 0) for c in calls)
+    ttl = "1h" if one_hour > sum(c["usage"].get("cache_creation_input_tokens", 0) for c in calls) / 2 else "5m"
+    prices = unit_prices(model, ttl)
     output = output_tokens * prices(0)["output"]
     base = input_cost(calls, prices, tokens_per_char) + output
     prompts = [sum(c["usage"].get(k, 0) for k in ("cache_read_input_tokens", "cache_creation_input_tokens",
                                                    "input_tokens")) for c in calls]
-    print(f"{len(calls)} calls, median prompt {statistics.median(prompts):.0f} tokens, max {max(prompts)}, "
-          f"output {output / base:.1%} of cost")
+    priced = model if model in PRICES else f"{model} (not in the price table: cache read 0.1x input)"
+    print(f"{priced}, {ttl} cache; {len(calls)} calls, median prompt {statistics.median(prompts):.0f} tokens, "
+          f"max {max(prompts)}, output {output / base:.1%} of cost")
     for policy in POLICIES:
         print(f"   trigger {policy[0]:>6} keep {policy[1]} clear_at_least {policy[2]:>5}: "
               f"cost ratio {(input_cost(calls, prices, tokens_per_char, policy) + output) / base:.3f}")
