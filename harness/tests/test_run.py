@@ -4,6 +4,7 @@ import json
 import subprocess
 import os
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -226,9 +227,21 @@ class SetupTimeoutTest(unittest.TestCase):
             finally:
                 run.SETUP_TIMEOUT_S = saved
             child = int(pid_file.read_text())
-            # Reaped by init or not, a killed child no longer runs.
-            state = Path(f"/proc/{child}/stat")
-            self.assertTrue(not state.exists() or state.read_text().split()[2] == "Z")
+            # Reaped by init or not, a killed child no longer runs. SIGKILL lands and init reaps
+            # asynchronously, so wait a little, and read /proc once: it can vanish between calls.
+            deadline = time.monotonic() + 5
+            while not stopped(child) and time.monotonic() < deadline:
+                time.sleep(0.05)
+            self.assertTrue(stopped(child))
+
+
+def stopped(pid):
+    """True once the process is gone or a zombie."""
+    try:
+        return Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[0] == "Z"
+    except (FileNotFoundError, ProcessLookupError):
+        return True
+
 
 if __name__ == "__main__":
     unittest.main()
