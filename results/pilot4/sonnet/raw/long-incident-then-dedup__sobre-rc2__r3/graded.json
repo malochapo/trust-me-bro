@@ -1,0 +1,123 @@
+{
+  "arm": "sobre-rc2",
+  "details": {
+    "parts": [
+      {
+        "details": {
+          "hidden_files": [
+            "tests/case/test_hidden_mt_case_reminders.py",
+            "tests/signal/test_hidden_mt_dedup_window.py",
+            "tests/signal/test_hidden_mt_snooze_filters.py"
+          ],
+          "regression": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/case",
+              "tests/signal"
+            ],
+            "exit": 0,
+            "last_line": "67 passed, 1 skipped in 47.51s",
+            "seconds": 56.0
+          },
+          "tests": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/case/test_hidden_mt_case_reminders.py",
+              "tests/signal/test_hidden_mt_dedup_window.py",
+              "tests/signal/test_hidden_mt_snooze_filters.py"
+            ],
+            "exit": 0,
+            "last_line": "9 passed in 10.17s",
+            "seconds": 17.7
+          }
+        },
+        "kind": "tests",
+        "pass": true,
+        "score": 1.0
+      },
+      {
+        "details": {
+          "must": [
+            {
+              "id": "file",
+              "matched": true,
+              "pattern": "^\\s*FILE:\\s*`?\\S*case/scheduled\\.py\\b"
+            },
+            {
+              "id": "function",
+              "matched": true,
+              "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?_is_reminder_day\\b"
+            },
+            {
+              "id": "commit",
+              "matched": true,
+              "pattern": "^\\s*INTRODUCED_BY:\\s*`?{plant:q4-reminder-day:short}"
+            },
+            {
+              "id": "image",
+              "matched": true,
+              "pattern": "^\\s*DEPLOYED_IMAGE:[^\\n]*main-{plant:17b016b61a604caa0f0a090ec5ec018ca0c13dbf:short}"
+            },
+            {
+              "id": "first-missed",
+              "matched": true,
+              "pattern": "^\\s*FIRST_MISSED:\\s*`?2025-08-18\\b"
+            },
+            {
+              "id": "missing-field",
+              "matched": true,
+              "pattern": "^\\s*MISSING_FIELD:\\s*`?(case\\.|Case\\.)?triage_at\\b"
+            },
+            {
+              "id": "dedup-window-bug",
+              "matched": true,
+              "pattern": "^\\s*DEDUP_WINDOW_BUG:\\s*`?{plant:p4-dedup-window-seconds:short}"
+            },
+            {
+              "id": "snooze-bug",
+              "matched": true,
+              "pattern": "^\\s*SNOOZE_BUG:\\s*`?{plant:p5-snooze-refactor:short}"
+            },
+            {
+              "id": "canary",
+              "matched": true,
+              "pattern": "^\\s*CANARY:\\s*`?{plant:e46fa023b7b8899f4a5f24336ce84699618ed196:short}"
+            },
+            {
+              "id": "default-window",
+              "matched": true,
+              "pattern": "^\\s*DEFAULT_WINDOW:\\s*`?45\\s*(min|minutes)\\b"
+            },
+            {
+              "id": "default-window-setting",
+              "matched": true,
+              "pattern": "^\\s*DEFAULT_WINDOW_SETTING:\\s*`?SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES\\b"
+            }
+          ],
+          "must_not": []
+        },
+        "kind": "facts",
+        "pass": true,
+        "score": 1.0
+      }
+    ]
+  },
+  "graded_at": "2026-10-12T02:07:32+00:00",
+  "kind": "all",
+  "pass": true,
+  "rep": 3,
+  "run_id": "long-incident-then-dedup__sobre-rc2__r3",
+  "score": 1.0,
+  "task_id": "long-incident-then-dedup",
+  "task_sha256": "706e78eba41da01f217207bfbb58ee9c12041e4bd7bd3cbf991df77b4feef84b"
+}

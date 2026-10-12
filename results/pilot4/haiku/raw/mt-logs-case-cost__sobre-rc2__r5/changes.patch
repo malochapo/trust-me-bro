@@ -1,0 +1,128 @@
+diff --git a/src/dispatch/case_cost/service.py b/src/dispatch/case_cost/service.py
+index c8e809ce..e11bf66b 100644
+--- a/src/dispatch/case_cost/service.py
++++ b/src/dispatch/case_cost/service.py
+@@ -15,6 +15,7 @@ from dispatch.participant import service as participant_service
+ from dispatch.participant.models import ParticipantRead
+ from dispatch.participant_activity import service as participant_activity_service
+ from dispatch.participant_activity.models import ParticipantActivityCreate, ParticipantActivity
++from dispatch.project.models import Project
+ from dispatch.participant_role.models import ParticipantRoleType, ParticipantRole
+ from dispatch.plugin import service as plugin_service
+ 
+@@ -114,8 +115,19 @@ def get_engagement_multiplier(participant_role: str):
+ 
+ 
+ def get_hourly_rate(project) -> int:
+-    """Calculates and rounds up the employee hourly rate within a project."""
+-    return math.ceil(project.annual_employee_cost / project.business_year_hours)
++    """Calculates and rounds up the employee hourly rate within a project.
++
++    Falls back to the project model defaults when a project has no value set.
++    """
++    annual_employee_cost = project.annual_employee_cost
++    if annual_employee_cost is None:
++        annual_employee_cost = Project.__table__.c.annual_employee_cost.default.arg
++
++    business_year_hours = project.business_year_hours
++    if business_year_hours is None:
++        business_year_hours = Project.__table__.c.business_year_hours.default.arg
++
++    return math.ceil(annual_employee_cost / business_year_hours)
+ 
+ 
+ def update_case_response_cost_for_case_type(db_session: Session, case_type: CaseType) -> None:
+@@ -350,7 +362,7 @@ def get_participant_role_time_seconds(case: Case, participant_role: ParticipantR
+                 closed_at = closed_at.replace(tzinfo=timezone.utc)
+             timestamps.append(closed_at)
+         if timestamps:
+-            participant_role_renounced_at = max(timestamps)
++            participant_role_renounced_at = min(timestamps)
+ 
+     if participant_role.renounced_at:
+         # the participant left the conversation or got assigned another role
+diff --git a/tests/case_cost/test_case_cost_service.py b/tests/case_cost/test_case_cost_service.py
+index c91a0e5f..88524924 100644
+--- a/tests/case_cost/test_case_cost_service.py
++++ b/tests/case_cost/test_case_cost_service.py
+@@ -418,3 +418,80 @@ def test_case_cost_stops_at_stable_time(
+ 
+     assert early_stable_cost == 0
+     assert early_stable_time == 0
++
++
++def test_case_cost_stops_at_earliest_stable_or_escalated_time(
++    case, session, participant, participant_role
++):
++    """Tests that the cost cut-off is the earliest of the stable/escalated timestamps, not the latest."""
++    from datetime import datetime, timedelta, timezone
++    from dispatch.case_cost.service import get_participant_role_time_seconds
++    from dispatch.participant_role.models import ParticipantRoleType
++    from dispatch.case.enums import CaseStatus
++
++    now = datetime.now(timezone.utc)
++    two_hours_ago = now - timedelta(hours=2)
++    escalated_time = now - timedelta(minutes=90)  # Escalated first
++    stable_time = now - timedelta(hours=1)  # Marked stable later
++
++    participant_role.role = ParticipantRoleType.assignee  # Full engagement multiplier
++    participant_role.assumed_at = two_hours_ago.replace(tzinfo=None)
++    participant_role.renounced_at = None  # Still active
++
++    participant.participant_roles = [participant_role]
++    case.participants = [participant]
++
++    case.status = CaseStatus.stable
++    case.escalated_at = escalated_time.replace(tzinfo=None)
++    case.stable_at = stable_time.replace(tzinfo=None)
++
++    # The role only counts up to the escalation, the earlier of the two timestamps
++    time_seconds = get_participant_role_time_seconds(case=case, participant_role=participant_role)
++    assert time_seconds == int((escalated_time - two_hours_ago).total_seconds())
++
++
++def test_get_hourly_rate_uses_project_defaults_for_missing_values(project):
++    """Tests that missing project cost values fall back to the project model defaults."""
++    import math
++    from dispatch.case_cost.service import get_hourly_rate
++    from dispatch.project.models import Project
++
++    default_cost = Project.__table__.c.annual_employee_cost.default.arg
++    default_hours = Project.__table__.c.business_year_hours.default.arg
++
++    project.annual_employee_cost = None
++    project.business_year_hours = 1000
++    assert get_hourly_rate(project) == math.ceil(default_cost / 1000)
++
++    project.annual_employee_cost = 100000
++    project.business_year_hours = None
++    assert get_hourly_rate(project) == math.ceil(100000 / default_hours)
++
++    project.annual_employee_cost = None
++    project.business_year_hours = None
++    assert get_hourly_rate(project) == math.ceil(default_cost / default_hours)
++
++
++def test_update_case_response_cost_with_missing_project_cost(
++    case, session, participant, participant_role, case_cost_type
++):
++    """Tests that a case still gets a cost when its project has no annual employee cost."""
++    from datetime import datetime, timedelta, timezone
++    from dispatch.case_cost.service import update_case_response_cost
++    from dispatch.participant_role.models import ParticipantRoleType
++    from dispatch.case.enums import CostModelType
++
++    now = datetime.now(timezone.utc).replace(microsecond=0)
++    participant_role.role = ParticipantRoleType.assignee
++    participant_role.assumed_at = (now - timedelta(hours=1)).replace(tzinfo=None)
++    participant_role.renounced_at = now.replace(tzinfo=None)
++    participant.participant_roles = [participant_role]
++    case.participants = [participant]
++
++    case_cost_type.model_type = CostModelType.classic
++    case_cost_type.project = case.project
++    case.project.annual_employee_cost = None
++    case.project.business_year_hours = None
++
++    results = update_case_response_cost(case=case, db_session=session)
++    assert results[CostModelType.classic] > 0

@@ -1,0 +1,181 @@
+{
+  "agent_commits": 0,
+  "arm": "sobre-rc2",
+  "arm_tool": {
+    "archive_binary": "sobre",
+    "binary": "sobre-rc2",
+    "sha256": "36e4f0dcfd38aec629d7f58019549850311d6d391d03e008164356283a4de3e2",
+    "source": "github-release",
+    "tool": "sobre",
+    "url": "https://github.com/malochapo/sobre-ai/releases/download/v0.1.0-rc.2/sobre-x86_64-unknown-linux-musl.tar.gz",
+    "version": "0.1.0-rc.2",
+    "version_output": "sobre 0.1.0-rc.2"
+  },
+  "auth": "api_key",
+  "claude_bin": "/opt/claude-code/bin/claude",
+  "claude_version": "2.1.296 (Claude Code)",
+  "cli_flags": {
+    "max_budget_usd": 3,
+    "max_turns": 80,
+    "no_venv": false,
+    "timeout_min": 25
+  },
+  "cmd": [
+    "/usr/bin/unshare",
+    "--pid",
+    "--fork",
+    "--mount-proc",
+    "--kill-child",
+    "sh",
+    "-c",
+    "unset PWD OLDPWD; \"$@\"",
+    "sh",
+    "/opt/claude-code/bin/claude",
+    "-p",
+    "--model",
+    "claude-haiku-5-5",
+    "--effort",
+    "medium",
+    "--output-format",
+    "stream-json",
+    "--verbose",
+    "--setting-sources",
+    "user",
+    "--strict-mcp-config",
+    "--mcp-config",
+    "/tmp/sobre-bench-work/run-ed270a43fec2/home/mcp.json",
+    "--permission-mode",
+    "bypassPermissions",
+    "--max-turns",
+    "80",
+    "--max-budget-usd",
+    "3",
+    "--disallowedTools",
+    "WebFetch",
+    "WebSearch",
+    "< prompt.txt"
+  ],
+  "daemon": null,
+  "effort": "medium",
+  "end_utc": "2026-10-11T21:45:47+00:00",
+  "exit_code": 0,
+  "extra_env": {},
+  "family": "multi-turn",
+  "fixture": "/home/user/sobre-bench/build/pilot2/fixture.git",
+  "fixture_head": "51546e13b36a1c5692f2c6a2e19cb6c2c32bbe37",
+  "flags": [],
+  "grader_kind": "all",
+  "init": {
+    "apiKeySource": "ANTHROPIC_API_KEY",
+    "claude_code_version": "2.1.296",
+    "mcp_server_errors": null,
+    "mcp_servers": {},
+    "model": "claude-haiku-5-5",
+    "permissionMode": "bypassPermissions",
+    "plugins": [
+      {
+        "name": "cc-plugin-agents-md",
+        "path": "builtin",
+        "source": "cc-plugin-agents-md@builtin"
+      },
+      {
+        "name": "cc-plugin-telemetry",
+        "path": "builtin",
+        "source": "cc-plugin-telemetry@builtin"
+      },
+      {
+        "name": "cc-plugin-plugin-authoring",
+        "path": "builtin",
+        "source": "cc-plugin-plugin-authoring@builtin"
+      }
+    ],
+    "skills": [
+      "deep-research",
+      "design",
+      "design-sync",
+      "dataviz",
+      "update-config",
+      "verify",
+      "debug",
+      "code-review",
+      "simplify",
+      "batch",
+      "fewer-permission-prompts",
+      "doctor",
+      "loop",
+      "claude-api",
+      "workflow-authoring",
+      "run",
+      "run-skill-generator",
+      "plugin-authoring"
+    ],
+    "tools": [
+      "Task",
+      "Bash",
+      "CronCreate",
+      "CronDelete",
+      "CronList",
+      "DesignSync",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "PushNotification",
+      "Read",
+      "ReportFindings",
+      "ScheduleWakeup",
+      "SendMessage",
+      "Skill",
+      "TaskStop",
+      "ToolSearch",
+      "Workflow",
+      "Write"
+    ]
+  },
+  "invalid_reason": null,
+  "isolated": true,
+  "model": "claude-haiku-5-5",
+  "probe_active": true,
+  "rep": 5,
+  "result_subtype": "success",
+  "run_id": "mt-logs-case-cost__sobre-rc2__r5",
+  "setup_exit_code": 0,
+  "setup_seconds": 0.1,
+  "start_utc": "2026-10-11T21:35:32+00:00",
+  "status": "ok",
+  "task_file": "/home/user/sobre-bench/tasks4/mt-logs-case-cost/task.json",
+  "task_id": "mt-logs-case-cost",
+  "task_sha256": "ee6f552a5c000e7a7274485878d76295496fde0a473a47f624afb6b2bfa82fb9",
+  "timed_out": false,
+  "turns": [
+    {
+      "exit_code": 0,
+      "timed_out": false
+    },
+    {
+      "exit_code": 0,
+      "timed_out": false
+    },
+    {
+      "exit_code": 0,
+      "timed_out": false
+    },
+    {
+      "exit_code": 0,
+      "timed_out": false
+    }
+  ],
+  "turns_completed": 4,
+  "turns_planned": 4,
+  "untracked_files": [],
+  "wall_seconds": 614.6,
+  "work": {
+    "data": "/tmp/sobre-bench-work/run-ed270a43fec2/data",
+    "dir": "/tmp/sobre-bench-work/run-ed270a43fec2",
+    "home": "/tmp/sobre-bench-work/run-ed270a43fec2/home",
+    "repo": "/tmp/sobre-bench-work/run-ed270a43fec2/repo",
+    "venv": "/tmp/sobre-bench-work/run-ed270a43fec2/venv"
+  }
+}

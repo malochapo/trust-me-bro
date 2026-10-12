@@ -1,0 +1,22 @@
+This repository is Dispatch, an incident management platform; it is the code we run in production. Since early September, the finance team's warehouse has been receiving case response costs that are several times what they were the hour before. For example, the classic cost of dispatch-default-security-5363 went from $2,261 to $6,241 on September 9, when the case was marked stable. Nobody changed the hourly rates or the cost models. Our logs from 2025-08-25 to 2025-09-14 are in /tmp/sobre-bench-work/run-13193498b15d/data: scheduler.log (the Dispatch scheduler), cost-sync.log (case-cost-sync, the finance team's hourly job that copies case costs from Dispatch's API into their warehouse) and events.log (the Kubernetes events of the dispatch namespace). Find the root cause, and the deploy that shipped it to production. Do not change any code yet.
+
+
+----- next turn -----
+
+Thanks. Please fix it, and add a regression test that would have caught it. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.
+
+
+----- next turn -----
+
+While you were in those logs: since September 8, the scheduler's hourly case cost job also logs a TypeError for a few cases every hour. Find out what causes it. Those cases should still get a cost: when a project has no annual employee cost or no business year hours set, use the project model's default for the missing value. Fix it and add a test.
+
+
+----- next turn -----
+
+Good. I am writing the incident report. Give me a recap that ends with these six lines, in this exact form:
+FILE: <path of the file with the cost bug>
+FUNCTION: <name of the function with the cost bug>
+INTRODUCED_BY: <hash of the commit that introduced the cost bug, at least 8 characters>
+DEPLOYED_IMAGE: <image tag of the deploy that shipped it>
+FIRST_INFLATED: <date of the first case cost inflated by this bug, YYYY-MM-DD>
+MISSING_SETTING: <the project setting whose absence caused the hourly TypeError>

@@ -1,0 +1,6 @@
+This repository is Dispatch, an incident management platform. When an alert keeps going off and each repeat is folded into a case that is already open, Dispatch does not redraw the alert's post at the top of that case's chat thread for every single repeat. Which function decides whether a given repeat gets that post redrawn, and how much time must have passed since the last redraw for the same case before a repeat can trigger another one? Do not change any code.
+
+Finish your answer with these three lines, in this exact form:
+FILE: <path of the file that defines that function>
+FUNCTION: <name of the function>
+MIN_GAP: <the minimum time since the last redraw, number and unit>

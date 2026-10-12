@@ -1,0 +1,88 @@
+{
+  "arm": "sobre-rc2-mcp-told",
+  "details": {
+    "parts": [
+      {
+        "details": {
+          "hidden_files": [
+            "tests/case/test_hidden_mt_case_reminders.py"
+          ],
+          "regression": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/case"
+            ],
+            "exit": 0,
+            "last_line": "29 passed in 17.60s",
+            "seconds": 28.3
+          },
+          "tests": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/case/test_hidden_mt_case_reminders.py"
+            ],
+            "exit": 0,
+            "last_line": "3 passed in 12.08s",
+            "seconds": 22.1
+          }
+        },
+        "kind": "tests",
+        "pass": true,
+        "score": 1.0
+      },
+      {
+        "details": {
+          "must": [
+            {
+              "id": "file",
+              "matched": true,
+              "pattern": "^\\s*FILE:\\s*`?\\S*case/scheduled\\.py\\b"
+            },
+            {
+              "id": "function",
+              "matched": true,
+              "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?_is_reminder_day\\b"
+            },
+            {
+              "id": "commit",
+              "matched": true,
+              "pattern": "^\\s*INTRODUCED_BY:\\s*`?{plant:q4-reminder-day:short}"
+            },
+            {
+              "id": "image",
+              "matched": true,
+              "pattern": "^\\s*DEPLOYED_IMAGE:[^\\n]*main-{plant:17b016b61a604caa0f0a090ec5ec018ca0c13dbf:short}"
+            },
+            {
+              "id": "first-missed",
+              "matched": true,
+              "pattern": "^\\s*FIRST_MISSED:\\s*`?2025-08-18\\b"
+            }
+          ],
+          "must_not": []
+        },
+        "kind": "facts",
+        "pass": true,
+        "score": 1.0
+      }
+    ]
+  },
+  "graded_at": "2026-10-12T03:14:16+00:00",
+  "kind": "all",
+  "pass": true,
+  "rep": 3,
+  "run_id": "xs-reminders-next-day__sobre-rc2-mcp-told__r3",
+  "score": 1.0,
+  "task_id": "xs-reminders-next-day",
+  "task_sha256": "5d0fcb90ea7b6d4d09ef2eadfd3bba13476272bd57966ce78db152689202bcbf"
+}

@@ -1,0 +1,3 @@
+$ python -m pytest -q -p no:cacheprovider tests/case tests/event tests/signal
+.......................................s..................               [100%]
+57 passed, 1 skipped in 24.92s

@@ -1,0 +1,46 @@
+This repository is Dispatch, an incident management platform; it is the code we run in production. Since mid-August, assignees no longer get the weekly Monday reminders to close their long-running triage and stable cases, while the daily triage reminders still arrive. Nobody changed the reminder settings. The scheduler's and the API's logs from 2025-07-28 to 2025-08-20 are in /tmp/sobre-bench-work/run-dc3712803ac7/data/scheduler.log and /tmp/sobre-bench-work/run-dc3712803ac7/data/api.log. Find the root cause, and the deploy that shipped it to production. Do not change any code yet.
+
+
+----- next turn -----
+
+Thanks. Please fix it, and add a regression test that would have caught it. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.
+
+
+----- next turn -----
+
+While you were in those logs: the case close reminder job also logs a TypeError every evening. Find out what causes it. Those cases should still get their weekly reminder: when the timestamp the job counts from is missing, count from when the case was created instead. Fix it and add a test.
+
+
+----- next turn -----
+
+/compact
+
+----- next turn -----
+
+This repository is Dispatch, an incident management platform. Since 2025-05-22, which commits changed how Dispatch decides whether a new signal instance is snoozed or deduplicated, including the time windows it uses for that? For each one, give its hash and what it changed, with the windows' values and units as the code applies them today. Do not change any code yet.
+
+
+----- next turn -----
+
+Thanks. Since one of those changes, deduplication filters group far fewer instances than they should. The signal "GuardDuty: Unauthorized API call" has a deduplication filter whose window is set to 30 in the UI, yet two of its instances for the same user, ten minutes apart, opened two cases. Which of the commits you listed caused it? Fix the code so that a filter's window means what the UI says, and existing filters work without being edited. Add a regression test. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.
+
+
+----- next turn -----
+
+Another report, maybe from the same batch of changes: the signal "Okta: Impossible travel" has two snooze filters for the same user, one that expired last week and one that is valid until next month, and new instances for that user are no longer snoozed. Find the cause, fix it, and add a regression test.
+
+
+----- next turn -----
+
+Thanks, that is all for today. I am writing up today's work for the weekly report. Give me a recap of both investigations that ends with these lines, in this exact form:
+FILE: <path of the file with the weekday bug>
+FUNCTION: <name of the function with the weekday bug>
+INTRODUCED_BY: <hash of the commit that introduced the weekday bug, at least 8 characters>
+DEPLOYED_IMAGE: <image tag of the deploy that shipped it>
+FIRST_MISSED: <date of the first Monday whose weekly reminders were not sent, YYYY-MM-DD>
+MISSING_FIELD: <the case attribute whose absence caused the evening TypeError>
+DEDUP_WINDOW_BUG: <hash of the commit that broke deduplication windows, at least 8 characters>
+SNOOZE_BUG: <hash of the commit that broke snoozing, at least 8 characters>
+CANARY: <hash of the commit that changed how canary signals are deduplicated, at least 8 characters>
+DEFAULT_WINDOW: <the grouping window that applies to signals without any filter, number and unit>
+DEFAULT_WINDOW_SETTING: <name of the setting that changes it>

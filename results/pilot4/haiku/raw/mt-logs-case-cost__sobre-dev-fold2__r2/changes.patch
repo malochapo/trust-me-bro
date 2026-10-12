@@ -1,0 +1,187 @@
+diff --git a/src/dispatch/case_cost/service.py b/src/dispatch/case_cost/service.py
+index c8e809ce..3f2aa119 100644
+--- a/src/dispatch/case_cost/service.py
++++ b/src/dispatch/case_cost/service.py
+@@ -17,6 +17,10 @@ from dispatch.participant_activity import service as participant_activity_servic
+ from dispatch.participant_activity.models import ParticipantActivityCreate, ParticipantActivity
+ from dispatch.participant_role.models import ParticipantRoleType, ParticipantRole
+ from dispatch.plugin import service as plugin_service
++from dispatch.project.models import (
++    DEFAULT_ANNUAL_EMPLOYEE_COST,
++    DEFAULT_BUSINESS_YEAR_HOURS,
++)
+ 
+ from .models import CaseCost, CaseCostCreate, CaseCostUpdate
+ 
+@@ -115,7 +119,15 @@ def get_engagement_multiplier(participant_role: str):
+ 
+ def get_hourly_rate(project) -> int:
+     """Calculates and rounds up the employee hourly rate within a project."""
+-    return math.ceil(project.annual_employee_cost / project.business_year_hours)
++    annual_employee_cost = project.annual_employee_cost
++    if annual_employee_cost is None:
++        annual_employee_cost = DEFAULT_ANNUAL_EMPLOYEE_COST
++
++    business_year_hours = project.business_year_hours
++    if business_year_hours is None:
++        business_year_hours = DEFAULT_BUSINESS_YEAR_HOURS
++
++    return math.ceil(annual_employee_cost / business_year_hours)
+ 
+ 
+ def update_case_response_cost_for_case_type(db_session: Session, case_type: CaseType) -> None:
+@@ -350,7 +362,7 @@ def get_participant_role_time_seconds(case: Case, participant_role: ParticipantR
+                 closed_at = closed_at.replace(tzinfo=timezone.utc)
+             timestamps.append(closed_at)
+         if timestamps:
+-            participant_role_renounced_at = max(timestamps)
++            participant_role_renounced_at = min(timestamps)
+ 
+     if participant_role.renounced_at:
+         # the participant left the conversation or got assigned another role
+diff --git a/src/dispatch/incident_cost/service.py b/src/dispatch/incident_cost/service.py
+index e02f8048..90fef586 100644
+--- a/src/dispatch/incident_cost/service.py
++++ b/src/dispatch/incident_cost/service.py
+@@ -17,6 +17,10 @@ from dispatch.participant_activity import service as participant_activity_servic
+ from dispatch.participant_activity.models import ParticipantActivityCreate
+ from dispatch.participant_role.models import ParticipantRoleType, ParticipantRole
+ from dispatch.plugin import service as plugin_service
++from dispatch.project.models import (
++    DEFAULT_ANNUAL_EMPLOYEE_COST,
++    DEFAULT_BUSINESS_YEAR_HOURS,
++)
+ 
+ from .models import IncidentCost, IncidentCostCreate, IncidentCostUpdate
+ 
+@@ -130,7 +134,15 @@ def get_incident_review_hours(incident: Incident) -> int:
+ 
+ def get_hourly_rate(project) -> int:
+     """Calculates and rounds up the employee hourly rate within a project."""
+-    return math.ceil(project.annual_employee_cost / project.business_year_hours)
++    annual_employee_cost = project.annual_employee_cost
++    if annual_employee_cost is None:
++        annual_employee_cost = DEFAULT_ANNUAL_EMPLOYEE_COST
++
++    business_year_hours = project.business_year_hours
++    if business_year_hours is None:
++        business_year_hours = DEFAULT_BUSINESS_YEAR_HOURS
++
++    return math.ceil(annual_employee_cost / business_year_hours)
+ 
+ 
+ def update_incident_response_cost_for_incident_type(
+diff --git a/src/dispatch/project/models.py b/src/dispatch/project/models.py
+index 4278858d..c58c3590 100644
+--- a/src/dispatch/project/models.py
++++ b/src/dispatch/project/models.py
+@@ -15,6 +15,10 @@ from dispatch.models import DispatchBase, NameStr, Pagination, PrimaryKey
+ from dispatch.organization.models import Organization, OrganizationRead
+ 
+ 
++DEFAULT_ANNUAL_EMPLOYEE_COST = 50000
++DEFAULT_BUSINESS_YEAR_HOURS = 2080
++
++
+ class Project(Base):
+     id = Column(Integer, primary_key=True)
+     name = Column(String)
+@@ -24,8 +28,8 @@ class Project(Base):
+     default = Column(Boolean, default=False)
+     color = Column(String)
+ 
+-    annual_employee_cost = Column(Integer, default=50000)
+-    business_year_hours = Column(Integer, default=2080)
++    annual_employee_cost = Column(Integer, default=DEFAULT_ANNUAL_EMPLOYEE_COST)
++    business_year_hours = Column(Integer, default=DEFAULT_BUSINESS_YEAR_HOURS)
+ 
+     owner_email = Column(String)
+     owner_conversation = Column(String)
+@@ -101,8 +105,8 @@ class ProjectBase(DispatchBase):
+     display_name: str | None = Field("")
+     owner_email: EmailStr | None = None
+     owner_conversation: str | None = None
+-    annual_employee_cost: int | None = 50000
+-    business_year_hours: int | None = 2080
++    annual_employee_cost: int | None = DEFAULT_ANNUAL_EMPLOYEE_COST
++    business_year_hours: int | None = DEFAULT_BUSINESS_YEAR_HOURS
+     description: str | None = None
+     default: bool = False
+     color: str | None = None
+diff --git a/tests/case_cost/test_case_cost_service.py b/tests/case_cost/test_case_cost_service.py
+index c91a0e5f..3a912a7d 100644
+--- a/tests/case_cost/test_case_cost_service.py
++++ b/tests/case_cost/test_case_cost_service.py
+@@ -418,3 +418,72 @@ def test_case_cost_stops_at_stable_time(
+ 
+     assert early_stable_cost == 0
+     assert early_stable_time == 0
++
++
++def test_case_cost_stops_at_first_status_change(
++    case, session, participant, participant_role, case_cost_type
++):
++    """Tests that case cost stops at the earliest of stable_at/escalated_at/closed_at.
++
++    A case that is escalated and later marked stable must stop accruing cost at
++    escalation, not at stable.
++    """
++    from datetime import datetime, timedelta, timezone
++    from dispatch.case_cost.service import get_participant_role_time_seconds
++    from dispatch.participant_role.models import ParticipantRoleType
++    from dispatch.case.enums import CaseStatus
++
++    now = datetime.now(timezone.utc)
++    three_hours_ago = now - timedelta(hours=3)
++    two_hours_ago = now - timedelta(hours=2)
++    one_hour_ago = now - timedelta(hours=1)
++
++    participant_role.role = ParticipantRoleType.assignee
++    participant_role.assumed_at = three_hours_ago.replace(tzinfo=None)
++    participant_role.renounced_at = None
++    participant.participant_roles = [participant_role]
++    case.participants = [participant]
++
++    # escalated 2 hours ago, then marked stable 1 hour ago
++    case.status = CaseStatus.stable
++    case.escalated_at = two_hours_ago.replace(tzinfo=None)
++    case.stable_at = one_hour_ago.replace(tzinfo=None)
++    case.closed_at = None
++
++    time_seconds = get_participant_role_time_seconds(case=case, participant_role=participant_role)
++
++    # the role should be counted from assumed_at (3h ago) until escalation (2h ago): 1 hour
++    assert int(time_seconds) == int((two_hours_ago - three_hours_ago).total_seconds())
++
++
++def test_get_hourly_rate_uses_project_defaults_when_missing(case):
++    import math
++
++    from dispatch.case_cost.service import get_hourly_rate
++    from dispatch.project.models import DEFAULT_ANNUAL_EMPLOYEE_COST, DEFAULT_BUSINESS_YEAR_HOURS
++
++    project = case.project
++
++    project.annual_employee_cost = None
++    project.business_year_hours = None
++    assert get_hourly_rate(project) == math.ceil(
++        DEFAULT_ANNUAL_EMPLOYEE_COST / DEFAULT_BUSINESS_YEAR_HOURS
++    )
++
++    project.annual_employee_cost = 100000
++    project.business_year_hours = None
++    assert get_hourly_rate(project) == math.ceil(100000 / DEFAULT_BUSINESS_YEAR_HOURS)
++
++    project.annual_employee_cost = None
++    project.business_year_hours = 1000
++    assert get_hourly_rate(project) == math.ceil(DEFAULT_ANNUAL_EMPLOYEE_COST / 1000)
++
++
++def test_calculate_case_response_cost_new_with_missing_project_values(case, session):
++    from dispatch.case_cost.service import calculate_case_response_cost_new
++
++    case.project.annual_employee_cost = None
++    case.project.business_year_hours = None
++
++    # previously raised TypeError: unsupported operand type(s) for /: 'NoneType' and 'int'
++    assert calculate_case_response_cost_new(case=case, db_session=session) >= 0

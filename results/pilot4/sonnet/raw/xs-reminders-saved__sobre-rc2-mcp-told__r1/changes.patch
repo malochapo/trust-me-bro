@@ -1,0 +1,74 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..77717a91 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,8 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    # date.weekday() numbers Monday as 0, matching calendar.MONDAY (isoweekday() starts at 1)
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..88d6912b
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,52 @@
++from datetime import date, datetime, timedelta
++from unittest.mock import patch
++
++import pytest
++
++from dispatch.case import scheduled
++from dispatch.case.enums import CaseStatus
++
++MONDAY = date(2025, 8, 18)
++
++
++class _FakeDate(date):
++    fake_today = MONDAY
++
++    @classmethod
++    def today(cls):
++        return cls.fake_today
++
++
++@pytest.mark.parametrize("offset", range(7))
++def test_is_reminder_day_only_on_monday(offset):
++    day = MONDAY + timedelta(days=offset)
++    with patch.object(scheduled, "date", _FakeDate):
++        _FakeDate.fake_today = day
++        assert scheduled._is_reminder_day() == (offset == 0)
++
++
++class _Case:
++    def __init__(self):
++        old = datetime.utcnow() - timedelta(days=15)
++        self.triage_at = old
++        self.stable_at = old
++
++
++@pytest.mark.parametrize("task,status", [
++    ("case_close_reminder", CaseStatus.triage),
++    ("case_stable_reminder", CaseStatus.stable),
++])
++@pytest.mark.parametrize("offset,expected", [(0, 1), (1, 0), (6, 0)])
++def test_weekly_reminders_sent_on_monday(task, status, offset, expected):
++    from dispatch.scheduler import scheduler
++
++    func = next(t["func"] for t in scheduler.registered_tasks if t["func"].__name__ == task)
++    # unwrap the decorators down to the plain function
++    while hasattr(func, "__wrapped__"):
++        func = func.__wrapped__
++    with patch.object(scheduled, "date", _FakeDate), patch.object(
++        scheduled, "get_all_by_status", return_value=[_Case()]
++    ), patch.object(scheduled, "send_case_close_reminder") as send:
++        _FakeDate.fake_today = MONDAY + timedelta(days=offset)
++        func(db_session=None, project=type("P", (), {"id": 1})())
++        assert send.call_count == expected

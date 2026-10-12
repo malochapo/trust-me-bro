@@ -1,0 +1,148 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..f0471f27 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,9 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # cases that never recorded a triage time (e.g. created directly in triage)
++            # count from when they were created
++            span = datetime.utcnow() - (case.triage_at or case.created_at)
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..15fc60b1
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,116 @@
++from datetime import date, datetime, timedelta
++from unittest import mock
++
++import pytest
++
++from dispatch.case.enums import CaseStatus
++import dispatch.case.scheduled  # noqa: F401 registers the reminder tasks
++from dispatch.scheduler import scheduler
++
++
++MONDAY = date(2025, 8, 18)
++
++
++def _create_case(session, project, status, **fields):
++    """Creates a case with the given status; CaseFactory ignores a status keyword, so set it after."""
++    from tests.factories import CaseFactory
++
++    case = CaseFactory(project=project, **fields)
++    case.status = status
++    session.flush()
++    return case
++
++
++def _run_task(task_name, session, project, today):
++    """Runs the named scheduled task with `today` as the current date and returns the mocked sender."""
++    # the scheduler decorator doesn't return the function, so look it up by name
++    (task,) = [t["func"] for t in scheduler.registered_tasks if t["name"] == task_name]
++
++    # unwrap the scheduler, project context, and timer decorators
++    func = task
++    while hasattr(func, "__wrapped__"):
++        func = func.__wrapped__
++
++    with (
++        mock.patch("dispatch.case.scheduled.date") as mock_date,
++        mock.patch("dispatch.case.scheduled.send_case_close_reminder") as mock_send,
++    ):
++        mock_date.today.return_value = today
++        func(db_session=session, project=project)
++
++    return mock_send
++
++
++@pytest.mark.parametrize(
++    "task_name, status, timestamp_field",
++    [
++        ("case-close-reminder", CaseStatus.triage, "triage_at"),
++        ("case-stable-reminder", CaseStatus.stable, "stable_at"),
++    ],
++    ids=["triage", "stable"],
++)
++@pytest.mark.parametrize("day_offset", range(7))
++def test_long_running_case_reminder_only_sent_on_monday(
++    session, project, task_name, status, timestamp_field, day_offset
++):
++    _create_case(
++        session,
++        project,
++        status,
++        **{timestamp_field: datetime.utcnow() - timedelta(days=10)},
++    )
++
++    today = MONDAY + timedelta(days=day_offset)
++    mock_send = _run_task(task_name, session, project, today)
++
++    if today.weekday() == 0:
++        mock_send.assert_called_once()
++    else:
++        mock_send.assert_not_called()
++
++
++@pytest.mark.parametrize(
++    "task_name, status, timestamp_field",
++    [
++        ("case-close-reminder", CaseStatus.triage, "triage_at"),
++        ("case-stable-reminder", CaseStatus.stable, "stable_at"),
++    ],
++    ids=["triage", "stable"],
++)
++def test_case_without_timestamp_does_not_block_others(
++    session, project, task_name, status, timestamp_field
++):
++    _create_case(session, project, status, **{timestamp_field: None})
++    long_running = _create_case(
++        session,
++        project,
++        status,
++        **{timestamp_field: datetime.utcnow() - timedelta(days=10)},
++    )
++
++    mock_send = _run_task(task_name, session, project, MONDAY)
++
++    mock_send.assert_called_once()
++    assert mock_send.call_args.args[0].id == long_running.id
++
++
++def test_triage_case_without_triage_at_counts_from_created_at(session, project):
++    old_case = _create_case(
++        session,
++        project,
++        CaseStatus.triage,
++        triage_at=None,
++        created_at=datetime.utcnow() - timedelta(days=10),
++    )
++    _create_case(
++        session,
++        project,
++        CaseStatus.triage,
++        triage_at=None,
++        created_at=datetime.utcnow() - timedelta(days=2),
++    )
++
++    mock_send = _run_task("case-close-reminder", session, project, MONDAY)
++
++    mock_send.assert_called_once()
++    assert mock_send.call_args.args[0].id == old_case.id

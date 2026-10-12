@@ -1,0 +1,16 @@
+{
+  "active": true,
+  "by_event": {
+    "sobre.compression": 16
+  },
+  "compressions_by_surface_tool": {
+    "mcp:sobre_patch": 2,
+    "mcp:sobre_read": 4,
+    "mcp:sobre_session": 4,
+    "mcp:sobre_shell": 6
+  },
+  "observer_seen": true,
+  "tokens_original": 7397,
+  "tokens_sent": 7129,
+  "usage_records": 16
+}

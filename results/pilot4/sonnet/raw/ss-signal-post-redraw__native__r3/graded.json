@@ -1,0 +1,31 @@
+{
+  "arm": "native",
+  "details": {
+    "must": [
+      {
+        "id": "file",
+        "matched": true,
+        "pattern": "^\\s*FILE:\\s*`?\\S*signal/flows\\.py\\b"
+      },
+      {
+        "id": "function",
+        "matched": true,
+        "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?_should_update_signal_message\\b"
+      },
+      {
+        "id": "min_gap",
+        "matched": true,
+        "pattern": "^\\s*MIN_GAP:\\s*`?(up\\s+to\\s+|under\\s+|less\\s+than\\s+|at\\s+least\\s+|<=?\\s*|>=?\\s*|~\\s*)?`?((5|five)\\s*`?\\s*(s|secs?|seconds?)\\b|(timedelta\\()?seconds\\s*=\\s*5\\b)"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-12T03:28:34+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 3,
+  "run_id": "ss-signal-post-redraw__native__r3",
+  "score": 1.0,
+  "task_id": "ss-signal-post-redraw",
+  "task_sha256": "39337b1e82d75d335a1a9de82907dd430b38d7649f0c97b50b027b68b1aa1070"
+}

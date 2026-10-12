@@ -1,0 +1,88 @@
+{
+  "arm": "native",
+  "details": {
+    "parts": [
+      {
+        "details": {
+          "hidden_files": [
+            "tests/case/test_hidden_mt_case_reminders.py"
+          ],
+          "regression": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/case"
+            ],
+            "exit": 0,
+            "last_line": "23 passed in 18.81s",
+            "seconds": 27.8
+          },
+          "tests": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/case/test_hidden_mt_case_reminders.py"
+            ],
+            "exit": 0,
+            "last_line": "3 passed in 8.38s",
+            "seconds": 15.5
+          }
+        },
+        "kind": "tests",
+        "pass": true,
+        "score": 1.0
+      },
+      {
+        "details": {
+          "must": [
+            {
+              "id": "file",
+              "matched": true,
+              "pattern": "^\\s*FILE:\\s*`?\\S*case/scheduled\\.py\\b"
+            },
+            {
+              "id": "function",
+              "matched": true,
+              "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?_is_reminder_day\\b"
+            },
+            {
+              "id": "commit",
+              "matched": true,
+              "pattern": "^\\s*INTRODUCED_BY:\\s*`?{plant:q4-reminder-day:short}"
+            },
+            {
+              "id": "image",
+              "matched": true,
+              "pattern": "^\\s*DEPLOYED_IMAGE:[^\\n]*main-{plant:17b016b61a604caa0f0a090ec5ec018ca0c13dbf:short}"
+            },
+            {
+              "id": "first-missed",
+              "matched": true,
+              "pattern": "^\\s*FIRST_MISSED:\\s*`?2025-08-18\\b"
+            }
+          ],
+          "must_not": []
+        },
+        "kind": "facts",
+        "pass": true,
+        "score": 1.0
+      }
+    ]
+  },
+  "graded_at": "2026-10-12T02:30:54+00:00",
+  "kind": "all",
+  "pass": true,
+  "rep": 1,
+  "run_id": "xs-reminders-saved__native__r1",
+  "score": 1.0,
+  "task_id": "xs-reminders-saved",
+  "task_sha256": "9d95e0c30146d79380f1a904462f40895d964df5dfcf069ebe20c67d5b11556f"
+}

@@ -1,0 +1,36 @@
+{
+  "arm": "sobre-rc2-mcp-told",
+  "details": {
+    "must": [
+      {
+        "id": "file",
+        "matched": true,
+        "pattern": "^\\s*FILE:\\s*`?\\S*conversation/flows\\.py\\b"
+      },
+      {
+        "id": "function",
+        "matched": true,
+        "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?add_case_participants\\b"
+      },
+      {
+        "id": "hand_opened",
+        "matched": true,
+        "pattern": "^\\s*HAND_OPENED:\\s*`?no\\b"
+      },
+      {
+        "id": "mark",
+        "matched": true,
+        "pattern": "^\\s*REQUIRED_MARK:[^\\n]*\\bproduction\\b"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-11T21:13:36+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 2,
+  "run_id": "ss-thread-case-bring-in__sobre-rc2-mcp-told__r2",
+  "score": 1.0,
+  "task_id": "ss-thread-case-bring-in",
+  "task_sha256": "964af6b2d9e93fca66c066d0918f40a44964552e8e62f76c0bc29add121033f4"
+}

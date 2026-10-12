@@ -1,0 +1,36 @@
+{
+  "arm": "sobre-rc2-mcp",
+  "details": {
+    "must": [
+      {
+        "id": "file",
+        "matched": true,
+        "pattern": "^\\s*FILE:\\s*`?\\S*incident/flows\\.py\\b"
+      },
+      {
+        "id": "function",
+        "matched": true,
+        "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?filter_participants_for_bridge\\b"
+      },
+      {
+        "id": "with_group",
+        "matched": true,
+        "pattern": "^\\s*APPLIED_WITH_GROUP:\\s*`?no\\b"
+      },
+      {
+        "id": "no_account",
+        "matched": true,
+        "pattern": "^\\s*NO_ACCOUNT_ADDED:\\s*`?yes\\b"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-12T03:25:15+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 1,
+  "run_id": "ss-call-invite-choice__sobre-rc2-mcp__r1",
+  "score": 1.0,
+  "task_id": "ss-call-invite-choice",
+  "task_sha256": "18a28f41b7d4c3a270f844ac43ac40f6a0a0515930434357ce799db3edbf086c"
+}

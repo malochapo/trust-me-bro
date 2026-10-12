@@ -1,0 +1,36 @@
+{
+  "arm": "sobre-rc3-dense-told",
+  "details": {
+    "must": [
+      {
+        "id": "file",
+        "matched": true,
+        "pattern": "^\\s*FILE:\\s*`?\\S*\\bai/service\\.py\\b"
+      },
+      {
+        "id": "function",
+        "matched": true,
+        "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?generate_read_in_summary\\b"
+      },
+      {
+        "id": "max_age",
+        "matched": true,
+        "pattern": "^\\s*MAX_AGE:\\s*`?(up\\s+to\\s+|under\\s+|less\\s+than\\s+|at\\s+least\\s+|<=?\\s*|>=?\\s*|~\\s*)?`?(120\\s*`?\\s*(s|secs?|seconds?)\\b|2\\s*(min|mins|minutes?)\\b|two\\s+minutes?\\b)"
+      },
+      {
+        "id": "lookup",
+        "matched": true,
+        "pattern": "^\\s*LOOKUP:\\s*`?(\\S*\\.)?get_recent_summary_event\\b"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-12T05:02:59+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 2,
+  "run_id": "ss-latecomer-briefing__sobre-rc3-dense-told__r2",
+  "score": 1.0,
+  "task_id": "ss-latecomer-briefing",
+  "task_sha256": "8c2c7f41ea0767e9b2e75194bbecf5cec8bdada80ca9be07bb3dfecb56ff464b"
+}

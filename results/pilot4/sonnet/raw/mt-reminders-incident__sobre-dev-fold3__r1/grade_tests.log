@@ -1,0 +1,3 @@
+$ python -m pytest -q -p no:cacheprovider tests/case/test_hidden_mt_case_reminders.py
+....                                                                     [100%]
+4 passed in 8.65s

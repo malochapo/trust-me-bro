@@ -1,0 +1,125 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..ab36d827 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,10 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # not every case has a triage_at (some reach triage without the
++            # transition flow setting it), so fall back to when it was created
++            triage_started_at = case.triage_at or case.created_at
++            span = datetime.utcnow() - triage_started_at
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..991bbc7c
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,92 @@
++from datetime import date, datetime, timedelta
++
++import pytest
++
++from dispatch.case import scheduled
++from dispatch.scheduler import scheduler
++
++
++class FakeDate(date):
++    """Stands in for `date` so that `date.today()` returns a fixed day."""
++
++    fixed_today = None
++
++    @classmethod
++    def today(cls):
++        return cls.fixed_today
++
++
++@pytest.mark.parametrize(
++    "today,expected",
++    [
++        (date(2025, 8, 18), True),  # Monday
++        (date(2025, 8, 19), False),
++        (date(2025, 8, 20), False),
++        (date(2025, 8, 21), False),
++        (date(2025, 8, 22), False),
++        (date(2025, 8, 23), False),
++        (date(2025, 8, 24), False),  # Sunday
++    ],
++)
++def test_is_reminder_day(monkeypatch, today, expected):
++    monkeypatch.setattr(FakeDate, "fixed_today", today)
++    monkeypatch.setattr(scheduled, "date", FakeDate)
++
++    assert scheduled._is_reminder_day() is expected
++
++
++def _raw_case_close_reminder():
++    # the job is wrapped by @timer and @scheduled_project_task, which loop over
++    # every organization and project, so call the undecorated function directly
++    task = next(t for t in scheduler.registered_tasks if t["name"] == "case-close-reminder")
++    return task["func"].__wrapped__.__wrapped__
++
++
++@pytest.fixture
++def close_reminder_sends(monkeypatch):
++    """Records which cases the close reminder is sent for, on a reminder day."""
++    sent = []
++    monkeypatch.setattr(scheduled, "_is_reminder_day", lambda: True)
++    monkeypatch.setattr(
++        scheduled,
++        "send_case_close_reminder",
++        lambda case, db_session: sent.append(case.id),
++    )
++    return sent
++
++
++def test_case_close_reminder_counts_from_created_at_without_triage_at(
++    session, case, close_reminder_sends
++):
++    case.status = "Triage"
++    case.triage_at = None
++    case.created_at = datetime.utcnow() - timedelta(days=8)
++    session.commit()
++
++    _raw_case_close_reminder()(db_session=session, project=case.project)
++
++    assert close_reminder_sends == [case.id]
++
++
++def test_case_close_reminder_skips_recent_case_without_triage_at(
++    session, case, close_reminder_sends
++):
++    case.status = "Triage"
++    case.triage_at = None
++    case.created_at = datetime.utcnow() - timedelta(days=2)
++    session.commit()
++
++    _raw_case_close_reminder()(db_session=session, project=case.project)
++
++    assert close_reminder_sends == []
++
++
++def test_case_close_reminder_prefers_triage_at(session, case, close_reminder_sends):
++    case.status = "Triage"
++    case.triage_at = datetime.utcnow() - timedelta(days=8)
++    case.created_at = datetime.utcnow() - timedelta(days=1)
++    session.commit()
++
++    _raw_case_close_reminder()(db_session=session, project=case.project)
++
++    assert close_reminder_sends == [case.id]

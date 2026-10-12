@@ -1,0 +1,71 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..c978a0cc 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..1829a888
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,50 @@
++from datetime import date, datetime, timedelta
++from unittest.mock import MagicMock, patch
++
++import pytest
++
++from dispatch.case import scheduled
++from dispatch.case.enums import CaseStatus
++from dispatch.scheduler import scheduler
++
++MONDAY = date(2025, 8, 18)
++
++
++def _freeze_today(day):
++    fake_date = MagicMock(wraps=date)
++    fake_date.today.return_value = day
++    return patch.object(scheduled, "date", fake_date)
++
++
++@pytest.mark.parametrize("offset", range(7))
++def test_is_reminder_day_only_on_monday(offset):
++    day = MONDAY + timedelta(days=offset)
++    with _freeze_today(day):
++        assert scheduled._is_reminder_day() is (offset == 0)
++
++
++@pytest.mark.parametrize(
++    "reminder, status, timestamp_attr",
++    [
++        ("case-close-reminder", CaseStatus.triage, "triage_at"),
++        ("case-stable-reminder", CaseStatus.stable, "stable_at"),
++    ],
++)
++@pytest.mark.parametrize("offset, expected_calls", [(0, 1), (1, 0), (6, 0)])
++def test_weekly_case_reminders_sent_on_mondays(reminder, status, timestamp_attr, offset, expected_calls):
++    case = MagicMock()
++    setattr(case, timestamp_attr, datetime.utcnow() - timedelta(days=10))
++
++    # unwrap the scheduler/project decorators and call the task body directly
++    task = next(t["func"] for t in scheduler.registered_tasks if t["name"] == reminder)
++    while hasattr(task, "__wrapped__"):
++        task = task.__wrapped__
++
++    with (
++        _freeze_today(MONDAY + timedelta(days=offset)),
++        patch.object(scheduled, "get_all_by_status", return_value=[case]),
++        patch.object(scheduled, "send_case_close_reminder") as send,
++    ):
++        task(db_session=MagicMock(), project=MagicMock(id=1))
++
++    assert send.call_count == expected_calls

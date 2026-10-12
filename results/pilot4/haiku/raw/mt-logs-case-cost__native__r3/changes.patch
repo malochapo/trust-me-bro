@@ -1,0 +1,131 @@
+diff --git a/src/dispatch/case_cost/service.py b/src/dispatch/case_cost/service.py
+index c8e809ce..9a74d4bf 100644
+--- a/src/dispatch/case_cost/service.py
++++ b/src/dispatch/case_cost/service.py
+@@ -115,7 +115,16 @@ def get_engagement_multiplier(participant_role: str):
+ 
+ def get_hourly_rate(project) -> int:
+     """Calculates and rounds up the employee hourly rate within a project."""
+-    return math.ceil(project.annual_employee_cost / project.business_year_hours)
++    # projects can have these values unset, we fall back to the project model's defaults
++    annual_employee_cost = project.annual_employee_cost
++    if annual_employee_cost is None:
++        annual_employee_cost = 50000
++
++    business_year_hours = project.business_year_hours
++    if business_year_hours is None:
++        business_year_hours = 2080
++
++    return math.ceil(annual_employee_cost / business_year_hours)
+ 
+ 
+ def update_case_response_cost_for_case_type(db_session: Session, case_type: CaseType) -> None:
+@@ -350,7 +359,7 @@ def get_participant_role_time_seconds(case: Case, participant_role: ParticipantR
+                 closed_at = closed_at.replace(tzinfo=timezone.utc)
+             timestamps.append(closed_at)
+         if timestamps:
+-            participant_role_renounced_at = max(timestamps)
++            participant_role_renounced_at = min(timestamps)
+ 
+     if participant_role.renounced_at:
+         # the participant left the conversation or got assigned another role
+diff --git a/tests/case_cost/test_case_cost_service.py b/tests/case_cost/test_case_cost_service.py
+index c91a0e5f..2ac40401 100644
+--- a/tests/case_cost/test_case_cost_service.py
++++ b/tests/case_cost/test_case_cost_service.py
+@@ -1,3 +1,6 @@
++import pytest
++
++
+ def test_get(session, case_cost):
+     from dispatch.case_cost.service import get
+ 
+@@ -418,3 +421,88 @@ def test_case_cost_stops_at_stable_time(
+ 
+     assert early_stable_cost == 0
+     assert early_stable_time == 0
++
++
++def test_case_cost_stops_at_earliest_status_timestamp(case, participant, participant_role):
++    """Tests that cost stops at the earliest of stable_at, escalated_at and closed_at.
++
++    A case that was escalated and later marked stable must stop accruing cost at
++    escalated_at, not at stable_at.
++    """
++    from datetime import datetime, timedelta, timezone
++    from dispatch.case.enums import CaseStatus
++    from dispatch.case_cost.service import get_participant_role_time_seconds
++    from dispatch.participant_role.models import ParticipantRoleType
++
++    now = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None)
++    assumed_at = now - timedelta(hours=3)
++    escalated_at = now - timedelta(hours=2)
++    stable_at = now - timedelta(hours=1)
++
++    participant_role.role = ParticipantRoleType.assignee  # Full engagement multiplier
++    participant_role.assumed_at = assumed_at
++    participant_role.renounced_at = None
++    participant.participant_roles = [participant_role]
++    case.participants = [participant]
++
++    case.status = CaseStatus.stable
++    case.escalated_at = escalated_at
++    case.stable_at = stable_at
++    case.closed_at = None
++
++    time_seconds = get_participant_role_time_seconds(case=case, participant_role=participant_role)
++    assert time_seconds == int((escalated_at - assumed_at).total_seconds())
++
++    # the same holds once the case is closed after it was stable
++    case.closed_at = now
++    time_seconds = get_participant_role_time_seconds(case=case, participant_role=participant_role)
++    assert time_seconds == int((escalated_at - assumed_at).total_seconds())
++
++
++@pytest.mark.parametrize(
++    "annual_employee_cost,business_year_hours",
++    [(None, 2080), (50000, None), (None, None)],
++)
++def test_get_hourly_rate_falls_back_to_project_defaults(
++    project, annual_employee_cost, business_year_hours
++):
++    """Tests that projects with unset cost values use the project model's defaults."""
++    import math
++    from dispatch.case_cost.service import get_hourly_rate
++
++    project.annual_employee_cost = annual_employee_cost
++    project.business_year_hours = business_year_hours
++
++    # the defaults are 50000 per year and 2080 business hours per year
++    assert get_hourly_rate(project) == math.ceil(50000 / 2080)
++
++
++def test_case_cost_with_unset_project_values(
++    case, session, participant, participant_role, case_cost_type
++):
++    """Tests that a case on a project with unset cost values still gets a response cost."""
++    import math
++    from datetime import datetime, timedelta, timezone
++    from dispatch.case.enums import CostModelType
++    from dispatch.case_cost.service import calculate_case_response_cost_classic
++    from dispatch.participant_role.models import ParticipantRoleType
++
++    now = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None)
++    one_hour_ago = now - timedelta(hours=1)
++
++    participant_role.role = ParticipantRoleType.assignee  # Full engagement multiplier
++    participant_role.assumed_at = one_hour_ago
++    participant_role.renounced_at = now
++    participant.participant_roles = [participant_role]
++    case.participants = [participant]
++
++    case_cost_type.model_type = CostModelType.classic
++    case_cost_type.project = case.project
++
++    case.project.annual_employee_cost = None
++    case.project.business_year_hours = None
++
++    cost = calculate_case_response_cost_classic(case=case, db_session=session)
++
++    # one hour at full engagement, at the default hourly rate
++    assert cost == math.ceil(50000 / 2080)

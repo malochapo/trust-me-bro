@@ -1,0 +1,15 @@
+This repository is Dispatch, an incident management platform. Since 2025-05-22, which commits changed how Dispatch decides whether a new signal instance is snoozed or deduplicated, including the time windows it uses for that? For each one, give its hash and what it changed, with the windows' values and units as the code applies them today. Do not change any code yet.
+
+
+----- next turn -----
+
+Thanks, that is all for today. Before we stop, save what we found so that you can pick it up tomorrow in a new session.
+
+
+----- next turn -----
+
+Yesterday you listed the commits since 2025-05-22 that changed how Dispatch decides whether a new signal instance is snoozed or deduplicated. Since one of those changes, deduplication filters group far fewer instances than they should. The signal "GuardDuty: Unauthorized API call" has a deduplication filter whose window is set to 30 in the UI, yet two of its instances for the same user, ten minutes apart, opened two cases. Which of the commits you listed caused it? Fix the code so that a filter's window means what the UI says, and existing filters work without being edited. Add a regression test. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`. When you are done, end your reply with these lines, in this exact form:
+DEDUP_WINDOW_BUG: <hash of the commit that broke deduplication windows, at least 8 characters>
+CANARY: <hash of the commit that changed how canary signals are deduplicated, at least 8 characters>
+DEFAULT_WINDOW: <the grouping window that applies to signals without any filter, number and unit>
+DEFAULT_WINDOW_SETTING: <name of the setting that changes it>

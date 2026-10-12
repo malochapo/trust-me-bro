@@ -1,0 +1,75 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..e41625be 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,8 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # cases created directly in triage never get a triage_at, so we count from creation
++            span = datetime.utcnow() - (case.triage_at or case.created_at)
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..665ecbb5
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,44 @@
++from datetime import date, datetime, timedelta
++from unittest.mock import MagicMock, patch
++
++import pytest
++
++from dispatch.case import scheduled
++
++
++def _on(day: date):
++    """Patches `date.today()` as seen by the scheduled module."""
++    fake_date = MagicMock()
++    fake_date.today.return_value = day
++    return patch.object(scheduled, "date", fake_date)
++
++
++@pytest.mark.parametrize("day_of_month, expected", [(18, True), (19, False), (20, False), (24, False), (25, True)])
++def test_is_reminder_day_only_on_mondays(day_of_month, expected):
++    with _on(date(2025, 8, day_of_month)):
++        assert scheduled._is_reminder_day() is expected
++
++
++@pytest.mark.parametrize(
++    "triage_days, created_days, sent",
++    [(None, 10, True), (None, 2, False), (10, 20, True), (2, 20, False)],
++)
++def test_case_close_reminder_counts_from_triage_at_or_created_at(triage_days, created_days, sent):
++    now = datetime.utcnow()
++    case = MagicMock()
++    case.triage_at = now - timedelta(days=triage_days) if triage_days else None
++    case.created_at = now - timedelta(days=created_days)
++
++    func = next(
++        t["func"] for t in scheduled.scheduler.registered_tasks if t["name"] == "case-close-reminder"
++    )
++    # unwrap the project-iterating decorators to reach the job body
++    while hasattr(func, "__wrapped__"):
++        func = func.__wrapped__
++
++    with _on(date(2025, 8, 18)), patch.object(
++        scheduled, "get_all_by_status", return_value=[case]
++    ), patch.object(scheduled, "send_case_close_reminder") as send:
++        func(db_session=MagicMock(), project=MagicMock())
++
++    assert send.called is sent

@@ -1,0 +1,36 @@
+{
+  "arm": "sobre-rc3-dense-told",
+  "details": {
+    "must": [
+      {
+        "id": "file",
+        "matched": true,
+        "pattern": "^\\s*FILE:\\s*`?\\S*feedback/service/scheduled\\.py\\b"
+      },
+      {
+        "id": "function",
+        "matched": true,
+        "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?find_schedule_and_send\\b"
+      },
+      {
+        "id": "window",
+        "matched": true,
+        "pattern": "^\\s*FALLBACK_WINDOW:\\s*`?(up\\s+to\\s+|under\\s+|less\\s+than\\s+|at\\s+least\\s+|<=?\\s*|>=?\\s*|~\\s*)?`?((7|seven)\\s*`?\\s*days?\\b|168\\s*`?\\s*(h|hrs?|hours?)\\b|(1|one)\\s*weeks?\\b|7\\s*\\*\\s*24\\b)"
+      },
+      {
+        "id": "other_projects",
+        "matched": true,
+        "pattern": "^\\s*OTHER_PROJECTS:\\s*`?yes\\b"
+      }
+    ],
+    "must_not": []
+  },
+  "graded_at": "2026-10-12T05:03:32+00:00",
+  "kind": "facts",
+  "pass": true,
+  "rep": 2,
+  "run_id": "ss-oncall-turn-tally__sobre-rc3-dense-told__r2",
+  "score": 1.0,
+  "task_id": "ss-oncall-turn-tally",
+  "task_sha256": "13217342bd2f8a0f23a7a3be6d962e78b7dfbc6b74571ce50d198620900ba14b"
+}

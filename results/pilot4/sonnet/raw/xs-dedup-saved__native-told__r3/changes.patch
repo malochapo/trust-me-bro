@@ -1,0 +1,99 @@
+diff --git a/src/dispatch/signal/models.py b/src/dispatch/signal/models.py
+index d583b957..d7c9670f 100644
+--- a/src/dispatch/signal/models.py
++++ b/src/dispatch/signal/models.py
+@@ -205,7 +205,7 @@ class SignalFilter(Base, ProjectMixin, EvergreenMixin, TimeStampMixin):
+     expiration = Column(DateTime, nullable=True)
+     window = Column(
+         Integer, default=(60 * 60)
+-    )  # number of seconds for duplication lookback default to 1 hour
++    )  # number of minutes for duplication lookback
+ 
+     creator_id = Column(Integer, ForeignKey(DispatchUser.id))
+     creator = relationship("DispatchUser", backref="signal_filters")
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..a388a58f 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -842,8 +842,8 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+         # Now apply filters
+         query = apply_filters(query, f.expression)
+ 
+-        # SignalFilter.window is stored in seconds
+-        window = _window_start(f.window)
++        # SignalFilter.window is stored in minutes (the UI offers "Window (minutes)")
++        window = _window_start(f.window * 60)
+         query = query.filter(SignalInstance.created_at >= window)
+         query = query.join(SignalInstance.entities).filter(
+             Entity.id.in_([e.id for e in signal_instance.entities])
+@@ -870,7 +870,7 @@ def filter_signal(*, db_session: Session, signal_instance: SignalInstance) -> bo
+     The function first checks if the signal instance is snoozed. If not snoozed,
+     it checks for a deduplication rule set on the signal instance. If no
+     deduplication rule is set, a default deduplication rule is applied,
+-    grouping all signal instances together for a 1-hour window, regardless of
++    grouping all signal instances together for a default window (SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES, 45 minutes), regardless of
+     the entities in the signal instance.
+ 
+     Args:
+diff --git a/tests/signal/test_signal_service.py b/tests/signal/test_signal_service.py
+index c253a7f3..2f4c09bc 100644
+--- a/tests/signal/test_signal_service.py
++++ b/tests/signal/test_signal_service.py
+@@ -824,3 +824,57 @@ def test_canary_signals_not_deduplicated(session, signal, project):
+     # Check that the canary signal instance is not deduplicated (should have same case_id as before)
+     assert canary_signal_instance.case_id == initial_case_id
+     assert canary_signal_instance.filter_action != SignalFilterAction.deduplicate
++
++
++def test_filter_actions_deduplicate_window_is_minutes(session, signal, project):
++    from datetime import datetime, timedelta, timezone
++
++    from dispatch.signal.models import SignalFilterAction
++    from dispatch.signal.service import filter_signal
++    from tests.factories import (
++        EntityTypeFactory,
++        EntityFactory,
++        SignalInstanceFactory,
++        SignalFilterFactory,
++    )
++
++    entity_type = EntityTypeFactory(project=project)
++    session.add(entity_type)
++    signal.entity_types.append(entity_type)
++    entity = EntityFactory(entity_type=entity_type, project=project)
++    session.add(entity)
++
++    # earlier instance, ten minutes ago, already attached to a case
++    old_instance = SignalInstanceFactory(
++        project=project,
++        signal=signal,
++        entities=[entity],
++        raw=json.dumps({"id": "foo"}),
++        created_at=datetime.now(timezone.utc) - timedelta(minutes=10),
++    )
++    session.add(old_instance)
++    new_instance = SignalInstanceFactory(
++        project=project,
++        signal=signal,
++        entities=[entity],
++        raw=json.dumps({"id": "foo"}),
++    )
++    session.add(new_instance)
++
++    # a window of 30 means 30 minutes
++    signal_filter = SignalFilterFactory(
++        name="dedupe-window",
++        description="test",
++        expression=[
++            {"or": [{"model": "EntityType", "field": "id", "op": "==", "value": entity_type.id}]}
++        ],
++        action="deduplicate",
++        window=30,
++        project=project,
++    )
++    signal.filters.append(signal_filter)
++    session.commit()
++
++    assert filter_signal(db_session=session, signal_instance=new_instance)
++    assert new_instance.filter_action == SignalFilterAction.deduplicate
++    assert new_instance.case_id == old_instance.case_id

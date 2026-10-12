@@ -1,0 +1,43 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..c978a0cc 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..6af35300
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,22 @@
++from datetime import date
++from unittest import mock
++
++import pytest
++
++
++@pytest.mark.parametrize(
++    "today,expected",
++    [
++        (date(2025, 8, 11), True),  # Monday
++        (date(2025, 8, 18), True),  # Monday
++        (date(2025, 8, 12), False),  # Tuesday
++        (date(2025, 8, 16), False),  # Saturday
++        (date(2025, 8, 17), False),  # Sunday
++    ],
++)
++def test_is_reminder_day(today, expected):
++    from dispatch.case import scheduled
++
++    with mock.patch.object(scheduled, "date") as mock_date:
++        mock_date.today.return_value = today
++        assert scheduled._is_reminder_day() is expected

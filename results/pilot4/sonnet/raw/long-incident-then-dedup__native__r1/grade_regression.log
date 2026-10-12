@@ -1,0 +1,4 @@
+$ python -m pytest -q -p no:cacheprovider tests/case tests/signal
+....................................................s................... [ 98%]
+.                                                                        [100%]
+72 passed, 1 skipped in 27.95s

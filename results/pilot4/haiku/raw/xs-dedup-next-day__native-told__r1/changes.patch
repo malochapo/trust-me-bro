@@ -1,0 +1,141 @@
+diff --git a/src/dispatch/signal/models.py b/src/dispatch/signal/models.py
+index d583b957..0472f059 100644
+--- a/src/dispatch/signal/models.py
++++ b/src/dispatch/signal/models.py
+@@ -204,8 +204,8 @@ class SignalFilter(Base, ProjectMixin, EvergreenMixin, TimeStampMixin):
+     action = Column(String, nullable=False)
+     expiration = Column(DateTime, nullable=True)
+     window = Column(
+-        Integer, default=(60 * 60)
+-    )  # number of seconds for duplication lookback default to 1 hour
++        Integer, default=60
++    )  # number of minutes for duplication lookback default to 1 hour
+ 
+     creator_id = Column(Integer, ForeignKey(DispatchUser.id))
+     creator = relationship("DispatchUser", backref="signal_filters")
+@@ -279,7 +279,7 @@ class SignalFilterBase(DispatchBase):
+     name: NameStr
+     action: SignalFilterAction = SignalFilterAction.snooze
+     description: str | None = Field(default=None)
+-    window: int | None = 600
++    window: int | None = 10
+     expiration: datetime | None = Field(default=None)
+ 
+ 
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..a8830051 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -781,9 +781,9 @@ def filter_snooze(*, db_session: Session, signal_instance: SignalInstance) -> Si
+     return signal_instance
+ 
+ 
+-def _window_start(seconds: int) -> datetime:
+-    """Returns the start of a lookback window that ends now."""
+-    return datetime.now(timezone.utc) - timedelta(seconds=seconds)
++def _window_start(minutes: int) -> datetime:
++    """Returns the start of a lookback window of the given minutes that ends now."""
++    return datetime.now(timezone.utc) - timedelta(minutes=minutes)
+ 
+ 
+ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> SignalInstance:
+@@ -802,7 +802,7 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+         return signal_instance
+ 
+     if not signal_instance.signal.filters:
+-        default_dedup_window = _window_start(SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES * 60)
++        default_dedup_window = _window_start(SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES)
+         instance = (
+             db_session.query(SignalInstance)
+             .filter(
+@@ -842,7 +842,7 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+         # Now apply filters
+         query = apply_filters(query, f.expression)
+ 
+-        # SignalFilter.window is stored in seconds
++        # SignalFilter.window is stored in minutes, as the UI shows it
+         window = _window_start(f.window)
+         query = query.filter(SignalInstance.created_at >= window)
+         query = query.join(SignalInstance.entities).filter(
+diff --git a/tests/signal/test_signal_service.py b/tests/signal/test_signal_service.py
+index c253a7f3..4b96962b 100644
+--- a/tests/signal/test_signal_service.py
++++ b/tests/signal/test_signal_service.py
+@@ -393,7 +393,7 @@ def test_filter_actions_default_deduplicate(session, signal, project):
+     assert filter_signal(db_session=session, signal_instance=signal_instance_2)
+     assert signal_instance_2.filter_action == SignalFilterAction.deduplicate
+ 
+-    # Test default deduplication logic within the 1-hour window
++    # Test default deduplication logic within the default 45 minute window
+     signal_instance_3 = SignalInstanceFactory(
+         project=project,
+         signal=signal,
+@@ -569,6 +569,68 @@ def test_filter_actions_deduplicate(session, signal, project):
+     assert signal_instance_2.filter_action == SignalFilterAction.deduplicate
+ 
+ 
++def test_filter_actions_deduplicate_window_is_minutes(session, signal, project):
++    from datetime import datetime, timedelta
++    from dispatch.signal.models import SignalFilterAction
++    from dispatch.signal.service import filter_signal
++    from tests.factories import (
++        CaseFactory,
++        EntityTypeFactory,
++        EntityFactory,
++        SignalInstanceFactory,
++        SignalFilterFactory,
++    )
++
++    entity_type = EntityTypeFactory(project=project)
++    session.add(entity_type)
++    signal.entity_types.append(entity_type)
++
++    entity = EntityFactory(entity_type=entity_type, project=project)
++    session.add(entity)
++
++    case = CaseFactory(project=project)
++    session.add(case)
++
++    # an earlier instance for the same entity, ten minutes ago, already in a case
++    signal_instance_1 = SignalInstanceFactory(
++        project=project,
++        signal=signal,
++        entities=[entity],
++        raw=json.dumps({"id": "foo"}),
++        case=case,
++        created_at=datetime.now() - timedelta(minutes=10),
++    )
++    session.add(signal_instance_1)
++    session.commit()
++
++    signal_filter = SignalFilterFactory(
++        name="dedupe-minutes",
++        description="window is configured in minutes, as the UI shows",
++        expression=[
++            {"or": [{"model": "EntityType", "field": "id", "op": "==", "value": entity_type.id}]}
++        ],
++        action="deduplicate",
++        window=30,
++        project=project,
++    )
++    signal.filters.append(signal_filter)
++    session.commit()
++
++    signal_instance_2 = SignalInstanceFactory(
++        project=project,
++        signal=signal,
++        entities=[entity],
++        raw=json.dumps({"id": "foo"}),
++    )
++    session.add(signal_instance_2)
++    session.commit()
++
++    # 30 minutes covers the instance from 10 minutes ago
++    assert filter_signal(db_session=session, signal_instance=signal_instance_2)
++    assert signal_instance_2.filter_action == SignalFilterAction.deduplicate
++    assert signal_instance_2.case_id == case.id
++
++
+ def test_filter_action_with_dedupe_and_snooze(session, signal, project):
+     from datetime import datetime, timedelta, timezone
+     from dispatch.signal.models import SignalFilterAction

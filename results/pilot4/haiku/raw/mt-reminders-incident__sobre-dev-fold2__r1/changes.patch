@@ -1,0 +1,111 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..376102e7 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,9 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # some triage cases never had triage_at set, so count from creation
++            triage_started_at = case.triage_at or case.created_at
++            span = datetime.utcnow() - triage_started_at
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..70c672f1
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,79 @@
++from datetime import date, datetime, timedelta
++from inspect import unwrap
++from unittest import mock
++
++import pytest
++
++from dispatch.case import scheduled
++from dispatch.case.enums import CaseStatus
++from dispatch.scheduler import scheduler
++
++
++class FakeDate(date):
++    """A date subclass whose today() returns a fixed day."""
++
++    fixed_today = date(2025, 1, 1)
++
++    @classmethod
++    def today(cls):
++        return cls.fixed_today
++
++
++@pytest.mark.parametrize(
++    "day,expected",
++    [
++        (date(2025, 8, 11), True),  # Monday
++        (date(2025, 8, 12), False),  # Tuesday
++        (date(2025, 8, 13), False),
++        (date(2025, 8, 14), False),
++        (date(2025, 8, 15), False),
++        (date(2025, 8, 16), False),
++        (date(2025, 8, 17), False),  # Sunday
++    ],
++)
++def test_is_reminder_day_only_on_monday(monkeypatch, day, expected):
++    FakeDate.fixed_today = day
++    monkeypatch.setattr(scheduled, "date", FakeDate)
++
++    assert scheduled._is_reminder_day() is expected
++
++
++def _close_reminder_job():
++    # scheduler.add() does not return the function, so look it up by task name
++    task = next(t for t in scheduler.registered_tasks if t["name"] == "case-close-reminder")
++    return unwrap(task["func"])
++
++
++def _run_close_reminder(session, case, created_days_ago, triage_at=None):
++    case.status = CaseStatus.triage
++    case.triage_at = triage_at
++    case.created_at = datetime.utcnow() - timedelta(days=created_days_ago)
++    session.flush()
++
++    with (
++        mock.patch.object(scheduled, "_is_reminder_day", return_value=True),
++        mock.patch.object(scheduled, "send_case_close_reminder") as send,
++    ):
++        _close_reminder_job()(db_session=session, project=case.project)
++
++    return send
++
++
++def test_case_close_reminder_counts_from_created_at_when_triage_at_missing(session, case):
++    send = _run_close_reminder(session, case, created_days_ago=8)
++
++    send.assert_called_once_with(case, session)
++
++
++def test_case_close_reminder_skips_recent_case_without_triage_at(session, case):
++    send = _run_close_reminder(session, case, created_days_ago=2)
++
++    send.assert_not_called()
++
++
++def test_case_close_reminder_counts_from_triage_at_when_set(session, case):
++    send = _run_close_reminder(
++        session, case, created_days_ago=30, triage_at=datetime.utcnow() - timedelta(days=2)
++    )
++
++    send.assert_not_called()

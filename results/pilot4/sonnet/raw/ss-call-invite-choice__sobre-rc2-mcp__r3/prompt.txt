@@ -1,0 +1,7 @@
+This repository is Dispatch, an incident management platform. Some responders complain that they get pulled into the video call of every incident they work on, and a person can tell Dispatch to stop adding them to those calls. Which function honours that choice when an incident's call is set up? Is the choice honoured at all when the incident has its own group e-mail address for its responders? And are people who have no Dispatch account added to the call? Do not change any code.
+
+Finish your answer with these four lines, in this exact form:
+FILE: <path of the file that defines that function>
+FUNCTION: <name of the function>
+APPLIED_WITH_GROUP: <yes or no: is the choice honoured when the incident has a group e-mail address for its responders>
+NO_ACCOUNT_ADDED: <yes or no: are people without a Dispatch account added to the call>

@@ -1,0 +1,99 @@
+diff --git a/src/dispatch/case_cost/service.py b/src/dispatch/case_cost/service.py
+index c8e809ce..523e65cb 100644
+--- a/src/dispatch/case_cost/service.py
++++ b/src/dispatch/case_cost/service.py
+@@ -115,7 +115,14 @@ def get_engagement_multiplier(participant_role: str):
+ 
+ def get_hourly_rate(project) -> int:
+     """Calculates and rounds up the employee hourly rate within a project."""
+-    return math.ceil(project.annual_employee_cost / project.business_year_hours)
++    # projects can have NULL for these columns, so fall back to the project model defaults
++    annual_employee_cost = (
++        project.annual_employee_cost if project.annual_employee_cost is not None else 50000
++    )
++    business_year_hours = (
++        project.business_year_hours if project.business_year_hours is not None else 2080
++    )
++    return math.ceil(annual_employee_cost / business_year_hours)
+ 
+ 
+ def update_case_response_cost_for_case_type(db_session: Session, case_type: CaseType) -> None:
+@@ -350,7 +357,7 @@ def get_participant_role_time_seconds(case: Case, participant_role: ParticipantR
+                 closed_at = closed_at.replace(tzinfo=timezone.utc)
+             timestamps.append(closed_at)
+         if timestamps:
+-            participant_role_renounced_at = max(timestamps)
++            participant_role_renounced_at = min(timestamps)
+ 
+     if participant_role.renounced_at:
+         # the participant left the conversation or got assigned another role
+diff --git a/tests/case_cost/test_case_cost_service.py b/tests/case_cost/test_case_cost_service.py
+index c91a0e5f..4334c02b 100644
+--- a/tests/case_cost/test_case_cost_service.py
++++ b/tests/case_cost/test_case_cost_service.py
+@@ -418,3 +418,65 @@ def test_case_cost_stops_at_stable_time(
+ 
+     assert early_stable_cost == 0
+     assert early_stable_time == 0
++
++
++def test_case_cost_cut_off_is_earliest_timestamp(case, participant, participant_role):
++    """Tests that the cost cut-off is the earliest of stable, escalated and closed.
++
++    A case escalated before it was marked stable must stop accruing cost at the escalation,
++    not at the later stable time.
++    """
++    from datetime import datetime, timedelta, timezone
++    from dispatch.case.enums import CaseStatus
++    from dispatch.case_cost.service import get_participant_role_time_seconds
++    from dispatch.participant_role.models import ParticipantRoleType
++
++    now = datetime.now(timezone.utc)
++    three_hours_ago = now - timedelta(hours=3)
++    two_hours_ago = now - timedelta(hours=2)
++    one_hour_ago = now - timedelta(hours=1)
++
++    participant_role.role = ParticipantRoleType.assignee
++    participant_role.assumed_at = three_hours_ago.replace(tzinfo=None)
++    participant_role.renounced_at = None
++    participant.participant_roles = [participant_role]
++    case.participants = [participant]
++
++    # Reference: the case was only escalated two hours ago, so the cut-off is that escalation
++    case.status = CaseStatus.escalated
++    case.escalated_at = two_hours_ago.replace(tzinfo=None)
++    case.stable_at = None
++    case.closed_at = None
++    escalated_only_time = get_participant_role_time_seconds(
++        case=case, participant_role=participant_role
++    )
++
++    # The same case, later marked stable one hour ago, must still be cut off at the escalation
++    case.status = CaseStatus.stable
++    case.stable_at = one_hour_ago.replace(tzinfo=None)
++    stable_after_escalation_time = get_participant_role_time_seconds(
++        case=case, participant_role=participant_role
++    )
++
++    assert escalated_only_time > 0
++    assert stable_after_escalation_time == escalated_only_time
++
++
++def test_get_hourly_rate_falls_back_to_project_model_defaults(case):
++    """Tests that a missing annual employee cost or business year hours uses the model default."""
++    import math
++
++    from dispatch.case_cost.service import get_hourly_rate
++
++    # Projects can have NULL for either column, so the rate must still be calculable
++    case.project.annual_employee_cost = None
++    case.project.business_year_hours = None
++    assert get_hourly_rate(case.project) == math.ceil(50000 / 2080)
++
++    case.project.annual_employee_cost = 60000
++    case.project.business_year_hours = None
++    assert get_hourly_rate(case.project) == math.ceil(60000 / 2080)
++
++    case.project.annual_employee_cost = None
++    case.project.business_year_hours = 1000
++    assert get_hourly_rate(case.project) == math.ceil(50000 / 1000)

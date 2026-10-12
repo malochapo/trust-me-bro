@@ -1,0 +1,46 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..c978a0cc 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..8f545acf
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,25 @@
++from datetime import date
++
++from dispatch.case import scheduled
++
++
++class _FakeDate(date):
++    _today = date(2025, 8, 18)
++
++    @classmethod
++    def today(cls):
++        return cls._today
++
++
++def test_is_reminder_day_on_monday(monkeypatch):
++    # 2025-08-18 is a Monday
++    monkeypatch.setattr(scheduled, "date", _FakeDate)
++    _FakeDate._today = date(2025, 8, 18)
++    assert scheduled._is_reminder_day()
++
++
++def test_is_reminder_day_not_on_other_days(monkeypatch):
++    monkeypatch.setattr(scheduled, "date", _FakeDate)
++    for day in range(12, 18):  # Tuesday 2025-08-12 through Sunday 2025-08-17
++        _FakeDate._today = date(2025, 8, day)
++        assert not scheduled._is_reminder_day(), _FakeDate._today

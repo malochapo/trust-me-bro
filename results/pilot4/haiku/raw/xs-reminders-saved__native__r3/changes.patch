@@ -1,0 +1,97 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..c978a0cc 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..88d09f54
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,76 @@
++import inspect
++from datetime import date, datetime, timedelta
++from types import SimpleNamespace
++from unittest.mock import MagicMock
++
++import pytest
++
++from dispatch.case.scheduled import _is_reminder_day
++from dispatch.scheduler import scheduler
++
++
++def _job(name):
++    # the scheduler decorator doesn't return the function, so look it up by name
++    task = next(t for t in scheduler.registered_tasks if t["name"] == name)
++    # unwrap the scheduled_project_task and timer decorators to run the job body
++    return inspect.unwrap(task["func"])
++
++
++@pytest.mark.parametrize(
++    "day,expected",
++    [
++        (date(2025, 8, 18), True),  # Monday
++        (date(2025, 8, 19), False),  # Tuesday
++        (date(2025, 8, 20), False),  # Wednesday
++        (date(2025, 8, 21), False),  # Thursday
++        (date(2025, 8, 22), False),  # Friday
++        (date(2025, 8, 23), False),  # Saturday
++        (date(2025, 8, 24), False),  # Sunday
++    ],
++)
++def test_is_reminder_day(mocker, day, expected):
++    mocker.patch("dispatch.case.scheduled.date").today.return_value = day
++
++    assert _is_reminder_day() is expected
++
++
++@pytest.mark.parametrize(
++    "job,status_field",
++    [
++        ("case-close-reminder", "triage_at"),
++        ("case-stable-reminder", "stable_at"),
++    ],
++)
++def test_weekly_case_reminder_sent_on_monday(mocker, job, status_field):
++    # a Monday, so the weekly reminder should go out
++    mocker.patch("dispatch.case.scheduled.date").today.return_value = date(2025, 8, 18)
++    send = mocker.patch("dispatch.case.scheduled.send_case_close_reminder")
++
++    # a case that has been in its status for more than a week
++    case = SimpleNamespace(**{status_field: datetime.utcnow() - timedelta(days=8)})
++    mocker.patch("dispatch.case.scheduled.get_all_by_status", return_value=[case])
++
++    _job(job)(db_session=MagicMock(), project=MagicMock())
++
++    send.assert_called_once()
++    assert send.call_args.args[0] is case
++
++
++@pytest.mark.parametrize(
++    "job,status_field",
++    [
++        ("case-close-reminder", "triage_at"),
++        ("case-stable-reminder", "stable_at"),
++    ],
++)
++def test_weekly_case_reminder_not_sent_on_other_days(mocker, job, status_field):
++    # a Tuesday, so no weekly reminder should go out
++    mocker.patch("dispatch.case.scheduled.date").today.return_value = date(2025, 8, 19)
++    send = mocker.patch("dispatch.case.scheduled.send_case_close_reminder")
++
++    case = SimpleNamespace(**{status_field: datetime.utcnow() - timedelta(days=8)})
++    mocker.patch("dispatch.case.scheduled.get_all_by_status", return_value=[case])
++
++    _job(job)(db_session=MagicMock(), project=MagicMock())
++
++    send.assert_not_called()

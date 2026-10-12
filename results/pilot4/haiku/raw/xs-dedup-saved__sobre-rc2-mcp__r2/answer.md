@@ -1,0 +1,1 @@
+That notification is for the background wait I already finished. Nothing new came out of it, and the work is unchanged: the fix and the two regression tests are in the working tree, uncommitted.

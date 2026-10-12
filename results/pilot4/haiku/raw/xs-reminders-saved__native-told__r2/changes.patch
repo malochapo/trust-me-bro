@@ -1,0 +1,48 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..c978a0cc 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..a1a26895
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,27 @@
++import pytest
++from datetime import date
++
++from dispatch.case import scheduled
++
++
++@pytest.mark.parametrize(
++    "today,expected",
++    [
++        (date(2025, 8, 17), False),  # Sunday
++        (date(2025, 8, 18), True),  # Monday
++        (date(2025, 8, 19), False),  # Tuesday
++        (date(2025, 8, 20), False),  # Wednesday
++        (date(2025, 8, 21), False),  # Thursday
++        (date(2025, 8, 22), False),  # Friday
++        (date(2025, 8, 23), False),  # Saturday
++    ],
++)
++def test_is_reminder_day(monkeypatch, today, expected):
++    class FrozenDate(date):
++        @classmethod
++        def today(cls):
++            return cls(today.year, today.month, today.day)
++
++    monkeypatch.setattr(scheduled, "date", FrozenDate)
++
++    assert scheduled._is_reminder_day() is expected

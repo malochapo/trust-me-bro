@@ -1,0 +1,7 @@
+This repository is Dispatch, an incident management platform. Some security cases do not get a channel of their own: they live as a thread inside a shared channel. When a person is added to such a case, which function decides whether they are brought into that thread? Are they brought in when the case was opened by hand rather than raised by an alert? And when the case was raised by an alert, what must that alert's definition be marked as for them to be brought in? Do not change any code.
+
+Finish your answer with these four lines, in this exact form:
+FILE: <path of the file that defines that function>
+FUNCTION: <name of the function>
+HAND_OPENED: <yes or no: are people brought into the thread of a case opened by hand>
+REQUIRED_MARK: <the value the alert's definition must be marked with>

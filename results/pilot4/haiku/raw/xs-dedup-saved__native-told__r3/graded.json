@@ -1,0 +1,83 @@
+{
+  "arm": "native-told",
+  "details": {
+    "parts": [
+      {
+        "details": {
+          "hidden_files": [
+            "tests/signal/test_hidden_mt_dedup_window.py"
+          ],
+          "regression": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/signal"
+            ],
+            "exit": 0,
+            "last_line": "36 passed, 1 skipped in 23.71s",
+            "seconds": 30.8
+          },
+          "tests": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/signal/test_hidden_mt_dedup_window.py"
+            ],
+            "exit": 0,
+            "last_line": "2 passed in 10.37s",
+            "seconds": 18.9
+          }
+        },
+        "kind": "tests",
+        "pass": true,
+        "score": 1.0
+      },
+      {
+        "details": {
+          "must": [
+            {
+              "id": "dedup-window-bug",
+              "matched": true,
+              "pattern": "^\\s*DEDUP_WINDOW_BUG:\\s*`?{plant:p4-dedup-window-seconds:short}"
+            },
+            {
+              "id": "canary",
+              "matched": true,
+              "pattern": "^\\s*CANARY:\\s*`?{plant:e46fa023b7b8899f4a5f24336ce84699618ed196:short}"
+            },
+            {
+              "id": "default-window",
+              "matched": true,
+              "pattern": "^\\s*DEFAULT_WINDOW:\\s*`?45\\s*(min|minutes)\\b"
+            },
+            {
+              "id": "default-window-setting",
+              "matched": true,
+              "pattern": "^\\s*DEFAULT_WINDOW_SETTING:\\s*`?SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES\\b"
+            }
+          ],
+          "must_not": []
+        },
+        "kind": "facts",
+        "pass": true,
+        "score": 1.0
+      }
+    ]
+  },
+  "graded_at": "2026-10-12T01:39:55+00:00",
+  "kind": "all",
+  "pass": true,
+  "rep": 3,
+  "run_id": "xs-dedup-saved__native-told__r3",
+  "score": 1.0,
+  "task_id": "xs-dedup-saved",
+  "task_sha256": "8d3b3b70ff3dd89e271b539df6b02f50bf264b719013d928d9a304666b7eceb7"
+}

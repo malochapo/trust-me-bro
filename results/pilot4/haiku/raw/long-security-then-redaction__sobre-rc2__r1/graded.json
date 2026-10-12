@@ -1,0 +1,144 @@
+{
+  "arm": "sobre-rc2",
+  "details": {
+    "parts": [
+      {
+        "details": {
+          "hidden_files": [
+            "tests/entity/test_hidden_mt_masked_entities.py",
+            "tests/event/test_hidden_mt_event_permission.py"
+          ],
+          "regression": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/case",
+              "tests/event",
+              "tests/signal"
+            ],
+            "exit": 0,
+            "last_line": "57 passed, 1 skipped in 36.59s",
+            "seconds": 44.5
+          },
+          "tests": {
+            "cmd": [
+              "bash",
+              "-c",
+              "git checkout 51546e13b36a1c5692f2c6a2e19cb6c2c32bbe37 -- tests/database tests/entity && python -m pytest -q -p no:cacheprovider tests/database tests/event/test_hidden_mt_event_permission.py tests/entity"
+            ],
+            "exit": 0,
+            "last_line": "41 passed in 28.16s",
+            "seconds": 35.3
+          }
+        },
+        "kind": "tests",
+        "pass": true,
+        "score": 1.0
+      },
+      {
+        "details": {
+          "must": [
+            {
+              "id": "create_case",
+              "matched": true,
+              "pattern": "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bcase\\.create_case\\b(?!_)"
+            },
+            {
+              "id": "create_case_channel",
+              "matched": true,
+              "pattern": "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bcase\\.create_case_channel\\b"
+            },
+            {
+              "id": "create_case_resources",
+              "matched": true,
+              "pattern": "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bcase\\.create_case_resources\\b"
+            },
+            {
+              "id": "create_incident",
+              "matched": true,
+              "pattern": "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bincident\\.create_incident\\b(?!_)"
+            },
+            {
+              "id": "incident_delete_custom_event",
+              "matched": true,
+              "pattern": "^\\s*UNPROTECTED_AT_START:[^\\n]*\\bincident\\.delete_custom_event\\b"
+            },
+            {
+              "id": "restored",
+              "matched": true,
+              "pattern": "^\\s*RESTORED:\\s*`?incident\\.delete_custom_event\\b"
+            },
+            {
+              "id": "removed-by",
+              "matched": true,
+              "pattern": "^\\s*REMOVED_BY:\\s*`?{plant:q5-unprotected-event-delete:short}"
+            },
+            {
+              "id": "visibility-bug",
+              "matched": true,
+              "pattern": "^\\s*VISIBILITY_BUG:\\s*`?{plant:q1-restricted-case-filter:short}"
+            },
+            {
+              "id": "function",
+              "matched": true,
+              "pattern": "^\\s*REDACTION_FUNCTION:\\s*`?\\S*redaction\\S*redact_raw\\b"
+            },
+            {
+              "id": "keys",
+              "matched": true,
+              "pattern": "^\\s*DEFAULT_KEYS:(?=[^\\n]*\\bpassword\\b)(?=[^\\n]*\\bsecret\\b)(?=[^\\n]*\\bapi_key\\b)(?=[^\\n]*\\bsession_token\\b)(?=[^\\n]*\\bauthorization\\b)"
+            },
+            {
+              "id": "unmasked-in-database",
+              "matched": true,
+              "pattern": "^\\s*UNMASKED_IN_DATABASE:\\s*`?yes\\b"
+            },
+            {
+              "id": "extraction-bug",
+              "matched": true,
+              "pattern": "^\\s*EXTRACTION_BUG:\\s*`?{plant:q3-entity-first-match:short}"
+            },
+            {
+              "id": "masking-commit",
+              "matched": true,
+              "pattern": "^\\s*MASKING_COMMIT:\\s*`?{plant:p2-redact-raw:short}"
+            }
+          ],
+          "must_not": [
+            {
+              "id": "case_delete_custom_event",
+              "matched": false
+            },
+            {
+              "id": "incident_create_resources",
+              "matched": false
+            },
+            {
+              "id": "protected_case",
+              "matched": false
+            },
+            {
+              "id": "protected_incident",
+              "matched": false
+            }
+          ]
+        },
+        "kind": "facts",
+        "pass": true,
+        "score": 1.0
+      }
+    ]
+  },
+  "graded_at": "2026-10-11T19:43:49+00:00",
+  "kind": "all",
+  "pass": true,
+  "rep": 1,
+  "run_id": "long-security-then-redaction__sobre-rc2__r1",
+  "score": 1.0,
+  "task_id": "long-security-then-redaction",
+  "task_sha256": "569b88822f25a224ed12f469e0b707340eed1a59b90872f112d85ca0bd69c2ba"
+}

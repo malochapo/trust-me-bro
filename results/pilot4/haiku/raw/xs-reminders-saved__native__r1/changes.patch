@@ -1,0 +1,38 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..c978a0cc 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..5e97cf03
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,17 @@
++from datetime import date, timedelta
++
++import pytest
++
++from dispatch.case.scheduled import _is_reminder_day
++
++
++# 2025-08-18 is a Monday, so the seven days starting from it cover one full week
++MONDAY = date(2025, 8, 18)
++
++
++@pytest.mark.parametrize("offset", range(7))
++def test_is_reminder_day_only_on_monday(mocker, offset):
++    today = MONDAY + timedelta(days=offset)
++    mocker.patch("dispatch.case.scheduled.date").today.return_value = today
++
++    assert _is_reminder_day() is (offset == 0)

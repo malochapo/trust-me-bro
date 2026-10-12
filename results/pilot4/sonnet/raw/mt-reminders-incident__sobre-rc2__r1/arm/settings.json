@@ -1,0 +1,88 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/sobre-bench/tools/bin/sobre-rc2 hook observe"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/sobre-bench/tools/bin/sobre-rc2 hook compress"
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/sobre-bench/tools/bin/sobre-rc2 hook read-dedup"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/sobre-bench/tools/bin/sobre-rc2 hook observe"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/sobre-bench/tools/bin/sobre-rc2 hook observe"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/sobre-bench/tools/bin/sobre-rc2 hook observe"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/sobre-bench/tools/bin/sobre-rc2 hook observe"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/sobre-bench/tools/bin/sobre-rc2 hook observe"
+          }
+        ]
+      }
+    ]
+  }
+}

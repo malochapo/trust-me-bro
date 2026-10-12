@@ -1,0 +1,136 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..7e1e1072 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,9 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # triage_at is only set by the triage transition, so some cases don't have it
++            triage_start = case.triage_at or case.created_at
++            span = datetime.utcnow() - triage_start
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..e9b47e1d
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,104 @@
++from datetime import date, datetime, timedelta
++
++import pytest
++
++from dispatch.case import scheduled as case_scheduled
++from dispatch.case.enums import CaseStatus
++from dispatch.scheduler import scheduler
++
++
++def _freeze_today(monkeypatch, day: date):
++    class FrozenDate(date):
++        @classmethod
++        def today(cls):
++            return day
++
++    monkeypatch.setattr(case_scheduled, "date", FrozenDate)
++
++
++def _original_task(name: str):
++    # the scheduler and timing/project decorators all wrap the original function
++    task = next(t for t in scheduler.registered_tasks if t["name"] == name)
++    func = task["func"]
++    while hasattr(func, "__wrapped__"):
++        func = func.__wrapped__
++    return func
++
++
++@pytest.mark.parametrize(
++    "day,expected",
++    [
++        (date(2025, 8, 11), True),  # Monday
++        (date(2025, 8, 12), False),
++        (date(2025, 8, 13), False),
++        (date(2025, 8, 14), False),
++        (date(2025, 8, 15), False),
++        (date(2025, 8, 16), False),
++        (date(2025, 8, 17), False),  # Sunday
++    ],
++)
++def test_is_reminder_day(monkeypatch, day, expected):
++    _freeze_today(monkeypatch, day)
++    assert case_scheduled._is_reminder_day() is expected
++
++
++@pytest.mark.parametrize(
++    "task_name,status,timestamp_field",
++    [
++        ("case-stable-reminder", CaseStatus.stable, "stable_at"),
++        ("case-close-reminder", CaseStatus.triage, "triage_at"),
++    ],
++)
++def test_weekly_case_reminders_only_send_on_monday(
++    monkeypatch, session, case, task_name, status, timestamp_field
++):
++    sent = []
++    monkeypatch.setattr(
++        case_scheduled, "send_case_close_reminder", lambda case, db_session: sent.append(case)
++    )
++
++    case.status = status
++    setattr(case, timestamp_field, datetime.utcnow() - timedelta(days=8))
++    session.commit()
++
++    task = _original_task(task_name)
++
++    _freeze_today(monkeypatch, date(2025, 8, 12))  # Tuesday
++    task(db_session=session, project=case.project)
++    assert sent == []
++
++    _freeze_today(monkeypatch, date(2025, 8, 11))  # Monday
++    task(db_session=session, project=case.project)
++    assert sent == [case]
++
++
++@pytest.mark.parametrize(
++    "triage_age_days,created_age_days,expected_sent",
++    [
++        # no triage_at: counts from created_at
++        (None, 8, True),
++        (None, 2, False),
++        # triage_at present: it wins over created_at
++        (2, 8, False),
++        (8, 2, True),
++    ],
++)
++def test_case_close_reminder_falls_back_to_created_at(
++    monkeypatch, session, case, triage_age_days, created_age_days, expected_sent
++):
++    sent = []
++    monkeypatch.setattr(
++        case_scheduled, "send_case_close_reminder", lambda case, db_session: sent.append(case)
++    )
++
++    case.status = CaseStatus.triage
++    case.triage_at = (
++        None if triage_age_days is None else datetime.utcnow() - timedelta(days=triage_age_days)
++    )
++    case.created_at = datetime.utcnow() - timedelta(days=created_age_days)
++    session.commit()
++
++    _freeze_today(monkeypatch, date(2025, 8, 11))  # Monday
++    _original_task("case-close-reminder")(db_session=session, project=case.project)
++
++    assert sent == ([case] if expected_sent else [])

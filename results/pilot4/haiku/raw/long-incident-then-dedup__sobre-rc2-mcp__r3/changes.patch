@@ -1,0 +1,314 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..08d9a115 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,10 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # triage_at is not set for every case in triage (e.g. cases that
++            # predate the column), so count from creation instead
++            triage_start = case.triage_at or case.created_at
++            span = datetime.utcnow() - triage_start
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/src/dispatch/signal/models.py b/src/dispatch/signal/models.py
+index d583b957..a9dbf546 100644
+--- a/src/dispatch/signal/models.py
++++ b/src/dispatch/signal/models.py
+@@ -204,8 +204,8 @@ class SignalFilter(Base, ProjectMixin, EvergreenMixin, TimeStampMixin):
+     action = Column(String, nullable=False)
+     expiration = Column(DateTime, nullable=True)
+     window = Column(
+-        Integer, default=(60 * 60)
+-    )  # number of seconds for duplication lookback default to 1 hour
++        Integer, default=60
++    )  # number of minutes for duplication lookback default to 1 hour
+ 
+     creator_id = Column(Integer, ForeignKey(DispatchUser.id))
+     creator = relationship("DispatchUser", backref="signal_filters")
+diff --git a/src/dispatch/signal/service.py b/src/dispatch/signal/service.py
+index f9cd72b7..f45fbe3d 100644
+--- a/src/dispatch/signal/service.py
++++ b/src/dispatch/signal/service.py
+@@ -760,7 +760,7 @@ def filter_snooze(*, db_session: Session, signal_instance: SignalInstance) -> Si
+             continue
+ 
+         if f.expiration.replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+-            break
++            continue
+ 
+         query = db_session.query(SignalInstance).filter(
+             SignalInstance.signal_id == signal_instance.signal_id
+@@ -842,8 +842,8 @@ def filter_dedup(*, db_session: Session, signal_instance: SignalInstance) -> Sig
+         # Now apply filters
+         query = apply_filters(query, f.expression)
+ 
+-        # SignalFilter.window is stored in seconds
+-        window = _window_start(f.window)
++        # SignalFilter.window is entered in minutes (see the signal filter form)
++        window = _window_start(f.window * 60)
+         query = query.filter(SignalInstance.created_at >= window)
+         query = query.join(SignalInstance.entities).filter(
+             Entity.id.in_([e.id for e in signal_instance.entities])
+diff --git a/tests/signal/test_signal_service.py b/tests/signal/test_signal_service.py
+index c253a7f3..ca110cf3 100644
+--- a/tests/signal/test_signal_service.py
++++ b/tests/signal/test_signal_service.py
+@@ -1,5 +1,9 @@
+ import json
+ 
++import pytest
++
++from dispatch.signal.models import SignalFilterAction
++
+ 
+ def test_get(session, signal):
+     from dispatch.signal.service import get
+@@ -824,3 +828,95 @@ def test_canary_signals_not_deduplicated(session, signal, project):
+     # Check that the canary signal instance is not deduplicated (should have same case_id as before)
+     assert canary_signal_instance.case_id == initial_case_id
+     assert canary_signal_instance.filter_action != SignalFilterAction.deduplicate
++
++
++@pytest.mark.parametrize(
++    "window, expected_action",
++    [
++        (5, None),  # 5 minutes: the earlier instance is 10 minutes old, outside the window
++        (30, SignalFilterAction.deduplicate),  # 30 minutes: inside the window
++    ],
++)
++def test_filter_dedup_window_is_minutes(session, signal, project, window, expected_action):
++    """A filter's window is entered in minutes in the UI; the earlier instance is 10 minutes old."""
++    from datetime import datetime, timedelta, timezone
++
++    from dispatch.signal.service import filter_dedup
++    from tests.factories import EntityTypeFactory, EntityFactory, SignalInstanceFactory, SignalFilterFactory
++
++    entity_type = EntityTypeFactory(project=project)
++    session.add(entity_type)
++    signal.entity_types.append(entity_type)
++
++    entity = EntityFactory(entity_type=entity_type, project=project)
++    session.add(entity)
++
++    earlier = SignalInstanceFactory(
++        project=project, signal=signal, entities=[entity], raw=json.dumps({"id": "foo"})
++    )
++    session.add(earlier)
++    session.commit()
++    earlier.created_at = datetime.now(timezone.utc) - timedelta(minutes=10)
++
++    later = SignalInstanceFactory(
++        project=project, signal=signal, entities=[entity], raw=json.dumps({"id": "foo"})
++    )
++    session.add(later)
++
++    signal_filter = SignalFilterFactory(
++        name="dedupe-window",
++        description="test",
++        expression=[
++            {"or": [{"model": "EntityType", "field": "id", "op": "==", "value": entity_type.id}]}
++        ],
++        action="deduplicate",
++        window=window,
++        project=project,
++    )
++    signal.filters.append(signal_filter)
++    session.commit()
++
++    filter_dedup(db_session=session, signal_instance=later)
++    assert later.filter_action == expected_action
++
++
++def test_filter_actions_snooze_after_expired_filter(session, entity, signal, project):
++    """An expired snooze filter must not stop later active snooze filters from being checked."""
++    from datetime import datetime, timedelta, timezone
++    from dispatch.signal.service import filter_signal
++    from tests.factories import EntityTypeFactory, SignalInstanceFactory, SignalFilterFactory
++
++    entity_type = EntityTypeFactory(project=project)
++    session.add(entity_type)
++    session.add(entity)
++
++    signal_instance = SignalInstanceFactory(
++        project=project,
++        signal=signal,
++        entities=[entity],
++        raw=json.dumps({"id": "foo"}),
++    )
++    session.add(signal_instance)
++
++    expired_filter = SignalFilterFactory(
++        name="snooze-expired",
++        description="test",
++        expression=[{"or": [{"model": "Entity", "field": "id", "op": "==", "value": entity.id}]}],
++        action="snooze",
++        expiration=datetime.now(timezone.utc) - timedelta(days=7),
++        project=project,
++    )
++    active_filter = SignalFilterFactory(
++        name="snooze-active",
++        description="test",
++        expression=[{"or": [{"model": "Entity", "field": "id", "op": "==", "value": entity.id}]}],
++        action="snooze",
++        expiration=datetime.now(timezone.utc) + timedelta(days=30),
++        project=project,
++    )
++
++    signal.filters = [expired_filter, active_filter]
++    session.commit()
++
++    assert filter_signal(db_session=session, signal_instance=signal_instance)
++    assert signal_instance.filter_action == "snooze"
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..1c3e907c
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,132 @@
++import inspect
++
++from datetime import date, datetime, timedelta
++from types import SimpleNamespace
++
++import pytest
++
++from dispatch.case import scheduled
++from dispatch.case.enums import CaseStatus
++from dispatch.scheduler import scheduler
++
++
++class FixedDate(date):
++    """A date whose today() is pinned, so the weekday checks are deterministic."""
++
++    _today = date(2025, 8, 18)
++
++    @classmethod
++    def today(cls):
++        return cls._today
++
++
++def task_body(name):
++    """Returns the undecorated body of a scheduled task so it can be called directly."""
++    task = next(t for t in scheduler.registered_tasks if t["name"] == name)
++    return inspect.unwrap(task["func"])
++
++
++def set_today(monkeypatch, day: date):
++    FixedDate._today = day
++    monkeypatch.setattr(scheduled, "date", FixedDate)
++
++
++@pytest.mark.parametrize(
++    "day, expected",
++    [
++        (date(2025, 8, 18), True),  # Monday
++        (date(2025, 8, 19), False),  # Tuesday
++        (date(2025, 8, 20), False),  # Wednesday
++        (date(2025, 8, 21), False),  # Thursday
++        (date(2025, 8, 22), False),  # Friday
++        (date(2025, 8, 23), False),  # Saturday
++        (date(2025, 8, 24), False),  # Sunday
++    ],
++)
++def test_is_reminder_day(monkeypatch, day, expected):
++    set_today(monkeypatch, day)
++    assert scheduled._is_reminder_day() is expected
++
++
++def test_case_close_reminder_sent_on_monday(monkeypatch):
++    set_today(monkeypatch, date(2025, 8, 18))
++    case = SimpleNamespace(
++        status=CaseStatus.triage, triage_at=datetime.utcnow() - timedelta(days=8)
++    )
++    sent = []
++    monkeypatch.setattr(scheduled, "get_all_by_status", lambda **kwargs: [case])
++    monkeypatch.setattr(
++        scheduled, "send_case_close_reminder", lambda case, db_session: sent.append(case)
++    )
++
++    task_body("case-close-reminder")(None, SimpleNamespace(id=1))
++
++    assert sent == [case]
++
++
++def test_case_close_reminder_not_sent_on_tuesday(monkeypatch):
++    set_today(monkeypatch, date(2025, 8, 19))
++    case = SimpleNamespace(
++        status=CaseStatus.triage, triage_at=datetime.utcnow() - timedelta(days=8)
++    )
++    sent = []
++    monkeypatch.setattr(scheduled, "get_all_by_status", lambda **kwargs: [case])
++    monkeypatch.setattr(
++        scheduled, "send_case_close_reminder", lambda case, db_session: sent.append(case)
++    )
++
++    task_body("case-close-reminder")(None, SimpleNamespace(id=1))
++
++    assert sent == []
++
++
++def test_case_stable_reminder_sent_on_monday(monkeypatch):
++    set_today(monkeypatch, date(2025, 8, 18))
++    case = SimpleNamespace(
++        status=CaseStatus.stable, stable_at=datetime.utcnow() - timedelta(days=8)
++    )
++    sent = []
++    monkeypatch.setattr(scheduled, "get_all_by_status", lambda **kwargs: [case])
++    monkeypatch.setattr(
++        scheduled, "send_case_close_reminder", lambda case, db_session: sent.append(case)
++    )
++
++    task_body("case-stable-reminder")(None, SimpleNamespace(id=1))
++
++    assert sent == [case]
++
++
++def test_case_close_reminder_counts_from_created_at_when_triage_at_missing(monkeypatch):
++    set_today(monkeypatch, date(2025, 8, 18))
++    case = SimpleNamespace(
++        status=CaseStatus.triage,
++        triage_at=None,
++        created_at=datetime.utcnow() - timedelta(days=30),
++    )
++    sent = []
++    monkeypatch.setattr(scheduled, "get_all_by_status", lambda **kwargs: [case])
++    monkeypatch.setattr(
++        scheduled, "send_case_close_reminder", lambda case, db_session: sent.append(case)
++    )
++
++    task_body("case-close-reminder")(None, SimpleNamespace(id=1))
++
++    assert sent == [case]
++
++
++def test_case_close_reminder_not_sent_when_created_recently_and_triage_at_missing(monkeypatch):
++    set_today(monkeypatch, date(2025, 8, 18))
++    case = SimpleNamespace(
++        status=CaseStatus.triage,
++        triage_at=None,
++        created_at=datetime.utcnow() - timedelta(days=2),
++    )
++    sent = []
++    monkeypatch.setattr(scheduled, "get_all_by_status", lambda **kwargs: [case])
++    monkeypatch.setattr(
++        scheduled, "send_case_close_reminder", lambda case, db_session: sent.append(case)
++    )
++
++    task_body("case-close-reminder")(None, SimpleNamespace(id=1))
++
++    assert sent == []

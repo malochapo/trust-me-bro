@@ -1,0 +1,11 @@
+This repository is Dispatch, an incident management platform; it is the code we run in production. Since mid-August, assignees no longer get the weekly Monday reminders to close their long-running triage and stable cases, while the daily triage reminders still arrive. Nobody changed the reminder settings. The scheduler's and the API's logs from 2025-07-28 to 2025-08-20 are in /tmp/sobre-bench-work/run-26bbfb1d0294/data/scheduler.log and /tmp/sobre-bench-work/run-26bbfb1d0294/data/api.log. Find the root cause, and the deploy that shipped it to production. Do not change any code yet.
+
+
+----- next turn -----
+
+Yesterday you found out why assignees stopped getting the weekly Monday reminders to close their long-running triage and stable cases, from the scheduler's and the API's logs in /tmp/sobre-bench-work/run-26bbfb1d0294/data. Please fix it now, and add a regression test that would have caught it. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`. When you are done, end your reply with these lines, in this exact form:
+FILE: <path of the file with the weekday bug>
+FUNCTION: <name of the function with the weekday bug>
+INTRODUCED_BY: <hash of the commit that introduced the weekday bug, at least 8 characters>
+DEPLOYED_IMAGE: <image tag of the deploy that shipped it>
+FIRST_MISSED: <date of the first Monday whose weekly reminders were not sent, YYYY-MM-DD>

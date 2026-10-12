@@ -1,0 +1,90 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..c978a0cc 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..44eec32a
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,69 @@
++import inspect
++from datetime import date, datetime, timedelta
++from types import SimpleNamespace
++
++import pytest
++
++from dispatch.case import scheduled as case_scheduled
++from dispatch.case.enums import CaseStatus
++from dispatch.scheduler import scheduler
++
++from tests.factories import CaseFactory
++
++
++MONDAY = date(2025, 8, 18)
++TUESDAY = date(2025, 8, 19)
++
++
++def _freeze_today(monkeypatch, day: date):
++    monkeypatch.setattr(case_scheduled, "date", SimpleNamespace(today=lambda: day))
++
++
++@pytest.mark.parametrize(
++    "day,expected",
++    [(MONDAY, True), (TUESDAY, False), (date(2025, 8, 17), False), (date(2025, 8, 25), True)],
++)
++def test_is_reminder_day(monkeypatch, day, expected):
++    _freeze_today(monkeypatch, day)
++
++    assert case_scheduled._is_reminder_day() is expected
++
++
++def _registered_task(name: str):
++    # the scheduler decorator doesn't return the function, so look it up by name
++    task = next(t for t in scheduler.registered_tasks if t["name"] == name)
++    # unwrap the timer and project context decorators down to the raw task
++    return inspect.unwrap(task["func"])
++
++
++@pytest.mark.parametrize(
++    "task_name,status,timestamp_field",
++    [
++        ("case-close-reminder", CaseStatus.triage, "triage_at"),
++        ("case-stable-reminder", CaseStatus.stable, "stable_at"),
++    ],
++)
++def test_weekly_reminders_are_sent_on_monday(
++    monkeypatch, session, task_name, status, timestamp_field
++):
++    case = CaseFactory()
++    case.status = status
++    setattr(case, timestamp_field, datetime.utcnow() - timedelta(days=8))
++    session.commit()
++
++    sent = []
++    monkeypatch.setattr(
++        case_scheduled,
++        "send_case_close_reminder",
++        lambda case, db_session: sent.append(case),
++    )
++
++    task = _registered_task(task_name)
++
++    _freeze_today(monkeypatch, TUESDAY)
++    task(db_session=session, project=case.project)
++    assert sent == []
++
++    _freeze_today(monkeypatch, MONDAY)
++    task(db_session=session, project=case.project)
++    assert sent == [case]
