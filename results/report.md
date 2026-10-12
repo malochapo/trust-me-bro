@@ -1,29 +1,29 @@
-# sobre-bench report
+# trust-me-bro report
 
-140 scored runs (graded, or timed out or errored, which count as failures) out of 140. Bootstrap: 10000 resamples over tasks, seed 20261010. Non-inferiority margin: 5.0 percentage points of success. Cost: tokens x harness/prices.json (client estimate alongside).
+140 scored runs (graded, or timed out or errored, which count as failures) out of 140. Bootstrap: 10000 resamples over tasks, seed 20261010. Non-inferiority margin: 5.0 percentage points of success. Cost: tokens x harness/prices.json (client estimate alongside). Cold start: the same runs, each session priced as if it had started with a cold prompt cache (docs/cache-isolation.md).
 
 ## Per arm
 
-| arm | runs | success | cost mean $ | cost median $ | client cost $ | input | output | cache read | cache write 5m | cache write 1h | turns | wall s | tool calls |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| native | 20 | 100.0% | 0.0552 | 0.0578 | 0.0552 | 10 | 1,633 | 92,667 | 11,833 | 0 | 5.2 | 25 | 4.2 |
-| sobre | 20 | 100.0% | 0.0623 | 0.0619 | 0.0623 | 11 | 1,847 | 108,410 | 13,198 | 0 | 6.3 | 30 | 5.3 |
-| sobre-dev | 20 | 100.0% | 0.0557 | 0.0576 | 0.0557 | 9 | 1,613 | 87,215 | 12,341 | 0 | 5.1 | 24 | 4.1 |
-| sobre-hooks | 20 | 100.0% | 0.0575 | 0.0560 | 0.0575 | 11 | 1,712 | 101,690 | 12,086 | 0 | 5.7 | 23 | 4.7 |
-| lean-ctx | 20 | 100.0% | 0.0893 | 0.0959 | 0.0893 | 11 | 2,205 | 140,898 | 21,275 | 0 | 8.9 | 31 | 8.0 |
-| headroom | 20 | 100.0% | 0.0623 | 0.0646 | 0.0623 | 10 | 1,666 | 92,234 | 14,548 | 0 | 5.6 | 26 | 4.6 |
-| rtk | 20 | 100.0% | 0.0587 | 0.0520 | 0.0587 | 11 | 1,692 | 103,530 | 12,580 | 0 | 5.8 | 28 | 4.8 |
+| arm | runs | success | cost mean $ | cost median $ | cold-start cost mean $ | client cost $ | input | output | cache read | cache write 5m | cache write 1h | turns | wall s | tool calls |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| native | 20 | 100.0% | 0.0552 | 0.0578 | 0.0818 | 0.0552 | 10 | 1,633 | 92,667 | 11,833 | 0 | 5.2 | 25 | 4.2 |
+| sobre | 20 | 100.0% | 0.0623 | 0.0619 | 0.0890 | 0.0623 | 11 | 1,847 | 108,410 | 13,198 | 0 | 6.3 | 30 | 5.3 |
+| sobre-dev | 20 | 100.0% | 0.0557 | 0.0576 | 0.0824 | 0.0557 | 9 | 1,613 | 87,215 | 12,341 | 0 | 5.1 | 24 | 4.1 |
+| sobre-hooks | 20 | 100.0% | 0.0575 | 0.0560 | 0.0842 | 0.0575 | 11 | 1,712 | 101,690 | 12,086 | 0 | 5.7 | 23 | 4.7 |
+| lean-ctx | 20 | 100.0% | 0.0893 | 0.0959 | 0.1154 | 0.0893 | 11 | 2,205 | 140,898 | 21,275 | 0 | 8.9 | 31 | 8.0 |
+| headroom | 20 | 100.0% | 0.0623 | 0.0646 | 0.0818 | 0.0623 | 10 | 1,666 | 92,234 | 14,548 | 0 | 5.6 | 26 | 4.6 |
+| rtk | 20 | 100.0% | 0.0587 | 0.0520 | 0.0854 | 0.0587 | 11 | 1,692 | 103,530 | 12,580 | 0 | 5.8 | 28 | 4.8 |
 
 ## Paired with native (per-task means over reps)
 
-| arm | tasks | Δ success (pp) | 95% CI | cost ratio (geo mean) | 95% CI | success verdict |
-|---|---|---|---|---|---|---|
-| sobre | 10 | 0.0 | [0.0, 0.0] | 1.127 | [1.040, 1.239] | non-inferior |
-| sobre-dev | 10 | 0.0 | [0.0, 0.0] | 1.020 | [0.974, 1.072] | non-inferior |
-| sobre-hooks | 10 | 0.0 | [0.0, 0.0] | 1.026 | [0.980, 1.078] | non-inferior |
-| lean-ctx | 10 | 0.0 | [0.0, 0.0] | 1.616 | [1.432, 1.820] | non-inferior |
-| headroom | 10 | 0.0 | [0.0, 0.0] | 1.142 | [1.057, 1.249] | non-inferior |
-| rtk | 10 | 0.0 | [0.0, 0.0] | 1.058 | [1.006, 1.113] | non-inferior |
+| arm | tasks | Δ success (pp) | 95% CI | cost ratio (geo mean) | 95% CI | cold-start cost ratio | 95% CI | success verdict |
+|---|---|---|---|---|---|---|---|---|
+| sobre | 10 | 0.0 | [0.0, 0.0] | 1.127 | [1.040, 1.239] | 1.083 | [1.021, 1.163] | non-inferior |
+| sobre-dev | 10 | 0.0 | [0.0, 0.0] | 1.020 | [0.974, 1.072] | 1.010 | [0.981, 1.043] | non-inferior |
+| sobre-hooks | 10 | 0.0 | [0.0, 0.0] | 1.026 | [0.980, 1.078] | 1.020 | [0.988, 1.058] | non-inferior |
+| lean-ctx | 10 | 0.0 | [0.0, 0.0] | 1.616 | [1.432, 1.820] | 1.405 | [1.314, 1.490] | non-inferior |
+| headroom | 10 | 0.0 | [0.0, 0.0] | 1.142 | [1.057, 1.249] | 0.998 | [0.969, 1.030] | non-inferior |
+| rtk | 10 | 0.0 | [0.0, 0.0] | 1.058 | [1.006, 1.113] | 1.039 | [1.003, 1.078] | non-inferior |
 
 ## Per task (success rate / mean cost $)
 

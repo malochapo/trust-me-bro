@@ -1,23 +1,23 @@
 # trust-me-bro report
 
-48 scored runs (graded, or timed out or errored, which count as failures) out of 48. Bootstrap: 10000 resamples over tasks, seed 20261010. Non-inferiority margin: 5.0 percentage points of success. Cost: tokens x harness/prices.json (client estimate alongside).
+48 scored runs (graded, or timed out or errored, which count as failures) out of 48. Bootstrap: 10000 resamples over tasks, seed 20261010. Non-inferiority margin: 5.0 percentage points of success. Cost: tokens x harness/prices.json (client estimate alongside). Cold start: the same runs, each session priced as if it had started with a cold prompt cache (docs/cache-isolation.md).
 
 ## Per arm
 
-| arm | runs | success | cost mean $ | cost median $ | client cost $ | input | output | cache read | cache write 5m | cache write 1h | turns | wall s | tool calls |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| native | 12 | 91.7% | 0.0612 | 0.0448 | 0.0640 | 1,223 | 33,657 | 2,439,592 | 91,286 | 0 | 51.8 | 516 | 46.2 |
-| lean-ctx | 12 | 100.0% | 0.1003 | 0.0760 | 0.1010 | 1,565 | 39,794 | 3,356,468 | 122,631 | 0 | 73.6 | 569 | 68.1 |
-| headroom | 12 | 100.0% | 0.0499 | 0.0455 | 0.0499 | 2,090 | 31,478 | 2,077,511 | 105,121 | 0 | 50.9 | 460 | 45.4 |
-| rtk | 12 | 75.0% | 0.0826 | 0.0788 | 0.0861 | 1,327 | 43,248 | 3,676,676 | 102,453 | 0 | 73.9 | 693 | 68.4 |
+| arm | runs | success | cost mean $ | cost median $ | cold-start cost mean $ | client cost $ | input | output | cache read | cache write 5m | cache write 1h | turns | wall s | tool calls |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| native | 12 | 91.7% | 0.0612 | 0.0448 | 0.0624 | 0.0640 | 1,223 | 33,657 | 2,439,592 | 91,286 | 0 | 51.8 | 516 | 46.2 |
+| lean-ctx | 12 | 100.0% | 0.1003 | 0.0760 | 0.1008 | 0.1010 | 1,565 | 39,794 | 3,356,468 | 122,631 | 0 | 73.6 | 569 | 68.1 |
+| headroom | 12 | 100.0% | 0.0499 | 0.0455 | 0.0500 | 0.0499 | 2,090 | 31,478 | 2,077,511 | 105,121 | 0 | 50.9 | 460 | 45.4 |
+| rtk | 12 | 75.0% | 0.0826 | 0.0788 | 0.0839 | 0.0861 | 1,327 | 43,248 | 3,676,676 | 102,453 | 0 | 73.9 | 693 | 68.4 |
 
 ## Paired with native (per-task means over reps)
 
-| arm | tasks | Δ success (pp) | 95% CI | cost ratio (geo mean) | 95% CI | success verdict |
-|---|---|---|---|---|---|---|
-| lean-ctx | 4 | 8.3 | [0.0, 25.0] | 1.782 | [1.242, 2.582] | non-inferior |
-| headroom | 4 | 8.3 | [0.0, 25.0] | 0.894 | [0.712, 1.124] | non-inferior |
-| rtk | 4 | -16.7 | [-33.3, 0.0] | 1.480 | [0.997, 2.128] | inconclusive |
+| arm | tasks | Δ success (pp) | 95% CI | cost ratio (geo mean) | 95% CI | cold-start cost ratio | 95% CI | success verdict |
+|---|---|---|---|---|---|---|---|---|
+| lean-ctx | 4 | 8.3 | [0.0, 25.0] | 1.782 | [1.242, 2.582] | 1.744 | [1.230, 2.514] | non-inferior |
+| headroom | 4 | 8.3 | [0.0, 25.0] | 0.894 | [0.712, 1.124] | 0.873 | [0.698, 1.092] | non-inferior |
+| rtk | 4 | -16.7 | [-33.3, 0.0] | 1.480 | [0.997, 2.128] | 1.467 | [0.996, 2.096] | inconclusive |
 
 ## Per task (success rate / mean cost $)
 
