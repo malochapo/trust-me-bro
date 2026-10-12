@@ -1,0 +1,21 @@
+name: harness tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # The arms' tools, Postgres and a real Claude Code are not installed here: the tests that
+      # need them skip themselves. No test calls the API.
+      - run: python3 -m unittest discover -s harness/tests -t harness/tests -v
