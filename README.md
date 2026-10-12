@@ -23,7 +23,7 @@ sobre, written by this benchmark's author, was measured further in pilots 3 and 
 
 ## Why they do not save
 
-Measured across the 1,070 runs of pilots 1 to 5:
+Measured across the 1,116 runs of pilots 1 to 5, all published here:
 
 - **Every API call re-reads the whole prompt.** A tool result is written to the prompt cache once and read again at every later call. That is why tool results make up 28% to 50% of a run's cost ([pilot 4](docs/pilot-4.md)).
 - **Agents already keep their outputs small.** Given megabytes of logs and full test suites, they pipe into `head`, `tail` and `grep -c`. Compressing what is left saves about 1% of a run ([pilot 2](docs/pilot-2.md), [pilot 4](docs/pilot-4.md)).
