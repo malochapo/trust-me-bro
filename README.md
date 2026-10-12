@@ -87,7 +87,7 @@ An arm is a directory under `arms/` with three parts ([arms/README.md](arms/READ
 - a `probe.sh` that says whether the tool did anything during the run;
 - its pinned version in `arms/versions.json`.
 
-Open a pull request. If your tool documents a setup this benchmark does not follow, that is a bug in the benchmark.
+Open a pull request ([CONTRIBUTING.md](CONTRIBUTING.md)). If your tool documents a setup this benchmark does not follow, that is a bug in the benchmark.
 
 ## License
 

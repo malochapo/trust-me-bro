@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Answer the results
+    url: https://github.com/malochapo/trust-me-bro/discussions
+    about: Tool authors and readers discussing a pilot's results.
+  - name: Report a leaked key or sensitive data
+    url: https://github.com/malochapo/trust-me-bro/security/advisories/new
+    about: Privately, never in a public issue (see SECURITY.md).

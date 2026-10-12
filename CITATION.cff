@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, its method or its results, please cite it as below."
+title: "trust-me-bro: a paired benchmark of token-saving tools for coding agents"
+type: software
+authors:
+  - alias: malochapo
+repository-code: "https://github.com/malochapo/trust-me-bro"
+license: Apache-2.0
+date-released: 2026-10-12
+abstract: >-
+  Runs Claude Code on the same tasks and code base with and without tools that
+  claim to cut what coding agents cost (rtk, Headroom, lean-ctx, sobre), and
+  compares billed tokens and task success. Every run is published with its
+  transcript.
+keywords:
+  - benchmark
+  - coding agents
+  - Claude Code
+  - LLM cost
+  - token usage
+  - prompt caching
