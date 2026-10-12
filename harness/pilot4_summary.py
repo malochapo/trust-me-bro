@@ -7,7 +7,8 @@ cost ratio to native (geometric mean of per-task ratios of means, 95% bootstrap 
 tasks; with two tasks per part the interval says little). Day 2 is the last session of a run
 that has more than one: its result's total_cost_usd, a running total within the session.
 
-Usage: python3 -I harness/pilot4_summary.py [haiku sonnet]
+Usage: python3 -I harness/pilot4_summary.py [--pilot pilot5] [haiku sonnet]
+(pilot 5 ran parts A and D again, with the released tools)
 """
 
 import sys
@@ -79,9 +80,9 @@ def read_run(run_dir):
                 loaded_day2=any(day == 2 for (day, _) in loaded))
 
 
-def load(model):
+def load(model, pilot="pilot4"):
     runs = collections.defaultdict(list)
-    for run_dir in sorted((common.BENCH_ROOT / "results" / "pilot4" / model / "raw").iterdir()):
+    for run_dir in sorted((common.BENCH_ROOT / "results" / pilot / model / "raw").iterdir()):
         meta, usage, graded = (common.read_json(run_dir / f) for f in ("meta.json", "usage.json", "graded.json"))
         if not (meta and usage and graded) or meta.get("status") != "ok":
             continue
@@ -97,10 +98,13 @@ def ratio_interval(ratios, rng):
     return math.exp(statistics.mean(logs)), boots[250], boots[9749]
 
 
-def main(models):
+def main(argv):
+    pilot = "pilot4"
+    if argv[:1] == ["--pilot"]:
+        pilot, argv = argv[1], argv[2:]
     rng = random.Random(20261012)
-    for model in models:
-        runs = load(model)
+    for model in argv or ["haiku", "sonnet"]:
+        runs = load(model, pilot)
         print(f"\n## {model}")
         for part in PARTS:
             tasks = sorted({t for t, _ in runs if part_of(t) == part})
@@ -130,4 +134,4 @@ def main(models):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:] or ["haiku", "sonnet"]))
+    sys.exit(main(sys.argv[1:]))
