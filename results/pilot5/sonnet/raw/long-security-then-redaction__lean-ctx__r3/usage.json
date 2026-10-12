@@ -1,0 +1,48 @@
+{
+  "by_model": {
+    "claude-sonnet-5-5": {
+      "cache_read": 1837445,
+      "cache_write_1h": 0,
+      "cache_write_5m": 97004,
+      "client_cost_usd": 0.639453,
+      "cost_usd": 0.6394525,
+      "input": 2194,
+      "output": 20881,
+      "price_key": "claude-sonnet-5-5"
+    }
+  },
+  "client_total_cost_usd": 0.639453,
+  "conversation_turns": 8,
+  "cost_usd": 0.639452,
+  "duration_api_ms": 226406,
+  "duration_ms": 347301,
+  "flags": [],
+  "is_error": false,
+  "num_turns": 60,
+  "prices": {
+    "as_of": "2026-10-10",
+    "source": "https://platform.claude.com/docs/en/about-claude/pricing (model pricing table, footnote 2 and long context pricing), read on 2026-10-10"
+  },
+  "result_subtype": "success",
+  "source": "modelUsage",
+  "tokens": {
+    "cache_read": 1837445,
+    "cache_write_1h": 0,
+    "cache_write_5m": 97004,
+    "input": 2194,
+    "output": 20881
+  },
+  "tool_calls": {
+    "Bash": 1,
+    "Edit": 2,
+    "mcp__lean-ctx__ctx_compose": 1,
+    "mcp__lean-ctx__ctx_patch": 5,
+    "mcp__lean-ctx__ctx_read": 17,
+    "mcp__lean-ctx__ctx_search": 9,
+    "mcp__lean-ctx__ctx_shell": 18
+  },
+  "tool_calls_total": 53,
+  "tool_result_chars": 112688,
+  "tool_result_errors": 4,
+  "tool_results": 53
+}

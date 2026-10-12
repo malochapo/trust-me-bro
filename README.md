@@ -6,24 +6,28 @@ A paired benchmark of the tools that promise to make coding agents cheaper. It r
 
 ## What it found
 
-Claude Code 2.1.296, October 2026. Cost of a run relative to Claude Code alone: 1 is the same cost, above 1 costs more. Geometric mean of per-task cost ratios, with a 95% bootstrap interval.
+Claude Code 2.1.296, October 2026. Cost of a run relative to Claude Code alone: 1 is the same cost, above 1 costs more, below 1 costs less. Geometric mean of per-task cost ratios, with a 95% bootstrap interval (over tasks in pilots 1 and 2, over runs in pilot 5).
 
-| Tool | Short tasks, Sonnet 5.5 ([pilot 1](docs/pilot-1.md)) | Harder tasks, Sonnet 5.5 ([pilot 2](docs/pilot-2.md)) | Long conversations ([pilot 5](docs/pilot-5.md)) |
-| --- | --- | --- | --- |
-| [rtk](https://github.com/rtk-ai/rtk) 0.51.0 | 1.06 (1.01–1.11) | 1.10 (0.91–1.44) | running |
-| [Headroom](https://github.com/chopratejas/headroom) 0.40.0 | 1.14 (1.06–1.25) | 1.30 (1.22–1.40) | running |
-| [lean-ctx](https://github.com/yvgude/lean-ctx) 3.11.2 | 1.62 (1.43–1.82) | 1.81 (1.52–2.11) | running |
-| [sobre](https://github.com/malochapo/sobre-ai) 0.1.0-rc.1 | 1.13 (1.04–1.24) | 1.08 (0.96–1.23) | see below |
+| Tool | Short tasks, Sonnet 5.5 ([pilot 1](docs/pilot-1.md)) | Harder tasks, Sonnet 5.5 ([pilot 2](docs/pilot-2.md)) | Long conversations, Haiku 5.5 ([pilot 5](docs/pilot-5.md)) | Long conversations, Sonnet 5.5 ([pilot 5](docs/pilot-5.md)) |
+| --- | --- | --- | --- | --- |
+| [rtk](https://github.com/rtk-ai/rtk) 0.51.0 | 1.06 (1.01–1.11) | 1.10 (0.91–1.44) | 1.48 (1.21–1.75) | 1.19 (1.05–1.35) |
+| [Headroom](https://github.com/chopratejas/headroom) 0.40.0 | 1.14 (1.06–1.25) | 1.30 (1.22–1.40) | 0.89 (0.81–1.01) | 1.11 (0.98–1.22) |
+| [lean-ctx](https://github.com/yvgude/lean-ctx) 3.11.2 | 1.62 (1.43–1.82) | 1.81 (1.52–2.11) | 1.78 (1.28–2.25) | 1.23 (1.16–1.31) |
+| [sobre](https://github.com/malochapo/sobre-ai) 0.1.0-rc.1 | 1.13 (1.04–1.24) | 1.08 (0.96–1.23) | see below | see below |
 
-Every run of pilots 1 and 2 succeeded, in every arm: no tool changed whether the task got done, only what it cost. sobre, written by this benchmark's author, was measured further in pilots 3 and 4 ([pilot 3](docs/pilot-3.md), [pilot 4](docs/pilot-4.md)). Its best build cost what Claude Code alone costs (0.98 to 1.03 on Sonnet's multi-turn conversations), and it was archived.
+Every run of pilots 1 and 2 succeeded, in every arm, and so did every Sonnet run of pilot 5. On Haiku's long conversations, rtk failed 3 runs of 12 and Claude Code alone 1.
+
+One result sits at the edge of the noise: Headroom on Haiku's long conversations, 0.89 (0.81–1.01). Its proxy compresses tool results inside each request, and those runs read 15% fewer tokens from the cache. But its four tasks disagree (0.62 to 1.13), and on Sonnet it costs more.
+
+sobre, written by this benchmark's author, was measured further in pilots 3 and 4 ([pilot 3](docs/pilot-3.md), [pilot 4](docs/pilot-4.md)). Its best build cost what Claude Code alone costs (0.98 to 1.03 on Sonnet's multi-turn conversations), and it was archived.
 
 ## Why they do not save
 
-Measured across the 998 runs of pilots 1 to 4:
+Measured across the 1,070 runs of pilots 1 to 5:
 
 - **Every API call re-reads the whole prompt.** A tool result is written to the prompt cache once and read again at every later call. That is why tool results make up 28% to 50% of a run's cost ([pilot 4](docs/pilot-4.md)).
 - **Agents already keep their outputs small.** Given megabytes of logs and full test suites, they pipe into `head`, `tail` and `grep -c`. Compressing what is left saves about 1% of a run ([pilot 2](docs/pilot-2.md), [pilot 4](docs/pilot-4.md)).
-- **A tool's fixed cost is paid on every call.** Its tool definitions and instructions sit in the prompt prefix, and the extra turns it invites cost more than the bytes it removes ([pilot 1](docs/pilot-1.md)).
+- **A tool's fixed cost is paid on every call.** Its tool definitions and instructions sit in the prompt prefix, and the extra turns it invites cost more than the bytes it removes. On long conversations, lean-ctx and rtk added 30% to 40% more turns ([pilot 1](docs/pilot-1.md), [pilot 5](docs/pilot-5.md)).
 - **Agents do not use tools they are not told about.** In 454 runs with a context tool's MCP server connected, no agent called it unless a `CLAUDE.md` said to. Told to search with it, Haiku's runs cost 1.27 times more ([pilot 4](docs/pilot-4.md)).
 - **The host's own features win.** Asked to save findings for the next day, every agent used Claude Code's own memory. Told to use an add-on memory instead, Sonnet's next day cost 1.23 times more ([pilot 4](docs/pilot-4.md)).
 - **The lever that would matter belongs to the host.** In a long session, clearing old tool results from the prompt would cut about 20% of the cost on the same path. Claude Code clears them only once the cache has expired, and a tool outside the host cannot do it without breaking the cache ([docs/clearing.md](docs/clearing.md)).

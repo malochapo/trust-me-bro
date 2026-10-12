@@ -1,0 +1,44 @@
+This repository is Dispatch, an incident management platform. Security review: which endpoints of the case API (src/dispatch/case/views.py) and the incident API (src/dispatch/incident/views.py) change data (POST, PUT, PATCH or DELETE routes) without declaring a PermissionsDependency in their route definition? List all of them, and only them. Do not change any code yet.
+
+
+----- next turn -----
+
+Thanks. Some of those are open on purpose: anyone may report a case or an incident. Is any of the others a regression rather than a design choice? If so, find the commit that removed its check, restore the check it had, and add a test that fails if the check goes missing again. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.
+
+
+----- next turn -----
+
+Another finding from the same review: a member of the security team says the cases list shows them restricted cases they do not take part in. Find the cause and fix it. The existing tests are correct; do not change them. Which commit introduced it?
+
+
+----- next turn -----
+
+/compact
+
+----- next turn -----
+
+This repository is Dispatch, an incident management platform. Trace what happens to a signal instance sent to the API with POST /api/v1/{organization}/signals/instances, until it either opens a case or is filtered out. In particular: where are sensitive values masked in the instance's raw payload, which function does it, which keys does it mask by default, and is the unmasked payload ever written to the database? Do not change any code yet.
+
+
+----- next turn -----
+
+Thanks. Something else broke this week: entity extraction misses values. For an entity type whose JSONPath matches several fields, only the first match becomes an entity, and CI is red in tests/entity. Find the change responsible and fix the code. The existing tests are correct; do not change them. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.
+
+
+----- next turn -----
+
+Analysts now report that unrelated instances of the signal "GitHub: Personal access token exposed" get grouped into the same case. That signal has an entity type whose JSONPath points at the session token in the payload, and a deduplication filter on that entity type. Find out why, and fix it: a masked value must never become an entity, wherever entities are extracted from a payload. Keep the masking as it is. Add a test.
+
+
+----- next turn -----
+
+Thanks, that is all for today. I am writing up today's work for the weekly report. Give me a recap of both investigations that ends with these lines, in this exact form:
+UNPROTECTED_AT_START: <every handler that changed data without a PermissionsDependency before your changes, comma-separated, as case.<function> or incident.<function>>
+RESTORED: <the handler whose check you restored, as case.<function> or incident.<function>>
+REMOVED_BY: <hash of the commit that removed its check, at least 8 characters>
+VISIBILITY_BUG: <hash of the commit that let members see restricted cases they do not take part in, at least 8 characters>
+REDACTION_FUNCTION: <dotted module path>.<function>
+DEFAULT_KEYS: <comma-separated keys>
+UNMASKED_IN_DATABASE: <yes or no: is the unmasked payload ever written to the database>
+EXTRACTION_BUG: <hash of the commit that made entity extraction keep only the first match, at least 8 characters>
+MASKING_COMMIT: <hash of the commit that introduced the masking, at least 8 characters>

@@ -1,0 +1,3 @@
+$ bash -c git checkout 51546e13b36a1c5692f2c6a2e19cb6c2c32bbe37 -- tests/database tests/entity && python -m pytest -q -p no:cacheprovider tests/database tests/event/test_hidden_mt_event_permission.py tests/entity
+.........................................                                [100%]
+41 passed in 19.79s

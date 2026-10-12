@@ -1,0 +1,119 @@
+diff --git a/src/dispatch/case_cost/service.py b/src/dispatch/case_cost/service.py
+index c8e809ce..12ae0e40 100644
+--- a/src/dispatch/case_cost/service.py
++++ b/src/dispatch/case_cost/service.py
+@@ -23,6 +23,10 @@ from .models import CaseCost, CaseCostCreate, CaseCostUpdate
+ 
+ HOURS_IN_DAY = 24
+ SECONDS_IN_HOUR = 3600
++
++# Fallbacks for projects missing these values, matching the defaults on the Project model
++DEFAULT_ANNUAL_EMPLOYEE_COST = 50000
++DEFAULT_BUSINESS_YEAR_HOURS = 2080
+ log = logging.getLogger(__name__)
+ 
+ 
+@@ -115,7 +119,15 @@ def get_engagement_multiplier(participant_role: str):
+ 
+ def get_hourly_rate(project) -> int:
+     """Calculates and rounds up the employee hourly rate within a project."""
+-    return math.ceil(project.annual_employee_cost / project.business_year_hours)
++    annual_employee_cost = project.annual_employee_cost
++    if annual_employee_cost is None:
++        annual_employee_cost = DEFAULT_ANNUAL_EMPLOYEE_COST
++
++    business_year_hours = project.business_year_hours
++    if business_year_hours is None:
++        business_year_hours = DEFAULT_BUSINESS_YEAR_HOURS
++
++    return math.ceil(annual_employee_cost / business_year_hours)
+ 
+ 
+ def update_case_response_cost_for_case_type(db_session: Session, case_type: CaseType) -> None:
+@@ -350,7 +362,7 @@ def get_participant_role_time_seconds(case: Case, participant_role: ParticipantR
+                 closed_at = closed_at.replace(tzinfo=timezone.utc)
+             timestamps.append(closed_at)
+         if timestamps:
+-            participant_role_renounced_at = max(timestamps)
++            participant_role_renounced_at = min(timestamps)
+ 
+     if participant_role.renounced_at:
+         # the participant left the conversation or got assigned another role
+diff --git a/tests/case_cost/test_case_cost_service.py b/tests/case_cost/test_case_cost_service.py
+index c91a0e5f..0959f881 100644
+--- a/tests/case_cost/test_case_cost_service.py
++++ b/tests/case_cost/test_case_cost_service.py
+@@ -418,3 +418,73 @@ def test_case_cost_stops_at_stable_time(
+ 
+     assert early_stable_cost == 0
+     assert early_stable_time == 0
++
++
++def test_get_participant_role_time_seconds_stops_at_first_milestone(
++    case, participant_role
++):
++    """Tests that participant time stops at the earliest of escalated_at, stable_at and closed_at."""
++    from datetime import datetime, timedelta, timezone
++    from dispatch.case.enums import CaseStatus
++    from dispatch.case_cost.service import get_participant_role_time_seconds
++    from dispatch.participant_role.models import ParticipantRoleType
++
++    now = datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None)
++    three_hours_ago = now - timedelta(hours=3)
++    two_hours_ago = now - timedelta(hours=2)
++    one_hour_ago = now - timedelta(hours=1)
++
++    participant_role.role = ParticipantRoleType.assignee
++    participant_role.assumed_at = three_hours_ago
++    participant_role.renounced_at = None
++
++    # The case was escalated two hours ago and marked stable one hour ago, so the
++    # cost should stop at the escalation, not at the later stable time.
++    case.status = CaseStatus.stable
++    case.escalated_at = two_hours_ago
++    case.stable_at = one_hour_ago
++    case.closed_at = None
++
++    time_seconds = get_participant_role_time_seconds(case=case, participant_role=participant_role)
++    assert time_seconds == 3600  # one hour between assumed_at and escalated_at
++
++
++def test_get_hourly_rate_defaults_when_missing(project):
++    """Tests that missing project cost values fall back to the project model defaults."""
++    import math
++    from dispatch.case_cost.service import get_hourly_rate
++
++    project.annual_employee_cost = None
++    project.business_year_hours = None
++    assert get_hourly_rate(project) == math.ceil(50000 / 2080)
++
++    project.annual_employee_cost = 120000
++    project.business_year_hours = None
++    assert get_hourly_rate(project) == math.ceil(120000 / 2080)
++
++    project.annual_employee_cost = None
++    project.business_year_hours = 1000
++    assert get_hourly_rate(project) == math.ceil(50000 / 1000)
++
++
++def test_calculate_case_response_cost_with_missing_project_values(
++    case, session, participant_activity
++):
++    """Tests that a case still gets a cost when its project has no employee cost or hours set."""
++    import math
++    from dispatch.case_cost.service import calculate_case_response_cost, calculate_response_cost
++    from dispatch.case.enums import CostModelType
++
++    participant_activity.case = case
++    case.project.annual_employee_cost = None
++    case.project.business_year_hours = None
++
++    costs = calculate_case_response_cost(case=case, db_session=session)
++
++    expected_cost = calculate_response_cost(
++        hourly_rate=math.ceil(50000 / 2080),
++        total_response_time_seconds=(
++            participant_activity.ended_at - participant_activity.started_at
++        ).total_seconds(),
++    )
++    assert costs[CostModelType.new] == expected_cost

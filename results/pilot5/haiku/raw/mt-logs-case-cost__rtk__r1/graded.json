@@ -1,0 +1,94 @@
+{
+  "arm": "rtk",
+  "details": {
+    "parts": [
+      {
+        "details": {
+          "hidden_files": [
+            "tests/case_cost/test_hidden_mt_case_cost.py"
+          ],
+          "regression": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/case_cost",
+              "tests/incident_cost"
+            ],
+            "exit": 0,
+            "last_line": "43 passed in 15.43s",
+            "seconds": 22.7
+          },
+          "tests": {
+            "cmd": [
+              "python",
+              "-m",
+              "pytest",
+              "-q",
+              "-p",
+              "no:cacheprovider",
+              "tests/case_cost/test_hidden_mt_case_cost.py"
+            ],
+            "exit": 0,
+            "last_line": "5 passed in 8.25s",
+            "seconds": 14.7
+          }
+        },
+        "kind": "tests",
+        "pass": true,
+        "score": 1.0
+      },
+      {
+        "details": {
+          "must": [
+            {
+              "id": "file",
+              "matched": true,
+              "pattern": "^\\s*FILE:\\s*`?\\S*case_cost/service\\.py\\b"
+            },
+            {
+              "id": "function",
+              "matched": true,
+              "pattern": "^\\s*FUNCTION:\\s*`?(\\S*\\.)?get_participant_role_time_seconds\\b"
+            },
+            {
+              "id": "commit",
+              "matched": true,
+              "pattern": "^\\s*INTRODUCED_BY:\\s*`?{plant:q2-case-cost-cutoff:short}"
+            },
+            {
+              "id": "image",
+              "matched": true,
+              "pattern": "^\\s*DEPLOYED_IMAGE:[^\\n]*main-{plant:2a90ae1b9fe5ebf8b5152673d965804a63f98275:short}"
+            },
+            {
+              "id": "first-inflated",
+              "matched": true,
+              "pattern": "^\\s*FIRST_INFLATED:\\s*`?2025-09-03\\b"
+            },
+            {
+              "id": "missing-setting",
+              "matched": true,
+              "pattern": "^\\s*MISSING_SETTING:\\s*`?(\\S*\\.)?annual[_ ]employee[_ ]cost\\b"
+            }
+          ],
+          "must_not": []
+        },
+        "kind": "facts",
+        "pass": true,
+        "score": 1.0
+      }
+    ]
+  },
+  "graded_at": "2026-10-12T12:07:07+00:00",
+  "kind": "all",
+  "pass": true,
+  "rep": 1,
+  "run_id": "mt-logs-case-cost__rtk__r1",
+  "score": 1.0,
+  "task_id": "mt-logs-case-cost",
+  "task_sha256": "ee6f552a5c000e7a7274485878d76295496fde0a473a47f624afb6b2bfa82fb9"
+}

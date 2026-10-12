@@ -1,0 +1,84 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..4899ea70 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,10 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # triage_at is only set by the triage transition, so cases that
++            # never went through it fall back to when they were created
++            triaged_at = case.triage_at or case.created_at
++            span = datetime.utcnow() - triaged_at
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..69bfb782
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,51 @@
++import inspect
++from datetime import date, datetime, timedelta
++from unittest import mock
++
++import pytest
++
++from dispatch.case.enums import CaseStatus
++from dispatch.case.scheduled import _is_reminder_day
++from dispatch.scheduler import scheduler
++
++
++@pytest.mark.parametrize(
++    "today, expected",
++    [
++        (date(2025, 8, 18), True),  # Monday
++        (date(2025, 8, 17), False),  # Sunday
++        (date(2025, 8, 19), False),  # Tuesday
++        (date(2025, 8, 25), True),  # next Monday
++    ],
++)
++def test_is_reminder_day(today, expected):
++    with mock.patch("dispatch.case.scheduled.date") as mock_date:
++        mock_date.today.return_value = today
++        assert _is_reminder_day() is expected
++
++
++@pytest.mark.parametrize(
++    "created_days_ago, expected_sends",
++    [
++        (8, 1),  # created more than a week ago, so the reminder goes out
++        (3, 0),  # created recently, so no reminder yet
++    ],
++)
++def test_case_close_reminder_falls_back_to_created_at(created_days_ago, expected_sends):
++    case = mock.Mock(
++        status=CaseStatus.triage,
++        triage_at=None,
++        created_at=datetime.utcnow() - timedelta(days=created_days_ago),
++    )
++    # scheduler.add doesn't return the job, so look it up by its registered name
++    [task] = [t for t in scheduler.registered_tasks if t["name"] == "case-close-reminder"]
++    job = inspect.unwrap(task["func"])
++
++    with (
++        mock.patch("dispatch.case.scheduled._is_reminder_day", return_value=True),
++        mock.patch("dispatch.case.scheduled.get_all_by_status", return_value=[case]),
++        mock.patch("dispatch.case.scheduled.send_case_close_reminder") as send,
++    ):
++        job(db_session=mock.Mock(), project=mock.Mock())
++
++    assert send.call_count == expected_sends

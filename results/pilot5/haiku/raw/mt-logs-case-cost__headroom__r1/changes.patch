@@ -1,0 +1,137 @@
+diff --git a/src/dispatch/case_cost/service.py b/src/dispatch/case_cost/service.py
+index c8e809ce..ba028250 100644
+--- a/src/dispatch/case_cost/service.py
++++ b/src/dispatch/case_cost/service.py
+@@ -17,6 +17,10 @@ from dispatch.participant_activity import service as participant_activity_servic
+ from dispatch.participant_activity.models import ParticipantActivityCreate, ParticipantActivity
+ from dispatch.participant_role.models import ParticipantRoleType, ParticipantRole
+ from dispatch.plugin import service as plugin_service
++from dispatch.project.models import (
++    DEFAULT_ANNUAL_EMPLOYEE_COST,
++    DEFAULT_BUSINESS_YEAR_HOURS,
++)
+ 
+ from .models import CaseCost, CaseCostCreate, CaseCostUpdate
+ 
+@@ -115,7 +119,10 @@ def get_engagement_multiplier(participant_role: str):
+ 
+ def get_hourly_rate(project) -> int:
+     """Calculates and rounds up the employee hourly rate within a project."""
+-    return math.ceil(project.annual_employee_cost / project.business_year_hours)
++    # projects created before these fields had defaults may have them unset
++    annual_employee_cost = project.annual_employee_cost or DEFAULT_ANNUAL_EMPLOYEE_COST
++    business_year_hours = project.business_year_hours or DEFAULT_BUSINESS_YEAR_HOURS
++    return math.ceil(annual_employee_cost / business_year_hours)
+ 
+ 
+ def update_case_response_cost_for_case_type(db_session: Session, case_type: CaseType) -> None:
+@@ -350,7 +357,7 @@ def get_participant_role_time_seconds(case: Case, participant_role: ParticipantR
+                 closed_at = closed_at.replace(tzinfo=timezone.utc)
+             timestamps.append(closed_at)
+         if timestamps:
+-            participant_role_renounced_at = max(timestamps)
++            participant_role_renounced_at = min(timestamps)
+ 
+     if participant_role.renounced_at:
+         # the participant left the conversation or got assigned another role
+diff --git a/src/dispatch/project/models.py b/src/dispatch/project/models.py
+index 4278858d..8002dbdd 100644
+--- a/src/dispatch/project/models.py
++++ b/src/dispatch/project/models.py
+@@ -15,6 +15,10 @@ from dispatch.models import DispatchBase, NameStr, Pagination, PrimaryKey
+ from dispatch.organization.models import Organization, OrganizationRead
+ 
+ 
++DEFAULT_ANNUAL_EMPLOYEE_COST = 50000
++DEFAULT_BUSINESS_YEAR_HOURS = 2080
++
++
+ class Project(Base):
+     id = Column(Integer, primary_key=True)
+     name = Column(String)
+@@ -24,8 +28,8 @@ class Project(Base):
+     default = Column(Boolean, default=False)
+     color = Column(String)
+ 
+-    annual_employee_cost = Column(Integer, default=50000)
+-    business_year_hours = Column(Integer, default=2080)
++    annual_employee_cost = Column(Integer, default=DEFAULT_ANNUAL_EMPLOYEE_COST)
++    business_year_hours = Column(Integer, default=DEFAULT_BUSINESS_YEAR_HOURS)
+ 
+     owner_email = Column(String)
+     owner_conversation = Column(String)
+diff --git a/tests/case_cost/test_case_cost_service.py b/tests/case_cost/test_case_cost_service.py
+index c91a0e5f..92e4526f 100644
+--- a/tests/case_cost/test_case_cost_service.py
++++ b/tests/case_cost/test_case_cost_service.py
+@@ -418,3 +418,70 @@ def test_case_cost_stops_at_stable_time(
+ 
+     assert early_stable_cost == 0
+     assert early_stable_time == 0
++
++
++def test_get_participant_role_time_seconds_cut_off_is_earliest_timestamp(
++    case, participant_role
++):
++    """Tests that the cost cut-off is the earliest of stable, escalated, and closed timestamps."""
++    from datetime import datetime, timedelta, timezone
++    from dispatch.case_cost.service import get_participant_role_time_seconds
++    from dispatch.participant_role.models import ParticipantRoleType
++    from dispatch.case.enums import CaseStatus
++
++    now = datetime.now(timezone.utc)
++    two_hours_ago = now - timedelta(hours=2)
++    one_hour_ago = now - timedelta(hours=1)
++
++    participant_role.role = ParticipantRoleType.assignee
++    participant_role.assumed_at = two_hours_ago.replace(tzinfo=None)
++    participant_role.renounced_at = None
++
++    # The case was marked stable an hour ago and closed just now, the cost stops at stable_at
++    case.status = CaseStatus.closed
++    case.stable_at = one_hour_ago
++    case.closed_at = now
++
++    time_seconds = get_participant_role_time_seconds(case=case, participant_role=participant_role)
++
++    expected_time = int((one_hour_ago - two_hours_ago).total_seconds())
++    assert time_seconds == expected_time
++
++
++def test_get_hourly_rate_uses_defaults_for_unset_project_values(project):
++    """Tests that the project model's defaults are used when a project has no cost or hours set."""
++    import math
++
++    from dispatch.case_cost.service import get_hourly_rate
++    from dispatch.project.models import DEFAULT_ANNUAL_EMPLOYEE_COST, DEFAULT_BUSINESS_YEAR_HOURS
++
++    expected_rate = math.ceil(DEFAULT_ANNUAL_EMPLOYEE_COST / DEFAULT_BUSINESS_YEAR_HOURS)
++
++    project.annual_employee_cost = None
++    project.business_year_hours = 1000
++    assert get_hourly_rate(project) == math.ceil(DEFAULT_ANNUAL_EMPLOYEE_COST / 1000)
++
++    project.annual_employee_cost = 100000
++    project.business_year_hours = None
++    assert get_hourly_rate(project) == math.ceil(100000 / DEFAULT_BUSINESS_YEAR_HOURS)
++
++    project.annual_employee_cost = None
++    assert get_hourly_rate(project) == expected_rate
++
++
++def test_calculate_case_response_cost_project_without_cost_settings(
++    case, session, participant_activity, case_cost_type
++):
++    """Tests that a case still gets a cost when its project has no employee cost or hours set."""
++    from dispatch.case_cost.service import calculate_case_response_cost
++    from dispatch.case.enums import CostModelType
++
++    participant_activity.case = case
++    case_cost_type.model_type = CostModelType.new
++    case_cost_type.project = case.project
++    case.project.annual_employee_cost = None
++    case.project.business_year_hours = None
++
++    costs = calculate_case_response_cost(case=case, db_session=session)
++
++    assert costs[CostModelType.new] > 0

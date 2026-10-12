@@ -1,0 +1,12 @@
+{
+  "active": true,
+  "db_rows": {
+    "commands": 99,
+    "hook_decisions": 64,
+    "parse_failures": 0
+  },
+  "tokens_input": 26542,
+  "tokens_output": 12847,
+  "tokens_saved": 13696,
+  "total_commands": 99
+}

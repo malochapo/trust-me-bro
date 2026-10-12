@@ -1,0 +1,14 @@
+{
+  "active": true,
+  "api_requests": 35,
+  "code_aware": "ENABLED",
+  "kompress": {
+    "backend": "onnx",
+    "ready": true,
+    "status": "healthy"
+  },
+  "primary_model": "claude-haiku-5-5",
+  "requests_compressed": 1,
+  "tokens_before": 1318463,
+  "tokens_removed": 252
+}

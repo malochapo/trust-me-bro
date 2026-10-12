@@ -1,0 +1,137 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/case/test_case_scheduled.py
+diff --git a/src/dispatch/case/scheduled.py b/src/dispatch/case/scheduled.py
+index 0854e8d1..56b0a0fd 100644
+--- a/src/dispatch/case/scheduled.py
++++ b/src/dispatch/case/scheduled.py
+@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
+ 
+ def _is_reminder_day() -> bool:
+     """Reminders about long-running cases go out once a week, on Mondays."""
+-    return date.today().isoweekday() == calendar.MONDAY
++    return date.today().weekday() == calendar.MONDAY
+ 
+ 
+ @scheduler.add(every(1).day.at("18:00"), name="case-close-reminder")
+@@ -44,7 +44,9 @@ def case_close_reminder(db_session: Session, project: Project):
+ 
+     for case in cases:
+         try:
+-            span = datetime.utcnow() - case.triage_at
++            # cases that never recorded a triage time count from when they were created
++            triage_start = case.triage_at or case.created_at
++            span = datetime.utcnow() - triage_start
+             q, r = divmod(span.days, 7)
+             if q >= 1 and _is_reminder_day():
+                 # we only send the reminder for cases that have been triaging
+diff --git a/tests/case/test_case_scheduled.py b/tests/case/test_case_scheduled.py
+new file mode 100644
+index 00000000..2ebf6f7c
+--- /dev/null
++++ b/tests/case/test_case_scheduled.py
+@@ -0,0 +1,105 @@
++from datetime import date, datetime, timedelta
++from unittest.mock import MagicMock
++
++import pytest
++
++from dispatch import decorators
++from dispatch.case import scheduled
++from dispatch.case.enums import CaseStatus
++from dispatch.scheduler import scheduler
++from tests.factories import CaseFactory
++
++
++class _FrozenDate(date):
++    """A date whose today() is fixed, so the weekday check is deterministic."""
++
++    frozen_today = date(2025, 8, 4)
++
++    @classmethod
++    def today(cls):
++        return cls(cls.frozen_today.year, cls.frozen_today.month, cls.frozen_today.day)
++
++
++@pytest.mark.parametrize(
++    "today, expected",
++    [
++        (date(2025, 8, 4), True),  # Monday
++        (date(2025, 8, 5), False),  # Tuesday
++        (date(2025, 8, 10), False),  # Sunday
++    ],
++)
++def test_is_reminder_day(monkeypatch, today, expected):
++    _FrozenDate.frozen_today = today
++    monkeypatch.setattr(scheduled, "date", _FrozenDate)
++
++    assert scheduled._is_reminder_day() is expected
++
++
++def _triage_case(session, project, *, triage_at, created_at):
++    """Creates a case in triage. The factory overrides a status kwarg, so set it after."""
++    case = CaseFactory(project=project, triage_at=triage_at, created_at=created_at)
++    case.status = CaseStatus.triage
++    session.commit()
++    return case
++
++
++def _run_case_close_reminder(monkeypatch, session, project):
++    """Runs the close reminder job against the test session instead of opening project sessions."""
++
++    def run_in_project(func, *args, **kwargs):
++        func(*args, db_session=session, project=project, **kwargs)
++
++    monkeypatch.setattr(decorators, "_execute_task_in_project_context", run_in_project)
++    # the scheduler decorator doesn't return the function, so look up the registered task
++    task = next(t["func"] for t in scheduler.registered_tasks if t["name"] == "case-close-reminder")
++    task()
++
++
++def test_case_close_reminder_counts_from_created_at_when_triage_at_missing(
++    monkeypatch, session, project
++):
++    _FrozenDate.frozen_today = date(2025, 8, 4)  # Monday
++    monkeypatch.setattr(scheduled, "date", _FrozenDate)
++    send = MagicMock()
++    monkeypatch.setattr(scheduled, "send_case_close_reminder", send)
++
++    case = _triage_case(
++        session, project, triage_at=None, created_at=datetime.utcnow() - timedelta(days=8)
++    )
++
++    _run_case_close_reminder(monkeypatch, session, project)
++
++    send.assert_called_once()
++    assert send.call_args.args[0].id == case.id
++
++
++def test_case_close_reminder_skips_recent_case_without_triage_at(monkeypatch, session, project):
++    _FrozenDate.frozen_today = date(2025, 8, 4)  # Monday
++    monkeypatch.setattr(scheduled, "date", _FrozenDate)
++    send = MagicMock()
++    monkeypatch.setattr(scheduled, "send_case_close_reminder", send)
++
++    _triage_case(session, project, triage_at=None, created_at=datetime.utcnow() - timedelta(days=2))
++
++    _run_case_close_reminder(monkeypatch, session, project)
++
++    send.assert_not_called()
++
++
++def test_case_close_reminder_counts_from_triage_at_when_set(monkeypatch, session, project):
++    _FrozenDate.frozen_today = date(2025, 8, 4)  # Monday
++    monkeypatch.setattr(scheduled, "date", _FrozenDate)
++    send = MagicMock()
++    monkeypatch.setattr(scheduled, "send_case_close_reminder", send)
++
++    # created long ago, but only triaging for two days, so no reminder
++    _triage_case(
++        session,
++        project,
++        triage_at=datetime.utcnow() - timedelta(days=2),
++        created_at=datetime.utcnow() - timedelta(days=30),
++    )
++
++    _run_case_close_reminder(monkeypatch, session, project)
++
++    send.assert_not_called()

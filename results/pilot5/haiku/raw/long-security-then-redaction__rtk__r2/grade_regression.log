@@ -1,0 +1,113 @@
+$ python -m pytest -q -p no:cacheprovider tests/case tests/event tests/signal
+.......................F...............s..................               [100%]
+=================================== FAILURES ===================================
+__________ test_deleting_a_custom_event_requires_the_event_permission __________
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 341, in from_call
+    result: Optional[TResult] = func()
+                                ^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 262, in <lambda>
+    lambda: ihook(item=item, **kwds), when=when, reraise=reraise
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 53, in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_result.py", line 103, in get_result
+    raise exc.with_traceback(tb)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 38, in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 177, in pytest_runtest_call
+    raise e
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/runner.py", line 169, in pytest_runtest_call
+    item.runtest()
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/python.py", line 1792, in runtest
+    self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 167, in _multicall
+    raise exception
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 139, in _multicall
+    teardown.throw(exception)
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/schemathesis/extra/pytest_plugin.py", line 312, in pytest_pyfunc_call
+    yield
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/pluggy/_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/claude-0/-home-user-sobre-ai/6e9fce50-dc77-557d-a798-3d46e734422a/scratchpad/bench-venv/deps/lib/python3.11/site-packages/_pytest/python.py", line 194, in pytest_pyfunc_call
+    result = testfunction(**testargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/sobre-bench-work/run-6997871b2e45/repo/tests/event/test_hidden_mt_event_permission.py", line 36, in test_deleting_a_custom_event_requires_the_event_permission
+    assert IncidentEventPermission in _permission_classes(route)
+AssertionError: assert <class 'dispatch.auth.permissions.IncidentEventPermission'> in set()
+ +  where set() = _permission_classes(APIRoute(path='/{incident_id}/event/{event_uuid}', name='delete_custom_event', methods=['DELETE']))
+=========================== short test summary info ============================
+FAILED tests/event/test_hidden_mt_event_permission.py::test_deleting_a_custom_event_requires_the_event_permission
+1 failed, 56 passed, 1 skipped in 30.87s

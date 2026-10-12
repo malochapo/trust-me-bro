@@ -1,0 +1,5 @@
+$ python -m pytest -q -p no:cacheprovider tests/case
+ImportError while loading conftest '/tmp/sobre-bench-work/run-4d7efdef914b/repo/tests/conftest.py'.
+tests/conftest.py:4: in <module>
+    from slack_sdk.web.client import WebClient
+E   ModuleNotFoundError: No module named 'slack_sdk'
