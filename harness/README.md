@@ -14,6 +14,7 @@ base, once per arm (`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`; see
 | `report.py` | `results/report.md` and `results/report.csv` |
 | `cache_isolation.py` | how often each arm's sessions started warm, and each pilot's ratios measured, cold and warm (`docs/cache-isolation.md`) |
 | `bench.py` | runs a matrix in a seeded, interleaved order, then grades it |
+| `compaction_position.py` | the compaction position test's tables: facts recalled by half, cost, requests past Haiku 5.5's price tier (`docs/compaction-position.md`) |
 | `prices.json` | $ per million tokens per model (to verify against the public pricing page) |
 | `common.py` | shared helpers: clean env, lock, run virtualenv, Postgres check |
 | `tests/` | unittest suite; `fake_claude.py` stands in for `claude` |

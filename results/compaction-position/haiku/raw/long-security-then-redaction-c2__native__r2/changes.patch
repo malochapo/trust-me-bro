@@ -1,0 +1,141 @@
+# untracked files (their diffs follow the tracked changes):
+#   tests/entity/test_entity_masked_values.py
+#   tests/incident/test_incident_event_permissions.py
+diff --git a/src/dispatch/database/service.py b/src/dispatch/database/service.py
+index e927a561..32e34f85 100644
+--- a/src/dispatch/database/service.py
++++ b/src/dispatch/database/service.py
+@@ -833,8 +833,10 @@ def restricted_case_filter(query: orm.Query, current_user: DispatchUser, role: U
+         .filter(
+             or_(
+                 Case.visibility == Visibility.open,
+-                Case.visibility == Visibility.restricted,
+-                IndividualContact.email == current_user.email,
++                and_(
++                    Case.visibility == Visibility.restricted,
++                    IndividualContact.email == current_user.email,
++                ),
+             )
+         )
+     )
+diff --git a/src/dispatch/entity/service.py b/src/dispatch/entity/service.py
+index 8e9cfe06..9e63bb04 100644
+--- a/src/dispatch/entity/service.py
++++ b/src/dispatch/entity/service.py
+@@ -14,6 +14,7 @@ from dispatch.entity.models import Entity, EntityCreate, EntityUpdate, EntityRea
+ from dispatch.entity_type import service as entity_type_service
+ from dispatch.entity_type.models import EntityType
+ from dispatch.signal.models import Signal, SignalInstance
++from dispatch.signal.redaction import MASK, redact_raw
+ 
+ 
+ log = logging.getLogger(__name__)
+@@ -283,13 +284,14 @@ def find_entities(
+         Yields:
+             EntityCreate: An entity found in the SignalInstance.
+         """
++        # mask sensitive values so they can never become entities
++        payload = redact_raw(signal_instance.raw)
+         for entity_type, _, jpath in entity_type_pairs:
+             if jpath:
+                 try:
+-                    # a JSONPath names one field: keep its first match
+-                    matches = jpath.find(signal_instance.raw)[:1]
++                    matches = jpath.find(payload)
+                     for match in matches:
+-                        if isinstance(match.value, str):
++                        if isinstance(match.value, str) and match.value != MASK:
+                             yield EntityCreate(
+                                 id=None,
+                                 value=match.value,
+diff --git a/src/dispatch/incident/views.py b/src/dispatch/incident/views.py
+index a4ca2d4c..b901f1f3 100644
+--- a/src/dispatch/incident/views.py
++++ b/src/dispatch/incident/views.py
+@@ -503,6 +503,7 @@ def export_timeline_event(
+ @router.delete(
+     "/{incident_id}/event/{event_uuid}",
+     summary="Deletes a custom event.",
++    dependencies=[Depends(PermissionsDependency([IncidentEventPermission]))],
+ )
+ def delete_custom_event(
+     db_session: DbSession,
+diff --git a/tests/entity/test_entity_masked_values.py b/tests/entity/test_entity_masked_values.py
+new file mode 100644
+index 00000000..fc328a6b
+--- /dev/null
++++ b/tests/entity/test_entity_masked_values.py
+@@ -0,0 +1,36 @@
++from dispatch.entity.service import find_entities
++from dispatch.entity_type.models import EntityType
++from dispatch.signal.redaction import MASK
++from tests.factories import SignalInstanceFactory
++
++
++def test_find_entities_never_turns_masked_values_into_entities(session, project):
++    """A masked value must not become an entity, even when the JSONPath points at it.
++
++    Otherwise every instance whose token was masked shares the same "[REDACTED]" entity
++    and gets grouped together by deduplication.
++    """
++    signal_instance = SignalInstanceFactory(
++        raw={"session_token": "super-secret-token", "user": "analyst@example.com"}
++    )
++    entity_types = [
++        EntityType(
++            name="Session token",
++            jpath="session_token",
++            regular_expression=None,
++            project=project,
++        ),
++        EntityType(
++            name="User",
++            jpath="user",
++            regular_expression=None,
++            project=project,
++        ),
++    ]
++
++    entities = find_entities(session, signal_instance, entity_types)
++
++    values = {entity.value for entity in entities}
++    assert MASK not in values
++    assert "super-secret-token" not in values
++    assert values == {"analyst@example.com"}
+diff --git a/tests/incident/test_incident_event_permissions.py b/tests/incident/test_incident_event_permissions.py
+new file mode 100644
+index 00000000..6ed0eaaf
+--- /dev/null
++++ b/tests/incident/test_incident_event_permissions.py
+@@ -0,0 +1,31 @@
++from fastapi.routing import APIRoute
++
++from dispatch.auth.permissions import IncidentEventPermission, PermissionsDependency
++from dispatch.incident.views import router
++
++
++def _get_route(path: str, method: str) -> APIRoute:
++    for route in router.routes:
++        if isinstance(route, APIRoute) and route.path == path and method in route.methods:
++            return route
++    raise AssertionError(f"Route {method} {path} not found")
++
++
++def test_delete_custom_event_requires_incident_event_permission():
++    """Deleting a custom event must be guarded by IncidentEventPermission.
++
++    Regression guard: this check was dropped in 28c21e1e ("refactor(incident): tidy
++    custom event routes") and must not go missing again.
++    """
++    route = _get_route("/{incident_id}/event/{event_uuid}", "DELETE")
++
++    permission_dependencies = [
++        dep.dependency
++        for dep in route.dependencies
++        if isinstance(dep.dependency, PermissionsDependency)
++    ]
++
++    assert permission_dependencies, "delete_custom_event has no PermissionsDependency"
++    assert any(
++        IncidentEventPermission in dep.permissions_classes for dep in permission_dependencies
++    ), "delete_custom_event is not guarded by IncidentEventPermission"

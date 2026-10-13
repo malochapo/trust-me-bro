@@ -58,8 +58,8 @@ sobre was archived because of what this benchmark found.
 | Path | What |
 | --- | --- |
 | [docs/](docs/) | one report per pilot, the run book, the clearing study, the cache-isolation and MCP-visibility notes |
-| [tasks/](tasks/), [tasks2/](tasks2/), [tasks3/](tasks3/), [tasks4/](tasks4/) | the tasks of pilots 1, 2, 3 and 4; pilot 5 reuses pilot 4's long conversations |
-| [results/](results/) | every run: `raw/` for pilot 1, then `pilot2/` to `pilot5/`, and `mcp-always/` for the MCP visibility test. Each run keeps its transcript, usage, grade and metadata |
+| [tasks/](tasks/), [tasks2/](tasks2/), [tasks3/](tasks3/), [tasks4/](tasks4/), [tasks5/](tasks5/) | the tasks of pilots 1, 2, 3 and 4; pilot 5 reuses pilot 4's long conversations; `tasks5/` moves their `/compact` ([docs/compaction-position.md](docs/compaction-position.md)) |
+| [results/](results/) | every run: `raw/` for pilot 1, then `pilot2/` to `pilot5/`, `mcp-always/` for the MCP visibility test and `compaction-position/` for the compaction position test. Each run keeps its transcript, usage, grade and metadata |
 | [arms/](arms/) | how each tool is installed, set up and checked |
 | [harness/](harness/) | runs, grading, usage, reports (Python 3.11, standard library only) |
 | [fixture/](fixture/) | the build of the code base |
