@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sobre": {
+      "command": "/root/.cache/trust-me-bro/tools/bin/sobre-rc2",
+      "alwaysLoad": true
+    }
+  }
+}
