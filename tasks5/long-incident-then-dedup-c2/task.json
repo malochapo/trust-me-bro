@@ -1,0 +1,118 @@
+{
+  "id": "long-incident-then-dedup-c2",
+  "family": "long-session",
+  "fixture": "pilot2",
+  "prompt": "This repository is Dispatch, an incident management platform; it is the code we run in production. Since mid-August, assignees no longer get the weekly Monday reminders to close their long-running triage and stable cases, while the daily triage reminders still arrive. Nobody changed the reminder settings. The scheduler's and the API's logs from 2025-07-28 to 2025-08-20 are in {DATA_DIR}/scheduler.log and {DATA_DIR}/api.log. Find the root cause, and the deploy that shipped it to production. Do not change any code yet.\n",
+  "followups": [
+    "Thanks. Please fix it, and add a regression test that would have caught it. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.\n",
+    "/compact",
+    "While you were in those logs: the case close reminder job also logs a TypeError every evening. Find out what causes it. Those cases should still get their weekly reminder: when the timestamp the job counts from is missing, count from when the case was created instead. Fix it and add a test.\n",
+    "This repository is Dispatch, an incident management platform. Since 2025-05-22, which commits changed how Dispatch decides whether a new signal instance is snoozed or deduplicated, including the time windows it uses for that? For each one, give its hash and what it changed, with the windows' values and units as the code applies them today. Do not change any code yet.\n",
+    "Thanks. Since one of those changes, deduplication filters group far fewer instances than they should. The signal \"GuardDuty: Unauthorized API call\" has a deduplication filter whose window is set to 30 in the UI, yet two of its instances for the same user, ten minutes apart, opened two cases. Which of the commits you listed caused it? Fix the code so that a filter's window means what the UI says, and existing filters work without being edited. Add a regression test. The test suite needs PostgreSQL, which is running locally; run tests with `python -m pytest`.\n",
+    "Another report, maybe from the same batch of changes: the signal \"Okta: Impossible travel\" has two snooze filters for the same user, one that expired last week and one that is valid until next month, and new instances for that user are no longer snoozed. Find the cause, fix it, and add a regression test.\n",
+    "Thanks, that is all for today. I am writing up today's work for the weekly report. Give me a recap of both investigations that ends with these lines, in this exact form:\nFILE: <path of the file with the weekday bug>\nFUNCTION: <name of the function with the weekday bug>\nINTRODUCED_BY: <hash of the commit that introduced the weekday bug, at least 8 characters>\nDEPLOYED_IMAGE: <image tag of the deploy that shipped it>\nFIRST_MISSED: <date of the first Monday whose weekly reminders were not sent, YYYY-MM-DD>\nMISSING_FIELD: <the case attribute whose absence caused the evening TypeError>\nDEDUP_WINDOW_BUG: <hash of the commit that broke deduplication windows, at least 8 characters>\nSNOOZE_BUG: <hash of the commit that broke snoozing, at least 8 characters>\nCANARY: <hash of the commit that changed how canary signals are deduplicated, at least 8 characters>\nDEFAULT_WINDOW: <the grouping window that applies to signals without any filter, number and unit>\nDEFAULT_WINDOW_SETTING: <name of the setting that changes it>\n"
+  ],
+  "data": "build/pilot2/data/log-reminders-stopped",
+  "grader": {
+    "kind": "all",
+    "graders": [
+      {
+        "kind": "tests",
+        "command": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/case/test_hidden_mt_case_reminders.py",
+          "tests/signal/test_hidden_mt_dedup_window.py",
+          "tests/signal/test_hidden_mt_snooze_filters.py"
+        ],
+        "regression": [
+          "python",
+          "-m",
+          "pytest",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "tests/case",
+          "tests/signal"
+        ]
+      },
+      {
+        "kind": "facts",
+        "must": [
+          {
+            "id": "file",
+            "any_of": [
+              "^\\s*FILE:\\s*`?\\S*case/scheduled\\.py\\b"
+            ]
+          },
+          {
+            "id": "function",
+            "any_of": [
+              "^\\s*FUNCTION:\\s*`?(\\S*\\.)?_is_reminder_day\\b"
+            ]
+          },
+          {
+            "id": "commit",
+            "any_of": [
+              "^\\s*INTRODUCED_BY:\\s*`?{plant:q4-reminder-day:short}"
+            ]
+          },
+          {
+            "id": "image",
+            "any_of": [
+              "^\\s*DEPLOYED_IMAGE:[^\\n]*main-{plant:17b016b61a604caa0f0a090ec5ec018ca0c13dbf:short}"
+            ]
+          },
+          {
+            "id": "first-missed",
+            "any_of": [
+              "^\\s*FIRST_MISSED:\\s*`?2025-08-18\\b"
+            ]
+          },
+          {
+            "id": "missing-field",
+            "any_of": [
+              "^\\s*MISSING_FIELD:\\s*`?(case\\.|Case\\.)?triage_at\\b"
+            ]
+          },
+          {
+            "id": "dedup-window-bug",
+            "any_of": [
+              "^\\s*DEDUP_WINDOW_BUG:\\s*`?{plant:p4-dedup-window-seconds:short}"
+            ]
+          },
+          {
+            "id": "snooze-bug",
+            "any_of": [
+              "^\\s*SNOOZE_BUG:\\s*`?{plant:p5-snooze-refactor:short}"
+            ]
+          },
+          {
+            "id": "canary",
+            "any_of": [
+              "^\\s*CANARY:\\s*`?{plant:e46fa023b7b8899f4a5f24336ce84699618ed196:short}"
+            ]
+          },
+          {
+            "id": "default-window",
+            "any_of": [
+              "^\\s*DEFAULT_WINDOW:\\s*`?45\\s*(min|minutes)\\b"
+            ]
+          },
+          {
+            "id": "default-window-setting",
+            "any_of": [
+              "^\\s*DEFAULT_WINDOW_SETTING:\\s*`?SIGNAL_DEFAULT_DEDUP_WINDOW_MINUTES\\b"
+            ]
+          }
+        ],
+        "must_not": []
+      }
+    ]
+  },
+  "notes": "Compaction position test (/compact after message 2, in the middle of the first investigation). Pilot 4 part A. The first three messages of tasks3/mt-reminders-incident (diagnose from logs, fix, fix the evening TypeError), then /compact (Claude Code's own compaction, as a long session would trigger), then the first three of tasks3/mt-dedup-snooze-regressions, then one recap that needs facts from both halves. The first half's facts (file, function, commit, image tag, first missed Monday, missing field) were found before the compaction."
+}
