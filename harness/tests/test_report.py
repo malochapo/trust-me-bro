@@ -20,7 +20,7 @@ DATA = {
 }
 
 
-def write_run(raw, task, arm, rep, passed, cost, status="ok", flags=()):
+def write_run(raw, task, arm, rep, passed, cost, status="ok", flags=(), cold=None):
     run_id = f"{task}__{arm}__r{rep}"
     d = raw / run_id
     d.mkdir(parents=True)
@@ -30,6 +30,7 @@ def write_run(raw, task, arm, rep, passed, cost, status="ok", flags=()):
     if status == "ok":
         common.write_json(d / "graded.json", {"pass": bool(passed), "score": float(passed)})
         common.write_json(d / "usage.json", {"cost_usd": cost, "client_total_cost_usd": cost, "num_turns": 10,
+                                             "cost_cold_usd": cold,
                                              "tokens": {"input": 1, "output": 2, "cache_read": 3,
                                                         "cache_write_5m": 4, "cache_write_1h": 5}})
 
@@ -107,3 +108,30 @@ class BenchScheduleTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ColdStartReportTest(unittest.TestCase):
+    """The cold-start ratio pairs the same tasks, from each run's cold-start cost."""
+
+    def test_cold_ratio_and_missing_cold_costs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            raw = Path(tmp) / "raw"
+            # native starts warm, the arm cold: measured 1.5x, the same work priced cold 1.0x.
+            for task in ("t1", "t2"):
+                for rep in (1, 2):
+                    write_run(raw, task, "native", rep, 1, 1.0, cold=1.5)
+                    write_run(raw, task, "sobre", rep, 1, 1.5, cold=1.5)
+            comps = report.build(raw, resamples=200, seed=1)[-1]
+            self.assertAlmostEqual(comps["sobre"]["cost_ratio_geo"], 1.5)
+            self.assertAlmostEqual(comps["sobre"]["cost_ratio_cold_geo"], 1.0)
+            # A run without a cold-start cost (no stream) leaves its task out of the cold ratio.
+            write_run(raw, "t3", "native", 1, 1, 1.0)
+            write_run(raw, "t3", "sobre", 1, 1, 3.0)
+            runs, good, arms, summaries, table, comps = report.build(raw, resamples=200, seed=1)
+            self.assertAlmostEqual(comps["sobre"]["cost_ratio_cold_geo"], 1.0)
+            self.assertIsNone(summaries["sobre"]["cost_cold_mean"])
+            out = Path(tmp) / "out"
+            out.mkdir()
+            args = argparse.Namespace(resamples=200, seed=1, margin_pp=5.0)
+            report.write_markdown(out / "report.md", runs, good, arms, summaries, table, comps, args)
+            self.assertIn("cold-start cost ratio", (out / "report.md").read_text())

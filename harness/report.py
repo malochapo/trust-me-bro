@@ -12,6 +12,11 @@ ratios). Non-inferiority on success: the lower bound of the interval for the
 difference must lie above -margin. Invalid, timed-out, errored and flagged runs are
 listed at the end.
 
+Cost is given twice. Measured: the run's own tokens. Cold start: the same run had each of its
+sessions started with a cold prompt cache (usage.cold_start). Interleaved arms share the
+cache of their workspace, so an arm that keeps native's prompt prefix starts warm more often
+than one that changes it; the cold-start ratio removes that difference (docs/cache-isolation.md).
+
 Usage: python3 -I harness/report.py [--raw results/raw] [--out results] [--margin-pp 5]
 """
 
@@ -28,6 +33,7 @@ import statistics
 from collections import defaultdict
 
 import common
+import usage
 from usage import TOKEN_CLASSES
 
 BASELINE = "native"
@@ -38,8 +44,9 @@ def load_runs(raw_dir):
     for meta_path in sorted(Path(raw_dir).glob("*/meta.json")):
         meta = common.read_json(meta_path)
         run_dir = meta_path.parent
-        runs.append({"meta": meta, "graded": common.read_json(run_dir / "graded.json"),
-                     "usage": common.read_json(run_dir / "usage.json", {}) or {}})
+        run_usage = common.read_json(run_dir / "usage.json", {}) or {}
+        runs.append({"meta": meta, "graded": common.read_json(run_dir / "graded.json"), "usage": run_usage,
+                     "cost_cold": usage.cold_cost(run_dir, run_usage)})
     return runs
 
 
@@ -62,6 +69,12 @@ def mean(xs):
     return sum(xs) / len(xs) if xs else None
 
 
+def mean_all(xs):
+    """The mean, or None when any value is missing (a cold-start cost needs the run's stream)."""
+    xs = list(xs)
+    return None if not xs or any(x is None for x in xs) else sum(xs) / len(xs)
+
+
 def arm_summary(runs):
     costs = [r["usage"].get("cost_usd") for r in runs]
     costs = [c for c in costs if c is not None]
@@ -70,6 +83,7 @@ def arm_summary(runs):
         "success_rate": mean([succeeded(r) for r in runs]),
         "cost_mean": mean(costs),
         "cost_median": statistics.median(costs) if costs else None,
+        "cost_cold_mean": mean_all(r.get("cost_cold") for r in runs),
         "client_cost_mean": mean([r["usage"].get("client_total_cost_usd") for r in runs]),
         **{f"tokens_{c}": mean([(r["usage"].get("tokens") or {}).get(c) for r in runs]) for c in TOKEN_CLASSES},
         "turns_mean": mean([r["usage"].get("num_turns") for r in runs]),
@@ -79,15 +93,16 @@ def arm_summary(runs):
     }
 
 
-def per_task(runs):
-    """{arm: {task: (mean success, mean cost)}} over each task's reps."""
+def per_task(runs, cold=False):
+    """{arm: {task: (mean success, mean cost)}} over each task's reps: the measured cost, or
+    with cold=True the cold-start cost (None for a task where a run has none)."""
     groups = defaultdict(list)
     for r in runs:
         groups[(r["meta"]["arm"], r["meta"]["task_id"])].append(r)
     table = defaultdict(dict)
     for (arm, task), rs in groups.items():
-        table[arm][task] = (mean([succeeded(r) for r in rs]),
-                            mean([r["usage"].get("cost_usd") for r in rs]))
+        cost = mean_all(r.get("cost_cold") for r in rs) if cold else mean([r["usage"].get("cost_usd") for r in rs])
+        table[arm][task] = (mean([succeeded(r) for r in rs]), cost)
     return table
 
 
@@ -157,13 +172,20 @@ def build(raw_dir, resamples=10_000, seed=20261010, margin_pp=5.0):
     summaries = {a: arm_summary(rs) for a, rs in by_arm.items()}
     table = per_task(good)
     comparisons = {a: compare(table, a, resamples, seed, margin_pp) for a in arms if a != BASELINE}
+    cold_table = per_task(good, cold=True)
+    for a, c in comparisons.items():
+        if c:
+            cold = compare(cold_table, a, resamples, seed, margin_pp)
+            c.update(cost_ratio_cold_geo=cold["cost_ratio_geo"], ratio_cold_ci_low=cold["ratio_ci_low"],
+                     ratio_cold_ci_high=cold["ratio_ci_high"])
     return runs, good, arms, summaries, table, comparisons
 
 
 def write_csv(path, arms, summaries, comparisons):
     fields = ["arm"] + list(next(iter(summaries.values())).keys()) + [
         "tasks_paired", "delta_success_pp", "delta_ci_low", "delta_ci_high",
-        "cost_ratio_geo", "ratio_ci_low", "ratio_ci_high", "verdict"]
+        "cost_ratio_geo", "ratio_ci_low", "ratio_ci_high", "verdict",
+        "cost_ratio_cold_geo", "ratio_cold_ci_low", "ratio_cold_ci_high"]
     with open(path, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields)
         w.writeheader()
@@ -192,27 +214,30 @@ def write_markdown(path, runs, good, arms, summaries, table, comparisons, args):
            f"{len(good)} scored runs (graded, or timed out or errored, which count as failures) out of {len(runs)}. "
            f"Bootstrap: {args.resamples} resamples over tasks, seed {args.seed}. "
            f"Non-inferiority margin: {args.margin_pp} percentage points of success. "
-           "Cost: tokens x harness/prices.json (client estimate alongside).", "",
+           "Cost: tokens x harness/prices.json (client estimate alongside). "
+           "Cold start: the same runs, each session priced as if it had started with a cold prompt cache "
+           "(docs/cache-isolation.md).", "",
            "## Per arm", "",
-           "| arm | runs | success | cost mean $ | cost median $ | client cost $ | input | output | cache read | cache write 5m | cache write 1h | turns | wall s | tool calls |",
-           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+           "| arm | runs | success | cost mean $ | cost median $ | cold-start cost mean $ | client cost $ | input | output | cache read | cache write 5m | cache write 1h | turns | wall s | tool calls |",
+           "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for a in arms:
         s = summaries[a]
         rate = f"{100 * s['success_rate']:.1f}%" if s["success_rate"] is not None else "-"
         out.append(f"| {a} | {s['n']} | {rate} | {fmt(s['cost_mean'], 4)} | {fmt(s['cost_median'], 4)} | "
-                   f"{fmt(s['client_cost_mean'], 4)} | " +
+                   f"{fmt(s['cost_cold_mean'], 4)} | {fmt(s['client_cost_mean'], 4)} | " +
                    " | ".join(fmt(s[f"tokens_{c}"], 0) for c in TOKEN_CLASSES) +
                    f" | {fmt(s['turns_mean'], 1)} | {fmt(s['wall_mean_s'], 0)} | {fmt(s['tool_calls_mean'], 1)} |")
     out += ["", f"## Paired with {BASELINE} (per-task means over reps)", "",
-            "| arm | tasks | Δ success (pp) | 95% CI | cost ratio (geo mean) | 95% CI | success verdict |",
-            "|---|---|---|---|---|---|---|"]
+            "| arm | tasks | Δ success (pp) | 95% CI | cost ratio (geo mean) | 95% CI | cold-start cost ratio | 95% CI | success verdict |",
+            "|---|---|---|---|---|---|---|---|---|"]
     for a, c in comparisons.items():
         if c is None:
-            out.append(f"| {a} | 0 | - | - | - | - | no paired tasks |")
+            out.append(f"| {a} | 0 | - | - | - | - | - | - | no paired tasks |")
             continue
         out.append(f"| {a} | {c['tasks_paired']} | {fmt(c['delta_success_pp'], 1)} | "
                    f"[{fmt(c['delta_ci_low'], 1)}, {fmt(c['delta_ci_high'], 1)}] | {fmt(c['cost_ratio_geo'], 3)} | "
-                   f"[{fmt(c['ratio_ci_low'], 3)}, {fmt(c['ratio_ci_high'], 3)}] | {c['verdict']} |")
+                   f"[{fmt(c['ratio_ci_low'], 3)}, {fmt(c['ratio_ci_high'], 3)}] | {fmt(c['cost_ratio_cold_geo'], 3)} | "
+                   f"[{fmt(c['ratio_cold_ci_low'], 3)}, {fmt(c['ratio_cold_ci_high'], 3)}] | {c['verdict']} |")
     tasks = sorted({t for a in table for t in table[a]})
     out += ["", "## Per task (success rate / mean cost $)", "",
             "| task | " + " | ".join(arms) + " |", "|---" * (len(arms) + 1) + "|"]

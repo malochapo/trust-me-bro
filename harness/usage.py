@@ -18,6 +18,11 @@ input, cache read and cache write tokens of its requests over the threshold, and
 the share of those requests. The client's own estimate, `total_cost_usd`, is reported next
 to it as a cross-check.
 
+The prompt cache is shared by every key of an API workspace, so a run can start on a prefix
+another run wrote: Claude Code's tool definitions and system prompt, the same in every run of
+a given setup. `cost_cold_usd` is the run's cost had each session started with a cold cache
+(see cold_start and docs/cache-isolation.md); it does not depend on which runs came before.
+
 Usage: python3 -I harness/usage.py <run dir | stream.jsonl> [--prices FILE]
 """
 
@@ -213,6 +218,85 @@ def tool_stats(events):
     }
 
 
+SUBAGENT_TOOLS = ("Agent", "Task")
+
+
+def session_starts(events):
+    """(model, usage) of the API responses a cold cache would have priced differently: the
+    first response of each main-loop session, and the first response of each subagent type's
+    first spawn. Whatever those responses read from the cache, another run wrote it (or, for a
+    session started the next day, the day before). Every later response reads only what its
+    own run wrote: a resumed turn keeps its session, a later spawn of a type finds what the
+    first one wrote, and a fork (subagent_type "fork") starts from its parent's context."""
+    seen, started, kinds, starts = set(), set(), {}, []
+    for event in events:
+        if event.get("type") != "assistant":
+            continue
+        msg = event.get("message") or {}
+        for block in msg.get("content") or []:
+            if isinstance(block, dict) and block.get("type") == "tool_use" and block.get("name") in SUBAGENT_TOOLS:
+                kinds[block.get("id")] = (block.get("input") or {}).get("subagent_type") or "general-purpose"
+        usage, msg_id, model = msg.get("usage"), msg.get("id"), msg.get("model")
+        if not usage or not msg_id or msg_id in seen or model in (None, "<synthetic>"):
+            continue
+        seen.add(msg_id)
+        parent = event.get("parent_tool_use_id")
+        if parent is None:
+            key = ("session", event.get("session_id"))
+        else:
+            kind = kinds.get(parent, "unknown")
+            if kind == "fork":
+                continue
+            key = ("subagent", kind)
+        if key not in started:
+            started.add(key)
+            starts.append((model, usage))
+    return starts
+
+
+def cold_start(events, price_table):
+    """The run's extra cost had each session started with a cold prompt cache: what each start
+    read from the cache is priced as the cache write it would have been, at the lifetime the
+    start wrote with (5 minutes, or 1 hour when it wrote 1-hour entries only). Interleaved arms
+    share the cache when their keys share a workspace: an arm that keeps native's prompt prefix
+    (a hook, a CLAUDE.md) finds it warm at almost every start, and one that changes it (tools
+    loaded up front, a proxy that rewrites the prompt) does not. Pricing every start cold makes
+    a run's cost independent of the runs before it."""
+    extra, read, unpriced = 0.0, 0, set()
+    starts = session_starts(events)
+    for model, u in starts:
+        tokens = u.get("cache_read_input_tokens") or 0
+        if not tokens:
+            continue
+        _, price = price_for(model, price_table["models"])
+        if price is None:
+            unpriced.add(model)
+            continue
+        long = price.get("long_prompt")
+        prompt = tokens + (u.get("input_tokens") or 0) + (u.get("cache_creation_input_tokens") or 0)
+        if long and prompt > long["over_tokens"]:
+            price = long
+        split = u.get("cache_creation") or {}
+        hour_only = (split.get("ephemeral_1h_input_tokens") or 0) and not (split.get("ephemeral_5m_input_tokens") or 0)
+        write = "cache_write_1h" if hour_only else "cache_write_5m"
+        extra += tokens * (price[write] - price["cache_read"]) / 1e6
+        read += tokens
+    return {"starts": len(starts), "cache_read_tokens": read, "extra_usd": round(extra, 6),
+            "unpriced_models": sorted(unpriced)}
+
+
+def cold_cost(run_dir, run_usage, prices_path=DEFAULT_PRICES):
+    """`cost_cold_usd` of a run: from its usage.json, or, for a run recorded before that field
+    existed, from its stream. None without a cost or a stream."""
+    if run_usage.get("cost_cold_usd") is not None:
+        return run_usage["cost_cold_usd"]
+    stream = Path(run_dir) / "stream.jsonl"
+    if run_usage.get("cost_usd") is None or not stream.exists():
+        return None
+    cold = cold_start(read_events(stream), json.loads(Path(prices_path).read_text()))
+    return round(run_usage["cost_usd"] + cold["extra_usd"], 6)
+
+
 def long_prompt_shares(msgs, threshold):
     """Share of each token class spent in requests whose prompt is over `threshold`."""
     if not msgs or not msgs["messages"]:
@@ -266,12 +350,15 @@ def compute(stream_path, prices_path=DEFAULT_PRICES):
             totals[c] += tokens[c]
     if result is None:
         flags.append("no_result_event")
+    cold = cold_start(events, price_table)
 
     return {
         "source": source,
         "by_model": by_model,
         "tokens": {c: totals[c] for c in TOKEN_CLASSES},
         "cost_usd": round(cost, 6),
+        "cost_cold_usd": round(cost + cold["extra_usd"], 6),
+        "cold_start": cold,
         "client_total_cost_usd": round(session_total(results, lambda r: r.get("total_cost_usd") or 0), 6) if results else None,
         "num_turns": sum(r.get("num_turns") or 0 for r in results) if results else None,
         "duration_ms": sum(r.get("duration_ms") or 0 for r in results) if results else None,

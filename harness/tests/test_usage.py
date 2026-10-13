@@ -167,3 +167,58 @@ class UsageTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ColdStartTest(unittest.TestCase):
+    """cold_start: each session's first response, and each subagent type's first, priced cold."""
+
+    PRICES = json.loads(usage.DEFAULT_PRICES.read_text())
+
+    @staticmethod
+    def assistant(msg_id, read, session="a", parent=None, model="claude-sonnet-5-5", w5=100, w1=0, content=()):
+        return {"type": "assistant", "session_id": session, "parent_tool_use_id": parent, "message": {
+            "id": msg_id, "model": model, "content": list(content),
+            "usage": {"input_tokens": 1, "output_tokens": 1, "cache_read_input_tokens": read,
+                      "cache_creation_input_tokens": w5 + w1,
+                      "cache_creation": {"ephemeral_5m_input_tokens": w5, "ephemeral_1h_input_tokens": w1}}}}
+
+    @staticmethod
+    def spawn(tool_id, kind=None):
+        return {"type": "tool_use", "id": tool_id, "name": "Agent",
+                "input": {"prompt": "look", **({"subagent_type": kind} if kind else {})}}
+
+    def test_starts_are_priced_cold_and_the_rest_left_alone(self):
+        events = [
+            self.assistant("m1", 10_000, content=[self.spawn("t1", "Explore"), self.spawn("t2", "Explore"),
+                                                  self.spawn("t3", "fork")]),
+            self.assistant("m1", 10_000),                     # the same response again: counted once
+            self.assistant("m2", 15_000),                     # a later call of session a: its own cache
+            self.assistant("s1", 3_000, parent="t1"),         # the first Explore: a start
+            self.assistant("s2", 9_000, parent="t1"),         # its second call
+            self.assistant("s3", 4_000, parent="t2"),         # a second Explore: finds what the first wrote
+            self.assistant("f1", 20_000, parent="t3"),        # a fork reads its parent's context
+            self.assistant("m3", 12_000, session="b", w5=0, w1=300),  # a new session, 1-hour writes only
+            self.assistant("x1", 50_000, session="c", model="<synthetic>"),
+        ]
+        cold = usage.cold_start(events, self.PRICES)
+        self.assertEqual(cold["starts"], 3)
+        self.assertEqual(cold["cache_read_tokens"], 10_000 + 3_000 + 12_000)
+        # Sonnet 5.5: a cache read costs $0.10/M, a 5-minute write $2.50/M, a 1-hour write $4.00/M.
+        expected = (10_000 * 2.4 + 3_000 * 2.4 + 12_000 * 3.9) / 1e6
+        self.assertAlmostEqual(cold["extra_usd"], expected, places=9)
+        self.assertEqual(cold["unpriced_models"], [])
+
+    def test_a_start_over_the_long_prompt_threshold_takes_the_long_prices(self):
+        events = [self.assistant("m1", 120_000, model="claude-haiku-5-5")]
+        # Haiku 5.5 over 100K tokens of prompt: a cache read costs $0.05/M, a 5-minute write $0.625/M.
+        self.assertAlmostEqual(usage.cold_start(events, self.PRICES)["extra_usd"], 120_000 * 0.575 / 1e6, places=9)
+
+    def test_compute_and_cold_cost(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            u = usage.compute(fake_stream(tmp))
+            self.assertAlmostEqual(u["cost_cold_usd"], u["cost_usd"] + u["cold_start"]["extra_usd"], places=6)
+            self.assertGreaterEqual(u["cost_cold_usd"], u["cost_usd"])
+            # A run recorded before the field existed: computed from its stream.
+            legacy = {k: v for k, v in u.items() if k not in ("cost_cold_usd", "cold_start")}
+            self.assertEqual(usage.cold_cost(tmp, legacy), u["cost_cold_usd"])
+            self.assertIsNone(usage.cold_cost(Path(tmp) / "missing", legacy))

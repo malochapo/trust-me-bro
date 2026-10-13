@@ -10,8 +10,9 @@ base, once per arm (`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`; see
 | `run.py` | one run: (task, arm, rep) → `results/raw/<run_id>/` |
 | `grade.py` | grades a run dir → `graded.json` (facts, tests, judge) |
 | `judge.py` | blind LLM judge for free-text answers (used by `grade.py`) |
-| `usage.py` | tokens per model and class, cost, tool stats, from `stream.jsonl` |
+| `usage.py` | tokens per model and class, cost (measured, and with every session started on a cold cache), tool stats, from `stream.jsonl` |
 | `report.py` | `results/report.md` and `results/report.csv` |
+| `cache_isolation.py` | how often each arm's sessions started warm, and each pilot's ratios measured, cold and warm (`docs/cache-isolation.md`) |
 | `bench.py` | runs a matrix in a seeded, interleaved order, then grades it |
 | `prices.json` | $ per million tokens per model (to verify against the public pricing page) |
 | `common.py` | shared helpers: clean env, lock, run virtualenv, Postgres check |
@@ -180,6 +181,14 @@ repo as the agent left it, its HOME and the virtualenv.
 - Also: `num_turns`, `duration_ms`, `duration_api_ms`, tool calls per tool name,
   tool results, those with `is_error`, and the characters of tool-result text the
   model received.
+- `cost_cold_usd` and `cold_start`: the run's cost had each session started on a cold
+  prompt cache. The keys of a workspace share the cache, so a session's first response
+  can read a prefix another run wrote (Claude Code's tool definitions and system
+  prompt). The first response of each session, and of each subagent type's first spawn
+  (forks excepted), has its cache reads priced as the cache writes they would have been;
+  every later response reads what its own run wrote and is unchanged
+  ([docs/cache-isolation.md](../docs/cache-isolation.md)). For a run recorded before the field
+  existed, `usage.cold_cost()` computes it from the stream.
 
 `python3 -I harness/usage.py <run dir>` prints it.
 
@@ -211,4 +220,6 @@ tasks with a fixed seed give 95% percentile intervals for Δ success (percentage
 points) and for the cost ratio (geometric mean of per-task ratios). Verdict on
 success with margin M: non-inferior if the interval's lower bound is above -M,
 inferior if its upper bound is below -M, inconclusive otherwise. Then a per-task
-table, run status counts per arm, and the runs not scored or flagged.
+table, run status counts per arm, and the runs not scored or flagged. The per-arm
+table adds the mean cold-start cost, and the paired table the cold-start cost ratio
+with its interval, from the same resamples (`usage.py`'s `cost_cold_usd`).

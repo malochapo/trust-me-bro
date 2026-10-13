@@ -165,6 +165,25 @@ class RunTest(unittest.TestCase):
         self.assertEqual(meta["status"], "invalid")
         self.assertIn("stubsrv", meta["invalid_reason"])
 
+    def test_an_always_arm_loads_its_mcp_tools_up_front(self):
+        setup = (self.arms / "stubarm" / "setup.sh").read_text()
+        for arm, text in (("stubarm-always", setup.replace("'{\"STUB_EXTRA\": \"1\"}'", "'{\"STUB_EXTRA\": \"1\"}' always-load")),
+                          ("stubbed-always", setup)):
+            (self.arms / arm).mkdir()
+            (self.arms / arm / "setup.sh").write_text(text)
+            (self.arms / arm / "probe.sh").write_text((self.arms / "stubarm" / "probe.sh").read_text())
+            for f in (self.arms / arm).iterdir():
+                f.chmod(0o755)
+        _, run_dir, meta, _ = self.run_arm("stubarm-always")
+        self.assertEqual(meta["status"], "ok", meta.get("invalid_reason"))
+        self.assertEqual(meta["mcp_always_load"], {"stubsrv": True})
+        self.assertTrue(json.loads((run_dir / "arm" / "mcp.json").read_text())["mcpServers"]["stubsrv"]["alwaysLoad"])
+        _, _, meta, _ = self.run_arm("stubbed-always")
+        self.assertEqual(meta["status"], "invalid")
+        self.assertIn("up front", meta["invalid_reason"])
+        _, _, meta, _ = self.run_arm("stubarm")
+        self.assertEqual(meta["mcp_always_load"], {"stubsrv": False})
+
     def test_wrong_model_and_api_error_are_invalid(self):
         _, _, meta, _ = self.run_arm("native", "wrong_model")
         self.assertEqual(meta["status"], "invalid")

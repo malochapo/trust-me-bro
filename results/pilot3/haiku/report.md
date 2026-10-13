@@ -1,29 +1,29 @@
-# sobre-bench report
+# trust-me-bro report
 
-280 scored runs (graded, or timed out or errored, which count as failures) out of 280. Bootstrap: 10000 resamples over tasks, seed 20261010. Non-inferiority margin: 5.0 percentage points of success. Cost: tokens x harness/prices.json (client estimate alongside).
+280 scored runs (graded, or timed out or errored, which count as failures) out of 280. Bootstrap: 10000 resamples over tasks, seed 20261010. Non-inferiority margin: 5.0 percentage points of success. Cost: tokens x harness/prices.json (client estimate alongside). Cold start: the same runs, each session priced as if it had started with a cold prompt cache (docs/cache-isolation.md).
 
 ## Per arm
 
-| arm | runs | success | cost mean $ | cost median $ | client cost $ | input | output | cache read | cache write 5m | cache write 1h | turns | wall s | tool calls |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| native | 40 | 100.0% | 0.0116 | 0.0063 | 0.0116 | 26 | 7,616 | 449,349 | 26,183 | 0 | 14.9 | 89 | 13.3 |
-| sobre-dev | 40 | 100.0% | 0.0135 | 0.0069 | 0.0135 | 30 | 8,343 | 564,420 | 29,145 | 0 | 16.8 | 113 | 15.2 |
-| sobre-dev-06 | 40 | 95.0% | 0.0145 | 0.0075 | 0.0144 | 28 | 8,000 | 529,454 | 28,143 | 0 | 16.0 | 97 | 14.4 |
-| sobre-dev-09 | 40 | 100.0% | 0.0133 | 0.0072 | 0.0133 | 29 | 8,458 | 547,713 | 28,828 | 0 | 16.4 | 111 | 14.8 |
-| sobre-dev-09b | 40 | 100.0% | 0.0133 | 0.0066 | 0.0134 | 28 | 8,250 | 536,210 | 27,975 | 0 | 16.4 | 108 | 14.8 |
-| sobre-hooks | 40 | 97.5% | 0.0133 | 0.0081 | 0.0133 | 30 | 8,364 | 548,202 | 28,990 | 0 | 16.6 | 114 | 15.1 |
-| sobre-keyonly | 40 | 100.0% | 0.0126 | 0.0075 | 0.0126 | 27 | 8,131 | 497,449 | 28,120 | 0 | 15.9 | 86 | 14.3 |
+| arm | runs | success | cost mean $ | cost median $ | cold-start cost mean $ | client cost $ | input | output | cache read | cache write 5m | cache write 1h | turns | wall s | tool calls |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| native | 40 | 100.0% | 0.0116 | 0.0063 | 0.0129 | 0.0116 | 26 | 7,616 | 449,349 | 26,183 | 0 | 14.9 | 89 | 13.3 |
+| sobre-dev | 40 | 100.0% | 0.0135 | 0.0069 | 0.0147 | 0.0135 | 30 | 8,343 | 564,420 | 29,145 | 0 | 16.8 | 113 | 15.2 |
+| sobre-dev-06 | 40 | 95.0% | 0.0145 | 0.0075 | 0.0157 | 0.0144 | 28 | 8,000 | 529,454 | 28,143 | 0 | 16.0 | 96 | 14.4 |
+| sobre-dev-09 | 40 | 100.0% | 0.0133 | 0.0072 | 0.0146 | 0.0133 | 29 | 8,458 | 547,713 | 28,828 | 0 | 16.4 | 111 | 14.8 |
+| sobre-dev-09b | 40 | 100.0% | 0.0133 | 0.0066 | 0.0146 | 0.0134 | 28 | 8,250 | 536,210 | 27,975 | 0 | 16.4 | 108 | 14.8 |
+| sobre-hooks | 40 | 97.5% | 0.0133 | 0.0081 | 0.0146 | 0.0133 | 30 | 8,364 | 548,202 | 28,990 | 0 | 16.6 | 114 | 15.1 |
+| sobre-keyonly | 40 | 100.0% | 0.0126 | 0.0075 | 0.0138 | 0.0126 | 27 | 8,131 | 497,449 | 28,120 | 0 | 15.9 | 86 | 14.3 |
 
 ## Paired with native (per-task means over reps)
 
-| arm | tasks | Δ success (pp) | 95% CI | cost ratio (geo mean) | 95% CI | success verdict |
-|---|---|---|---|---|---|---|
-| sobre-dev | 20 | 0.0 | [0.0, 0.0] | 1.096 | [1.018, 1.188] | non-inferior |
-| sobre-dev-06 | 20 | -5.0 | [-12.5, 0.0] | 1.050 | [0.961, 1.168] | inconclusive |
-| sobre-dev-09 | 20 | 0.0 | [0.0, 0.0] | 1.070 | [1.002, 1.141] | non-inferior |
-| sobre-dev-09b | 20 | 0.0 | [0.0, 0.0] | 1.047 | [0.985, 1.118] | non-inferior |
-| sobre-hooks | 20 | -2.5 | [-7.5, 0.0] | 1.111 | [1.019, 1.216] | inconclusive |
-| sobre-keyonly | 20 | 0.0 | [0.0, 0.0] | 1.033 | [0.960, 1.124] | non-inferior |
+| arm | tasks | Δ success (pp) | 95% CI | cost ratio (geo mean) | 95% CI | cold-start cost ratio | 95% CI | success verdict |
+|---|---|---|---|---|---|---|---|---|
+| sobre-dev | 20 | 0.0 | [0.0, 0.0] | 1.096 | [1.018, 1.188] | 1.088 | [1.020, 1.171] | non-inferior |
+| sobre-dev-06 | 20 | -5.0 | [-12.5, 0.0] | 1.050 | [0.961, 1.168] | 1.056 | [0.977, 1.165] | inconclusive |
+| sobre-dev-09 | 20 | 0.0 | [0.0, 0.0] | 1.070 | [1.002, 1.141] | 1.067 | [1.009, 1.131] | non-inferior |
+| sobre-dev-09b | 20 | 0.0 | [0.0, 0.0] | 1.047 | [0.985, 1.118] | 1.048 | [0.994, 1.113] | non-inferior |
+| sobre-hooks | 20 | -2.5 | [-7.5, 0.0] | 1.111 | [1.019, 1.216] | 1.102 | [1.026, 1.192] | inconclusive |
+| sobre-keyonly | 20 | 0.0 | [0.0, 0.0] | 1.033 | [0.960, 1.124] | 1.034 | [0.970, 1.115] | non-inferior |
 
 ## Per task (success rate / mean cost $)
 
