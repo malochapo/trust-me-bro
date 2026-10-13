@@ -1,0 +1,7 @@
+This repository is Dispatch, an incident management platform. Someone who comes late to an incident's channel can get a machine-written briefing on what they missed. When several latecomers ask one after another, Dispatch does not always write a fresh briefing: it may hand out an earlier one again. Which function decides between handing out an earlier briefing and writing a new one, how old may a briefing be and still be handed out again, and which function finds that earlier briefing? Do not change any code.
+
+Finish your answer with these four lines, in this exact form:
+FILE: <path of the file that defines the deciding function>
+FUNCTION: <name of the deciding function>
+MAX_AGE: <how old a briefing may be and still be handed out again, number and unit>
+LOOKUP: <name of the function that finds the earlier briefing>
