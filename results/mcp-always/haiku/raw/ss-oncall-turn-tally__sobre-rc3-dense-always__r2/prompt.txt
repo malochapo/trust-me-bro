@@ -1,0 +1,7 @@
+This repository is Dispatch, an incident management platform. When someone's turn on call ends, Dispatch can send them a short questionnaire about it, along with how many incidents and security cases they handled during that turn. Which function works out those numbers? If the paging tool does not say when the turn began, how far back does it look? And does it include incidents they led in other projects of the same organization? Do not change any code.
+
+Finish your answer with these four lines, in this exact form:
+FILE: <path of the file that defines that function>
+FUNCTION: <name of the function>
+FALLBACK_WINDOW: <how far back it looks when the start of the turn is unknown, number and unit>
+OTHER_PROJECTS: <yes or no: are incidents they led in other projects of the organization included>

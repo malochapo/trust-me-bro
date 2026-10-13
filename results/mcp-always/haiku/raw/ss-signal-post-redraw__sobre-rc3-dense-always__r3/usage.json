@@ -1,0 +1,58 @@
+{
+  "by_model": {
+    "claude-haiku-5-5": {
+      "cache_read": 93581,
+      "cache_write_1h": 0,
+      "cache_write_5m": 9480,
+      "client_cost_usd": 0.002513,
+      "cost_usd": 0.0025131100000000003,
+      "input": 8,
+      "long_prompt_shares": {
+        "cache_read": 0.0,
+        "cache_write_1h": 0.0,
+        "cache_write_5m": 0.0,
+        "input": 0.0,
+        "output": 0.0
+      },
+      "output": 783,
+      "price_key": "claude-haiku-5-5"
+    }
+  },
+  "client_total_cost_usd": 0.002513,
+  "cold_start": {
+    "cache_read_tokens": 17909,
+    "extra_usd": 0.00206,
+    "starts": 1,
+    "unpriced_models": []
+  },
+  "conversation_turns": 1,
+  "cost_cold_usd": 0.004573,
+  "cost_usd": 0.002513,
+  "duration_api_ms": 5888,
+  "duration_ms": 11595,
+  "flags": [],
+  "is_error": false,
+  "num_turns": 4,
+  "prices": {
+    "as_of": "2026-10-10",
+    "source": "https://platform.claude.com/docs/en/about-claude/pricing (model pricing table, footnote 2 and long context pricing), read on 2026-10-10"
+  },
+  "result_subtype": "success",
+  "source": "modelUsage",
+  "tokens": {
+    "cache_read": 93581,
+    "cache_write_1h": 0,
+    "cache_write_5m": 9480,
+    "input": 8,
+    "output": 783
+  },
+  "tool_calls": {
+    "mcp__sobre__sobre_compose": 1,
+    "mcp__sobre__sobre_read": 1,
+    "mcp__sobre__sobre_search": 1
+  },
+  "tool_calls_total": 3,
+  "tool_result_chars": 5913,
+  "tool_result_errors": 0,
+  "tool_results": 3
+}
