@@ -25,7 +25,7 @@ sobre, written by this benchmark's author, was measured further in pilots 3 and 
 
 ## Why they do not save
 
-Measured across the 1,116 runs of pilots 1 to 5, all published here:
+Measured across the 1,116 runs of pilots 1 to 5 and the 122 runs of the follow-up tests, all published here:
 
 - **Every API call re-reads the whole prompt.** A tool result is written to the prompt cache once and read again at every later call. That is why tool results make up 28% to 50% of a run's cost ([pilot 4](docs/pilot-4.md)).
 - **Agents already keep their outputs small.** Given megabytes of logs and full test suites, they pipe into `head`, `tail` and `grep -c`. Compressing what is left saves about 1% of a run ([pilot 2](docs/pilot-2.md), [pilot 4](docs/pilot-4.md)).
@@ -33,6 +33,7 @@ Measured across the 1,116 runs of pilots 1 to 5, all published here:
 - **Agents use a context tool only when its tools are in the prompt, and then pay for them.** In 454 runs with a context tool's MCP server connected, no agent called it unless a `CLAUDE.md` said to. Told to search with it, Haiku's runs cost 1.27 times more ([pilot 4](docs/pilot-4.md)). Claude Code had deferred those tools behind its tool search, so the agent saw only their names. Loaded up front, Haiku and Sonnet used them on search questions with no instruction, for 1.20 to 1.40 times the cost and the same answers; in Haiku's long sessions they were seldom used and still added 6%. Their definitions ride on every request, and the agent used them to grep, never to search by meaning ([docs/mcp-visibility.md](docs/mcp-visibility.md)).
 - **The host's own features win.** Asked to save findings for the next day, every agent used Claude Code's own memory. Told to use an add-on memory instead, Sonnet's next day cost 1.23 times more ([pilot 4](docs/pilot-4.md)).
 - **The lever that would matter belongs to the host.** In a long session, clearing old tool results from the prompt would cut about 20% of the cost on the same path. Claude Code clears them only once the cache has expired, and a tool outside the host cannot do it without breaking the cache ([docs/clearing.md](docs/clearing.md)).
+- **Where a long session is compacted matters only at a price tier.** Moving the `/compact` of two long sessions changed no answer. It changed the cost only where the prompt passed Haiku 5.5's 100,000-token tier, above which every token costs five times as much: uncompacted or compacted late, the log investigation cost 3.9 and 7 times as much; below the tier, every position cost within 11% ([docs/compaction-position.md](docs/compaction-position.md)).
 - **Interleaved arms share the prompt cache.** A session starts by reading or writing Claude Code's tool definitions and system prompt, the same in every run of a setup, and every key of a workspace shares the cache. As billed, that put 14 and 31 points on Headroom's short tasks and 22 and 46 on lean-ctx's, whose prefixes no other arm warmed ([docs/cache-isolation.md](docs/cache-isolation.md)).
 
 ## Who wrote this
@@ -44,6 +45,10 @@ The author of sobre, one of the tools measured. To keep that from tilting the re
 - each tool's authors may review their arm and answer the results.
 
 sobre was archived because of what this benchmark found.
+
+## Status
+
+Paused in October 2026, after five pilots and their follow-up tests on Claude Code 2.1.296. Phase 2, the frozen protocol with 40 to 60 tasks ([PROTOCOL.md](PROTOCOL.md)), has not started. The results hold for the pinned versions only. To extend the benchmark: pin a newer Claude Code and each tool's current release, re-run a pilot with the commands in its report, and add arms ([below](#add-your-tool)) or tasks (a new `tasksN/` directory, checked with `tasks/validate.py`).
 
 ## How it works
 
@@ -57,7 +62,7 @@ sobre was archived because of what this benchmark found.
 
 | Path | What |
 | --- | --- |
-| [docs/](docs/) | one report per pilot, the run book, the clearing study, the cache-isolation and MCP-visibility notes |
+| [docs/](docs/) | one report per pilot, the run book, sobre's development builds, the clearing study, and the cache-isolation, MCP-visibility and compaction-position notes |
 | [tasks/](tasks/), [tasks2/](tasks2/), [tasks3/](tasks3/), [tasks4/](tasks4/), [tasks5/](tasks5/) | the tasks of pilots 1, 2, 3 and 4; pilot 5 reuses pilot 4's long conversations; `tasks5/` moves their `/compact` ([docs/compaction-position.md](docs/compaction-position.md)) |
 | [results/](results/) | every run: `raw/` for pilot 1, then `pilot2/` to `pilot5/`, `mcp-always/` for the MCP visibility test and `compaction-position/` for the compaction position test. Each run keeps its transcript, usage, grade and metadata |
 | [arms/](arms/) | how each tool is installed, set up and checked |

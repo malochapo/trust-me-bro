@@ -162,3 +162,23 @@ The recap after `/compact` had every fact from before it in all runs but two on 
   | `sobre-dev-fold3` | 48 | 3.2% | 0 | no |
 
 So folding logs cannot save much on these tasks without hiding what the agent asked for: the fold that hides nothing removes 0.4% to 4% of a log conversation's cost, about 1% on most. Its value is not hiding the warnings and values rc.2 hides.
+
+## Run
+
+The commands that rerun each part, per model (`haiku` or `sonnet`). The fold builds are local builds of malochapo/sobre-ai#106's two commits, installed as `$BENCH_TOOLS/bin/sobre-dev-fold2` and `sobre-dev-fold3`; the dense arms provision their model once with network access (above). The pilot itself ran fewer repetitions of the dense arms and more native runs of the log task (Results).
+
+```sh
+python3 -I fixture/build.py --spec fixture/plants-pilot2.json --out build/pilot2
+python3 -I fixture/gen_logs_pilot2.py build/pilot2
+python3 -I fixture/gen_logs_pilot4.py build/pilot2
+bash arms/install.sh sobre-rc2 sobre-rc3-dense
+out="--jobs 3 --first-port 5436 --out results/pilot4/$model/raw"
+run="-- --model claude-$model-5-5 --fixture build/pilot2/fixture.git"
+python3 -I harness/bench.py --tasks 'tasks4/long-*/task.json' --arms native,sobre-rc2,sobre-rc2-mcp --reps 3 $out $run --timeout-min 45
+python3 -I harness/bench.py --tasks 'tasks4/xs-*/task.json' --arms native,native-told,sobre-rc2-mcp,sobre-rc2-mcp-told --reps 3 $out $run
+python3 -I harness/bench.py --tasks 'tasks4/ss-*/task.json' --arms native,sobre-rc2-mcp,sobre-rc2-mcp-told,sobre-rc3-dense-told --reps 3 $out $run
+python3 -I harness/bench.py --tasks 'tasks4/mt-logs-case-cost/task.json' --arms native,sobre-rc2,sobre-dev-fold2,sobre-dev-fold3 --reps 6 $out $run
+python3 -I harness/bench.py --tasks 'tasks3/mt-reminders-incident/task.json' --arms native,sobre-rc2,sobre-dev-fold2,sobre-dev-fold3 --reps 4 $out $run
+python3 -I harness/pilot4_summary.py
+```
+

@@ -55,7 +55,7 @@ Source: README "Connect agents" and "What init writes"; `index build` is README'
 - Skill `~/.claude/skills/sobre/SKILL.md`.
 - Warm indexes (graph, BM25, code graph) for the repo in `~/.local/share/sobre`.
 - No extra env. Run non-interactively, `init` asks nothing, so sobre's optional proxy
-  stays off (it serves API keys only; these runs use a subscription).
+  (for API keys) stays off.
 - Probe: records in `~/.local/share/sobre/usage.jsonl` (sobre's usage ledger, by event
   and by surface:tool, tokens before/after), and whether the session observer wrote
   `active_transcript.json`. Active = any ledger record or the observer ran.
@@ -83,6 +83,21 @@ with every request. They ask whether agents left sobre's tools unused because th
 see them ([docs/mcp-visibility.md](../docs/mcp-visibility.md)). `run.py` records which
 servers load up front (`mcp_always_load` in `meta.json`) and marks a run of an arm named
 `*-always` invalid when a server does not.
+
+### Other development and test arms
+
+Not vendor arms either; each pilot report says why it ran them. They bill to the sobre
+key, `native-told` to the native one.
+
+| arm | what it is | report |
+|---|---|---|
+| `sobre-keyonly` | Claude Code alone, as `native`, billed to the sobre key: a control for the key | [pilot 3](../docs/pilot-3.md) |
+| `sobre-dev-06`, `sobre-dev-09`, `sobre-dev-09b` | `sobre-dev` at compression levels 0.6 and 0.9; `-09b` is a later build | [pilot 3](../docs/pilot-3.md) |
+| `sobre-rc2` | sobre 0.1.0-rc.2 as released: `sobre init claude`, the hooks only | [pilot 4](../docs/pilot-4.md) |
+| `sobre-rc2-mcp` | rc.2 with `--mcp` (hooks, MCP server, skill) and a prebuilt index | [pilot 4](../docs/pilot-4.md) |
+| `sobre-rc2-dense`, `sobre-rc3-dense` | the builds with local embeddings, everything connected (`lib-dense.sh`) | [pilot 4](../docs/pilot-4.md) |
+| `native-told`, `sobre-rc2-mcp-told`, `sobre-rc2-dense-told`, `sobre-rc3-dense-told` | the same setups plus a user `CLAUDE.md` that says when to use the memory or sobre's tools (`lib-told.sh`) | [pilot 4](../docs/pilot-4.md) |
+| `sobre-dev-fold2`, `sobre-dev-fold3` | development builds that fold log lines, set up as `sobre-rc2`; installed as `<tools>/sobre-dev-fold2` and `-fold3` | [pilot 4](../docs/pilot-4.md) |
 
 ### rtk — `rtk init -g --auto-patch`
 

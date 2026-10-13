@@ -74,6 +74,9 @@ Per-task tables are in `results/pilot5/{haiku,sonnet}/report.md`. They can also 
 Per model, with `cap` at 5 for Haiku and 12 for Sonnet. Sonnet's part A ran `long-security-then-redaction` only, and it skipped `mt-reminders-incident`.
 
 ```sh
+python3 -I fixture/build.py --spec fixture/plants-pilot2.json --out build/pilot2
+python3 -I fixture/gen_logs_pilot2.py build/pilot2
+python3 -I fixture/gen_logs_pilot4.py build/pilot2
 common="--arms native,lean-ctx,headroom,rtk --reps 3 --jobs 3 --first-port 5436 --out results/pilot5/$model/raw --stop-at-usd $cap"
 run="-- --model claude-$model-5-5 --fixture build/pilot2/fixture.git"
 python3 -I harness/bench.py --tasks 'tasks4/long-*/task.json' $common $run --timeout-min 45

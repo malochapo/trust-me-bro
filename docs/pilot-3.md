@@ -120,3 +120,5 @@ At 0.3 that is 12% less on average. An exact permutation test on the six against
 - **Test the log effect directly.** Use more log-diagnosis conversations, on more than one log format, at six or more repetitions. It is the one place where sobre's compression changed what the agent did and what it cost.
 - **Use one API key for every arm, or check the keys against each other.** Per-arm keys keep the Console bills apart, but the control above shows a key-level difference cannot yet be ruled out.
 
+  **Later finding (2026-10-12).** The keys of a workspace share the prompt cache, and `native` and `sobre-keyonly` start from the same prompt prefix ([cache-isolation.md](cache-isolation.md)), so the key cannot change what a run reads from the cache: the gap between them is the noise of identical setups above.
+

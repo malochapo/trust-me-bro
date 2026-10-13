@@ -6,12 +6,13 @@ authors:
   - alias: malochapo
 repository-code: "https://github.com/malochapo/trust-me-bro"
 license: Apache-2.0
-date-released: 2026-10-12
+date-released: 2026-10-13
 abstract: >-
   Runs Claude Code on the same tasks and code base with and without tools that
   claim to cut what coding agents cost (rtk, Headroom, lean-ctx, sobre), and
-  compares billed tokens and task success. Every run is published with its
-  transcript.
+  compares billed tokens and task success. Follow-up tests measure what loading
+  MCP tools up front and where a long session is compacted change in a run's
+  cost. Every run is published with its transcript.
 keywords:
   - benchmark
   - coding agents
