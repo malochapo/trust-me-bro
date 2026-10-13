@@ -1,0 +1,88 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/trust-me-bro/tools/bin/sobre-rc3-dense hook observe"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/trust-me-bro/tools/bin/sobre-rc3-dense hook compress"
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/trust-me-bro/tools/bin/sobre-rc3-dense hook read-dedup"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/trust-me-bro/tools/bin/sobre-rc3-dense hook observe"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/trust-me-bro/tools/bin/sobre-rc3-dense hook observe"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/trust-me-bro/tools/bin/sobre-rc3-dense hook observe"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/trust-me-bro/tools/bin/sobre-rc3-dense hook observe"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/root/.cache/trust-me-bro/tools/bin/sobre-rc3-dense hook observe"
+          }
+        ]
+      }
+    ]
+  }
+}

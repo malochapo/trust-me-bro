@@ -2,14 +2,16 @@
 """Pilot 4's tables (docs/pilot-4.md): per part and model, each arm against native, and for
 parts B and B2 what each arm saved on day 1 and what day 2 cost.
 
-Per arm: runs, success, mean cost, turns, sobre tool calls and memory writes per run, and the
+Per arm: runs, success, mean cost, turns, sobre tool calls per run and the runs that made one,
+memory writes per run, and the
 cost ratio to native (geometric mean of per-task ratios of means, 95% bootstrap interval over
 tasks; with two tasks per part the interval says little), measured and with every session
 started on a cold prompt cache (usage.cold_start, docs/cache-isolation.md). Day 2 is the last session
 of a run that has more than one: its result's total_cost_usd, a running total within the session.
 
 Usage: python3 -I harness/pilot4_summary.py [--pilot pilot5] [haiku sonnet]
-(pilot 5 ran parts A and D again, with the released tools)
+(pilot 5 ran parts A and D again, with the released tools; --pilot mcp-always is part C with
+sobre's tools loaded up front, docs/mcp-visibility.md)
 """
 
 import sys
@@ -115,9 +117,9 @@ def main(argv):
                 continue
             arms = sorted({a for t, a in runs if part_of(t) == part}, key=lambda a: (a != "native", a))
             print(f"\n### part {part} ({len(tasks)} tasks)\n")
-            print("| arm | runs | success | mean cost | turns | sobre calls/run | memory writes/run | cost vs native (95% CI) "
+            print("| arm | runs | success | mean cost | turns | sobre calls/run | runs calling sobre | memory writes/run | cost vs native (95% CI) "
                   "| cold start vs native (95% CI) | day-2 cost |")
-            print("|---|---|---|---|---|---|---|---|---|---|")
+            print("|---|---|---|---|---|---|---|---|---|---|---|")
             for arm in arms:
                 rs = [r for t in tasks for r in runs.get((t, arm), [])]
                 paired = [t for t in tasks if runs.get((t, arm)) and runs.get((t, "native"))]
@@ -132,6 +134,7 @@ def main(argv):
                 day2 = [r["day2"] for r in rs if r["day2"] is not None]
                 print(f"| {arm} | {len(rs)} | {sum(r['ok'] for r in rs)}/{len(rs)} | ${statistics.mean(r['cost'] for r in rs):.4f} | "
                       f"{statistics.mean(r['turns'] for r in rs):.1f} | {statistics.mean(r['sobre'] for r in rs):.1f} | "
+                      f"{sum(r['sobre'] > 0 for r in rs)}/{len(rs)} | "
                       f"{statistics.mean(r['mem'] for r in rs):.1f} | {ratio} | {cold} | {f'${statistics.mean(day2):.4f}' if day2 else ''} |")
             if part in ("B", "B2"):
                 print("\n| arm | saved on day 1 | day 2 loaded sobre's memory |")

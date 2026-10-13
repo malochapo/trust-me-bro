@@ -1,0 +1,17 @@
+--- setup.sh exit 0
+--- stdout
+{"ORT_DYLIB_PATH": "/root/.cache/trust-me-bro/tools/cache/sobre-dense-home/.local/share/sobre/onnxruntime/1.24.4/libonnxruntime.so"}
+--- stderr
+
+sobre init
+
+  Claude Code  connected
+                 created ~/.claude/.claude.json
+                 created ~/.claude/skills/sobre/SKILL.md
+                 created ~/.claude/settings.json
+
+  Restart the agents above so they load sobre, then check with: sobre doctor
+indexes (graph + BM25) done
+  BM25: indexed 8562 chunks, 1.2 MB persisted
+dense done
+  dense index ready
