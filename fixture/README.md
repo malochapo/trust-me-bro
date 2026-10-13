@@ -15,4 +15,20 @@
 
 `author_plants.py` regenerates the patches from edits made on upstream. Maintainers run it; the benchmark does not. `gen_logs.py` writes the signal worker's log for `log-dedup-regression`, seeded, from the built fixture. `requirements.lock` pins Dispatch's Python dependencies.
 
+## The pilot 2 fixture
+
+From pilot 2 on, the tasks run on `build/pilot2/` (`python3 -I fixture/build.py --spec fixture/plants-pilot2.json --out build/pilot2`). `plants-pilot2.json` keeps the eight plants above and adds five, each a bug:
+
+| Plant | What it does | Used by |
+| --- | --- | --- |
+| `q1-restricted-case-filter` | A refactor that lets members see restricted cases they do not take part in | `ci-red-regressions`, `mt-security-review`, `long-security-then-redaction` |
+| `q2-case-cost-cutoff` | Stops a case's classic cost at the latest of its status timestamps | `ci-red-regressions`, `mt-logs-case-cost` |
+| `q3-entity-first-match` | Keeps only the first JSONPath match in entity extraction | `ci-red-regressions`, `mt-redaction-entities`, `long-security-then-redaction` |
+| `q4-reminder-day` | A refactor with a weekday off-by-one: the weekly Monday reminders stop | `log-reminders-stopped`, `mt-reminders-incident`, `long-incident-then-dedup`, `xs-reminders-*` |
+| `q5-unprotected-event-delete` | Drops the permission check of an incident's custom event delete route | `mt-security-review`, `long-security-then-redaction` |
+
+`gen_logs_pilot2.py build/pilot2` writes the scheduler and API logs of `log-reminders-stopped`, which the reminder conversations reuse; `gen_logs_pilot4.py build/pilot2` writes the three logs of `mt-logs-case-cost`. Both are seeded.
+
+## Tests
+
 The tests need PostgreSQL on localhost (user `postgres`, password `dispatch`). `tests/conftest.py` hard-codes the database name, so test runs must not overlap.

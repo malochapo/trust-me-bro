@@ -10,7 +10,7 @@ The pilot uses one API key per arm, plus one for the judge and the leakage check
 BENCH_KEY_NATIVE  BENCH_KEY_SOBRE  BENCH_KEY_LEANCTX  BENCH_KEY_HEADROOM  BENCH_KEY_RTK  BENCH_KEY_JUDGE
 ```
 
-All keys belong to one Console workspace, which has a spend limit. The pilot's budget is the $100 of API credit.
+All keys belong to one Console workspace, which has a spend limit; they also share its prompt cache ([cache-isolation.md](cache-isolation.md)). Pilot 1's budget was $100 of API credit. Later pilots give their commands in their own reports; this page sets up the machine and runs pilot 1.
 
 Claude Code cloud sessions supply Claude Code with credentials of their own, even to a child process started with an empty environment. An explicit API key takes precedence over them. The harness checks that each run was billed to its arm's key (`apiKeySource`) and marks the run invalid otherwise. Never run the bench there without the keys: it would bill the session's subscription and measure nothing per arm.
 
@@ -24,6 +24,11 @@ su postgres -c "psql -c \"ALTER USER postgres PASSWORD 'dispatch';\""
 # Fixture and its data
 python3 -I fixture/build.py
 python3 -I fixture/gen_logs.py build
+
+# The pilot 2 fixture and its logs, for pilots 2 to 5 and the follow-up tests
+python3 -I fixture/build.py --spec fixture/plants-pilot2.json --out build/pilot2
+python3 -I fixture/gen_logs_pilot2.py build/pilot2
+python3 -I fixture/gen_logs_pilot4.py build/pilot2
 
 # Dispatch's dependencies, shared by every run's venv
 export BENCH_DEPS_VENV=~/.cache/trust-me-bro/deps
@@ -78,9 +83,8 @@ python3 -I harness/report.py        # results/report.md and results/report.csv
 
 ## After the pilot
 
-- **Cost check:** compare each arm's billed cost on the Console, by API key, with the arm's summed `usage.json` cost. Report the gap: it validates the cost formula that phase 2 uses on a subscription.
+- **Cost check:** compare each arm's billed cost on the Console, by API key, with the arm's summed `usage.json` cost. Report the gap: it validates the cost formula the reports use.
 - **Results:** commit `results/report.md`, `results/report.csv` and the raw run directories (`results/raw/`; mind their size).
-- **Summary:** post a short summary on malochapo/sobre-ai issue #81 that links to the report. It must say what the pilot is not: 10 tasks and one or two repetitions, which estimate variance and cost and back no claim.
 - **Phase 2:** choose the number of tasks and repetitions from the pilot's variance, then freeze PROTOCOL.md.
 
 ## Parallel runs (`bench.py --jobs N`)

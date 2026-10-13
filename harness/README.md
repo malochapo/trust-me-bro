@@ -1,8 +1,8 @@
 # Harness
 
-Paired runs of Claude Code (`claude-sonnet-5-5`) on the same tasks and the same code
-base, once per arm (`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`; see
-`arms/README.md`). Python 3.11, standard library only; run every script with
+Paired runs of Claude Code (`claude-sonnet-5-5` unless `--model` says otherwise) on the
+same tasks and the same code base, once per arm (`native`, `sobre`, `lean-ctx`,
+`headroom`, `rtk`, and development arms; see `arms/README.md`). Python 3.11, standard library only; run every script with
 `python3 -I`.
 
 | file | what it does |
@@ -12,8 +12,12 @@ base, once per arm (`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`; see
 | `judge.py` | blind LLM judge for free-text answers (used by `grade.py`) |
 | `usage.py` | tokens per model and class, cost (measured, and with every session started on a cold cache), tool stats, from `stream.jsonl` |
 | `report.py` | `results/report.md` and `results/report.csv` |
+| `leakage.py` | phase 0: each fact task put to the model with no code and no tools (`results/leakage/`) |
 | `cache_isolation.py` | how often each arm's sessions started warm, and each pilot's ratios measured, cold and warm (`docs/cache-isolation.md`) |
 | `bench.py` | runs a matrix in a seeded, interleaved order, then grades it |
+| `pilot4_summary.py` | pilots 4 and 5 by part, with sobre calls, memory writes and the cold-start column; `--pilot mcp-always` for the MCP visibility test |
+| `result_share.py` | the share of a run's cost its tool results account for, and what a build's hook would remove (pilot 4) |
+| `clear_sim.py` | what clearing old tool results would save on recorded runs (`docs/clearing.md`) |
 | `compaction_position.py` | the compaction position test's tables: facts recalled by half, cost, requests past Haiku 5.5's price tier (`docs/compaction-position.md`) |
 | `prices.json` | $ per million tokens per model (to verify against the public pricing page) |
 | `common.py` | shared helpers: clean env, lock, run virtualenv, Postgres check |
@@ -24,10 +28,12 @@ base, once per arm (`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`; see
 - Linux x86_64 (glibc >= 2.35 for the lean-ctx build), `git`, `curl`, [`uv`](https://docs.astral.sh/uv/),
   Python 3.11 and 3.13, Claude Code (`claude --version`).
 - Postgres on `localhost:5432`, user `postgres`, password `dispatch` (the fixture's
-  tests create and drop the database `dispatch-test`). One database for everything,
-  so runs and grading are strictly sequential: `run.py` and the tests grader take the
-  lock `/tmp/trust-me-bro.lock` (`BENCH_LOCK_FILE`), and `run.py`/`bench.py` refuse to
-  start when `pg_isready -h localhost` fails.
+  tests create and drop the database `dispatch-test`). Runs and gradings on one server
+  never overlap: `run.py` and the tests grader take a lock per server
+  (`/tmp/trust-me-bro.lock` for 5432, `/tmp/trust-me-bro.<port>.lock` otherwise;
+  `BENCH_LOCK_FILE` overrides it), and `run.py`/`bench.py` refuse to start when the
+  server does not answer. `bench.py --jobs N` runs N at a time, each on its own server,
+  on consecutive ports from `--first-port` ([docs/RUNBOOK.md](../docs/RUNBOOK.md)).
 - Running as root: Claude Code refuses `bypassPermissions` as root outside a sandbox;
   the harness sets `IS_SANDBOX=1` for the agent. Run in a container or VM.
 
@@ -38,7 +44,8 @@ base, once per arm (`native`, `sobre`, `lean-ctx`, `headroom`, `rtk`; see
 #    (default ~/.cache/trust-me-bro/tools)
 arms/install.sh
 
-# 2. The fixture: build/fixture.git (bare, branch main), build/plants.json, build/data/
+# 2. The fixture: build/fixture.git (bare, branch main), build/plants.json, build/data/;
+#    pilots 2 to 5 use build/pilot2/ (fixture/README.md)
 python3 -I fixture/build.py
 
 # 3. Dispatch's dependencies, once, in a shared virtualenv without Dispatch itself
@@ -78,7 +85,7 @@ python3 -I harness/report.py
 
 `run.py` options (defaults): `--fixture build/fixture.git`, `--out results/raw`,
 `--work /tmp/trust-me-bro-work`, `--model claude-sonnet-5-5`, `--effort medium`,
-`--max-turns 80`, `--max-budget-usd 8`, `--timeout-min 25`, `--claude-bin claude`,
+`--max-turns 80`, `--max-budget-usd 3`, `--timeout-min 25`, `--claude-bin claude`,
 `--deps-venv $BENCH_DEPS_VENV`, `--cleanup` (delete the work dir afterwards; grading
 a tests task needs it), `--force` (replace an existing run dir). `bench.py` passes
 anything after `--` to `run.py` (`-- --effort high`), re-runs invalid runs, skips
@@ -89,7 +96,7 @@ Run the tests (no token, no network; `test_arms.py` sets up each installed arm f
 real, `test_grade.py`'s tests-grader case needs Postgres):
 
 ```bash
-python3 -I -m unittest discover -s harness/tests
+python3 -m unittest discover -s harness/tests -t harness/tests
 ```
 
 ## What a run does
@@ -198,8 +205,8 @@ repo as the agent left it, its HOME and the virtualenv.
 - `facts`: `grader.must` = `[{id, any_of: [regex]}]`, `grader.must_not` = `[{id, regex}]`,
   searched in `answer.md` case-insensitively, multi-line. `{plant:<id>}` and
   `{plant:<id>:short}` (first 8 chars) in a regex become that plant's commit sha from
-  `build/plants.json`. Score = matched / len(must); pass = all must, no must_not.
-- `tests`: copies `tasks/<id>/hidden/` over the run's repo, runs `grader.command` in it
+  the `plants.json` next to the run's fixture. Score = matched / len(must); pass = all must, no must_not.
+- `tests`: copies the task directory's `hidden/` over the run's repo, runs `grader.command` in it
   (run's `venv/bin` first on PATH, clean env, a temporary HOME, 15 min timeout), then
   `grader.regression`, by default `python -m pytest -q -p no:cacheprovider tests/signal`
   (`[]` for none). Pass = both exit 0. Takes the bench lock and checks Postgres.

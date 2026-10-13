@@ -2,6 +2,8 @@
 
 This is a draft for the pilot (phase 1). It will be frozen before phase 2, the first phase whose results are published as findings. After that, any change is logged in the changelog at the end of this file, with its reason.
 
+**Status (2026-10-13):** phase 1 ran as five pilots and a few follow-up tests, each reported in `docs/`. Phase 2 has not started, and this protocol was never frozen. Later pilots changed some of the settings below, each in the changelog and in the pilot's report: Haiku 5.5 alongside Sonnet 5.5 from pilot 3, the pilot 2 fixture, multi-message conversations, and intervals bootstrapped over runs when a part has only a few tasks.
+
 ## Question
 
 With Claude Code and Sonnet 5.5, does each tool lower the cost of completing realistic tasks on a real code base, without lowering the share of tasks completed?
@@ -22,7 +24,7 @@ These are the same for every arm:
 
 ## Fixture
 
-Netflix Dispatch at `dd2837e8`, with 150 commits replayed and 8 commits planted among them (`fixture/plants.json`). The build is deterministic and checks that its final tree equals upstream plus the plants.
+Netflix Dispatch at `dd2837e8`, with 150 commits replayed and 8 commits planted among them (`fixture/plants.json`). The build is deterministic and checks that its final tree equals upstream plus the plants. From pilot 2 on, the fixture adds five plants (`fixture/plants-pilot2.json`, [fixture/README.md](fixture/README.md)).
 
 ## Tasks and grading
 
@@ -62,8 +64,8 @@ A run succeeds when its grader passes, or when the judge gives it 2 or more. A r
 
 ## Known limits
 
-- **Narrow scope:** one model, one agent (Claude Code) and one code base (Python and Vue).
-- **Cost:** it is API-equivalent, not billed, and measured on a subscription whose limits can throttle runs.
+- **Narrow scope:** two models (Sonnet 5.5 and Haiku 5.5), one agent (Claude Code) and one code base (Python and Vue).
+- **Cost:** it is computed from each run's tokens and public prices, not read from an invoice; in pilot 1 it matched Claude Code's own estimate to the cent. The runs use API keys, whose prompt cache lives 5 minutes; a subscription gives Claude Code's main loop a 1-hour cache, which these runs do not measure.
 - **Moving targets:** the tools change quickly. Results hold for the pinned versions only.
 - **Conflict of interest:** the maintainer of sobre wrote the benchmark. Mitigations:
   - this protocol is fixed before scored runs;
